@@ -30,15 +30,6 @@
                 android:textSize="16sp"
                 android:text="Основной"
                 android:letterSpacing="0.01" />
-
-            <TextView
-                android:id="@+id/serverUrlText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textColor="?attr/secondaryTextColor"
-                android:textSize="12sp"
-                android:text="https://video1.cdnlibs.org/.%D0%B0s/" />
         </LinearLayout>
 
         <ImageView

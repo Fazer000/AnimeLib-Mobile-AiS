@@ -56,7 +56,6 @@ public class VideoServerAdapter extends RecyclerView.Adapter<VideoServerAdapter.
     public void onBindViewHolder(@NonNull ServerViewHolder holder, int position) {
         ServerOption option = servers.get(position);
         holder.serverNameText.setText(option.name);
-        holder.serverUrlText.setText(option.url);
 
         boolean isCurrent = option.domain.equalsIgnoreCase(currentDomain);
         holder.currentIndicator.setVisibility(isCurrent ? View.VISIBLE : View.GONE);
@@ -99,13 +98,11 @@ public class VideoServerAdapter extends RecyclerView.Adapter<VideoServerAdapter.
 
     public static class ServerViewHolder extends RecyclerView.ViewHolder {
         TextView serverNameText;
-        TextView serverUrlText;
         ImageView currentIndicator;
 
         ServerViewHolder(@NonNull View itemView) {
             super(itemView);
             serverNameText = itemView.findViewById(R.id.serverNameText);
-            serverUrlText = itemView.findViewById(R.id.serverUrlText);
             currentIndicator = itemView.findViewById(R.id.currentIndicator);
         }
     }
