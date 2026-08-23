@@ -229,6 +229,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private CommentsManager commentsManager;
     private com.example.animelib.data.DatabaseManager databaseManager;
     private SettingsBottomSheet currentSettingsBottomSheet;
+    private String currentVideoDomain = VideoUrlHelper.DOMAIN_MAIN;
     private androidx.appcompat.app.AlertDialog currentErrorDialog;
 
     // Orientation listener for autorotation
@@ -3568,6 +3569,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private void onPlayerSelected(EpisodeResponse.PlayerData playerData) {
         Log.d("VideoPlayer", "Player selected: " + playerData.getPlayer());
 
+        if (playerData != null && playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty()) {
+            currentVideoDomain = playerData.getVideoDomain();
+            Log.d("VideoPlayer", "Set currentVideoDomain from API: " + currentVideoDomain);
+        }
+
         if (isNewEpisodeSelection) {
             autoPlayOnPrepare = this.autoPlay;
             isNewEpisodeSelection = false;
@@ -4011,6 +4017,24 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     apiService.saveSubtitleStyleSettings(textSize, textColor, bgColor, edgeType, edgeColor);
                     applySubtitlesStateToPlayer();
                 });
+
+        boolean checkKodik = false;
+        if (playersManager != null && playersManager.getCurrentPlayerData() != null) {
+            String pType = playersManager.getCurrentPlayerData().getPlayer();
+            if (pType != null && "kodik".equalsIgnoreCase(pType)) {
+                checkKodik = true;
+            }
+        }
+        final boolean isKodik = checkKodik;
+        dialog.setVideoServerSettings(currentVideoDomain, isKodik, domain -> {
+            if (!Objects.equals(currentVideoDomain, domain)) {
+                currentVideoDomain = domain;
+                Log.d("VideoPlayer", "Selected video server domain: " + domain);
+                if (!isKodik && player != null) {
+                    restartPlayerWithNewQuality();
+                }
+            }
+        });
 
         currentSettingsBottomSheet = dialog;
 
@@ -4554,7 +4578,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
             int target = Integer.parseInt(quality.replace("p", ""));
             for (EpisodeResponse.QualityData data : playerData.getVideo().getQuality()) {
                 if (data.getQuality() == target) {
-                    return VideoUrlHelper.toAbsoluteVideoUrl(data.getHref());
+                    String domain = (playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty())
+                            ? playerData.getVideoDomain() : currentVideoDomain;
+                    return VideoUrlHelper.toAbsoluteVideoUrl(data.getHref(), domain);
                 }
             }
         } catch (NumberFormatException e) {
@@ -5160,7 +5186,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             String videoUrl = selectedQuality.getHref();
             Log.d("AnimelibPlayer", "Selected quality: " + selectedQuality.getQuality() + "p, URL: " + videoUrl);
 
-            videoUrl = VideoUrlHelper.toAbsoluteVideoUrl(videoUrl);
+            videoUrl = VideoUrlHelper.toAbsoluteVideoUrl(videoUrl, currentVideoDomain);
 
             Log.d("AnimelibPlayer", "Final video URL: " + videoUrl);
             currentVideoUrl = videoUrl;
@@ -5973,7 +5999,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
             String format = sub.getFormat() != null ? sub.getFormat().trim().toLowerCase() : "";
             String mimeType = getMimeTypeForSubtitle(format, sub.getSrc());
-            String absUrl = VideoUrlHelper.toAbsoluteVideoUrl(sub.getSrc());
+            String absUrl = VideoUrlHelper.toAbsoluteVideoUrl(sub.getSrc(), currentVideoDomain);
 
             String label = sub.getName();
             if (label == null || label.isEmpty()) {

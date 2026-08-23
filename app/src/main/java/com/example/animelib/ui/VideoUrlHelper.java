@@ -11,19 +11,117 @@ import java.util.regex.Pattern;
  */
 public class VideoUrlHelper {
     private static final String TAG = "VideoUrlHelper";
-    private static final String VIDEO_CDN = "https://video1.cdnlibs.org/.%D0%B0s";
+
+    public static final String DOMAIN_MAIN = "main";
+    public static final String DOMAIN_SECONDARY_1 = "secondary_1";
+    public static final String DOMAIN_SECONDARY_2 = "secondary_2";
+
+    public static final String URL_MAIN = "https://video1.cdnlibs.org/.%D0%B0s";
+    public static final String URL_SECONDARY_1 = "https://video2.cdnlibs.org";
+    public static final String URL_SECONDARY_2 = "https://video1.imglib.info";
+
+    public static String getBaseUrlForDomain(String domain) {
+        if (domain == null) return URL_MAIN;
+        switch (domain) {
+            case DOMAIN_SECONDARY_1:
+                return URL_SECONDARY_1;
+            case DOMAIN_SECONDARY_2:
+                return URL_SECONDARY_2;
+            case DOMAIN_MAIN:
+            default:
+                return URL_MAIN;
+        }
+    }
+
+    public static String getDomainDisplayName(String domain) {
+        if (domain == null) return "Основной";
+        switch (domain) {
+            case DOMAIN_SECONDARY_1:
+                return "Резервный 1";
+            case DOMAIN_SECONDARY_2:
+                return "Резервный 2";
+            case DOMAIN_MAIN:
+            default:
+                return "Основной";
+        }
+    }
+
+    public static String getDomainFullDescription(String domain) {
+        if (domain == null) return "Основной (video1.cdnlibs.org)";
+        switch (domain) {
+            case DOMAIN_SECONDARY_1:
+                return "Резервный 1 (video2.cdnlibs.org)";
+            case DOMAIN_SECONDARY_2:
+                return "Резервный 2 (video1.imglib.info)";
+            case DOMAIN_MAIN:
+            default:
+                return "Основной (video1.cdnlibs.org)";
+        }
+    }
 
     /**
      * Достраивает относительную ссылку на видео доменом CDN
      */
     public static String toAbsoluteVideoUrl(String href) {
+        return toAbsoluteVideoUrl(href, DOMAIN_MAIN);
+    }
+
+    /**
+     * Достраивает относительную или меняет домен абсолютной ссылки в зависимости от сервера
+     */
+    public static String toAbsoluteVideoUrl(String href, String domain) {
         if (href == null || href.isEmpty()) {
             return null;
         }
-        if (href.startsWith("http")) {
+        String baseUrl = getBaseUrlForDomain(domain);
+
+        if (href.startsWith("http://") || href.startsWith("https://")) {
+            String relativePath = extractRelativePathFromCdnUrl(href);
+            if (relativePath != null) {
+                if (!relativePath.startsWith("/")) {
+                    relativePath = "/" + relativePath;
+                }
+                return baseUrl + relativePath;
+            }
             return href;
         }
-        return VIDEO_CDN + href;
+
+        if (href.startsWith("/")) {
+            return baseUrl + href;
+        } else {
+            return baseUrl + "/" + href;
+        }
+    }
+
+    /**
+     * Извлекает относительный путь из известного URL видеосервера AnimeLib
+     */
+    public static String extractRelativePathFromCdnUrl(String fullUrl) {
+        if (fullUrl == null) return null;
+
+        String[] prefixes = new String[] {
+            "https://video1.cdnlibs.org/.%D0%B0s",
+            "https://video1.cdnlibs.org/.\u0430s",
+            "https://video1.cdnlibs.org",
+            "http://video1.cdnlibs.org",
+            "https://video2.cdnlibs.org",
+            "http://video2.cdnlibs.org",
+            "https://video1.imglib.info",
+            "http://video1.imglib.info"
+        };
+
+        for (String prefix : prefixes) {
+            if (fullUrl.startsWith(prefix)) {
+                String path = fullUrl.substring(prefix.length());
+                if (path.startsWith("/.%D0%B0s")) {
+                    path = path.substring("/.%D0%B0s".length());
+                } else if (path.startsWith("/.\u0430s")) {
+                    path = path.substring("/.\u0430s".length());
+                }
+                return path;
+            }
+        }
+        return null;
     }
 
     /**

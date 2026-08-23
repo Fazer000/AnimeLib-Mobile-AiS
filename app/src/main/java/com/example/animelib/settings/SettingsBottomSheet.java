@@ -18,6 +18,7 @@ import com.example.animelib.UpdateActivity;
 import com.example.animelib.adapters.QualityAdapter;
 import com.example.animelib.models.EpisodeResponse;
 import com.example.animelib.models.UpdateInfo;
+import com.example.animelib.ui.VideoUrlHelper;
 import com.example.animelib.util.CustomToast;
 import com.example.animelib.util.ThemeUtils;
 import com.example.animelib.util.UpdateManager;
@@ -86,6 +87,21 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
     private float filterGamma = 1.0f;
     private float filterHue = 0f;
     private OnVideoFiltersChangedListener onVideoFiltersChangedListener;
+
+    // Video Server
+    private String currentVideoDomain = VideoUrlHelper.DOMAIN_MAIN;
+    private boolean isKodikPlayer = false;
+
+    public interface OnVideoServerSelectedListener {
+        void onVideoServerSelected(String domain);
+    }
+    private OnVideoServerSelectedListener onVideoServerSelectedListener;
+
+    public void setVideoServerSettings(String currentDomain, boolean isKodikPlayer, OnVideoServerSelectedListener listener) {
+        this.currentVideoDomain = currentDomain != null ? currentDomain : VideoUrlHelper.DOMAIN_MAIN;
+        this.isKodikPlayer = isKodikPlayer;
+        this.onVideoServerSelectedListener = listener;
+    }
 
     public interface OnVideoFiltersChangedListener {
         void onVideoFiltersChanged(float brightness, float contrast, float saturation, float gamma, float hue);
@@ -255,6 +271,27 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
                 dismiss();
                 showQualityDialog();
             });
+        }
+
+        // Video Server option click
+        LinearLayout videoServerOption = view.findViewById(R.id.videoServerOption);
+        TextView currentVideoServerText = view.findViewById(R.id.currentVideoServerText);
+        if (currentVideoServerText != null) {
+            currentVideoServerText.setText(VideoUrlHelper.getDomainDisplayName(currentVideoDomain));
+        }
+        if (videoServerOption != null) {
+            if (isKodikPlayer) {
+                videoServerOption.setAlpha(0.5f);
+                videoServerOption.setOnClickListener(v -> {
+                    com.example.animelib.util.CustomToast.showInfo(getContext(), "Выбор сервера недоступен для плеера Kodik");
+                });
+            } else {
+                videoServerOption.setAlpha(1.0f);
+                videoServerOption.setOnClickListener(v -> {
+                    dismiss();
+                    showVideoServerDialog();
+                });
+            }
         }
 
         // 4K option click
@@ -440,6 +477,25 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
             }
         }
         return activity;
+    }
+
+    private void showVideoServerDialog() {
+        VideoServerBottomSheet serverSheet = new VideoServerBottomSheet(
+            getContext(),
+            currentVideoDomain,
+            domain -> {
+                currentVideoDomain = domain;
+                TextView currentVideoServerText = findViewById(R.id.currentVideoServerText);
+                if (currentVideoServerText != null) {
+                    currentVideoServerText.setText(VideoUrlHelper.getDomainDisplayName(domain));
+                }
+                if (onVideoServerSelectedListener != null) {
+                    onVideoServerSelectedListener.onVideoServerSelected(domain);
+                }
+            }
+        );
+        serverSheet.setOnBackPressedListener(this::show);
+        serverSheet.show();
     }
 
     private void showQualityDialog() {

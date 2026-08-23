@@ -85,6 +85,8 @@ public class EpisodeResponse {
         private List<TimecodeData> timecode;
         @SerializedName("subtitles")
         private List<SubtitleData> subtitles;
+        @SerializedName("video_domain")
+        private String videoDomain;
 
         @SerializedName("cover")
         private com.google.gson.JsonElement cover;
@@ -154,6 +156,14 @@ public class EpisodeResponse {
 
         public void setSubtitles(List<SubtitleData> subtitles) {
             this.subtitles = subtitles;
+        }
+
+        public String getVideoDomain() {
+            return videoDomain;
+        }
+
+        public void setVideoDomain(String videoDomain) {
+            this.videoDomain = videoDomain;
         }
 
         public String getCoverUrl() {

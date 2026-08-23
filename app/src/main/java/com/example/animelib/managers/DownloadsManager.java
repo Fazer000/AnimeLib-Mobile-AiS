@@ -278,14 +278,15 @@ public class DownloadsManager {
                                 } else {
                                     // AnimeLib player
                                     if (p.getVideo() != null && p.getVideo().getQuality() != null) {
+                                        String domain = p.getVideoDomain();
                                         for (EpisodeResponse.QualityData qd : p.getVideo().getQuality()) {
                                             if (String.valueOf(qd.getQuality()).contains(task.getQuality())) {
-                                                resolvedUrl[0] = VideoUrlHelper.toAbsoluteVideoUrl(qd.getHref());
+                                                resolvedUrl[0] = VideoUrlHelper.toAbsoluteVideoUrl(qd.getHref(), domain);
                                                 break;
                                             }
                                         }
                                         if (resolvedUrl[0] == null && !p.getVideo().getQuality().isEmpty()) {
-                                            resolvedUrl[0] = VideoUrlHelper.toAbsoluteVideoUrl(p.getVideo().getQuality().get(0).getHref());
+                                            resolvedUrl[0] = VideoUrlHelper.toAbsoluteVideoUrl(p.getVideo().getQuality().get(0).getHref(), domain);
                                         }
                                     }
                                 }
