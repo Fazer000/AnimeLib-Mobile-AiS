@@ -331,13 +331,7 @@ public class DownloadProgressBottomSheet extends FlexibleBottomSheetDialogFragme
                 taskHolder.tvTaskTitle.setSelected(true);
 
                 if (taskHolder.tvEpisodeName != null) {
-                    String cleanName = com.example.animelib.VideoPlayerActivity.cleanEpisodeName(epName, rawEp);
-                    if (cleanName != null && !cleanName.trim().isEmpty()) {
-                        taskHolder.tvEpisodeName.setText(cleanName.trim());
-                        taskHolder.tvEpisodeName.setVisibility(View.VISIBLE);
-                    } else {
-                        taskHolder.tvEpisodeName.setVisibility(View.GONE);
-                    }
+                    taskHolder.tvEpisodeName.setVisibility(View.GONE);
                 }
 
                 Context context = taskHolder.itemView.getContext();
