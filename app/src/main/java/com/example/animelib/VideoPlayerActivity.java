@@ -219,6 +219,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private View skipIndicatorRight;
     private View playerBufferingIndicator;
     private volatile boolean isVideoLoading = false;
+    private volatile boolean hasRenderedFirstFrame = false;
     private volatile boolean isSeeking = false;
     private volatile boolean isScrubbingTimeBar = false;
     private int currentControlState = -1; // -1 = uninitialized, 0 = play, 1 = pause, 2 = loading
@@ -2844,7 +2845,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
             public void onPlaybackStateChanged(int playbackState) {
                 Log.d("PlayerControls", "Playback state changed: " + playbackState);
                 if (playbackState == Player.STATE_READY) {
-                    isVideoLoading = false;
+                    if (hasRenderedFirstFrame || (player != null && player.isPlaying())) {
+                        isVideoLoading = false;
+                    }
                 } else if (playbackState == Player.STATE_ENDED || playbackState == Player.STATE_IDLE) {
                     isSeeking = false;
                     isVideoLoading = false;
@@ -2882,7 +2885,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
             @Override
             public void onRenderedFirstFrame() {
                 Log.d("PlayerControls", "First frame rendered!");
+                hasRenderedFirstFrame = true;
                 isVideoLoading = false;
+                isSeeking = false;
                 updatePlayPauseAndLoadingState(true);
             }
 
@@ -2895,13 +2900,14 @@ public class VideoPlayerActivity extends AppCompatActivity {
             public void onIsPlayingChanged(boolean isPlaying) {
                 Log.d("PlayerControls", "Is playing changed: " + isPlaying);
                 if (isPlaying) {
+                    hasRenderedFirstFrame = true;
+                    isVideoLoading = false;
                     if (!isScrubbingTimeBar) {
                         isSeeking = false;
                         if (seekResetHandler != null) {
                             seekResetHandler.removeCallbacksAndMessages(null);
                         }
                     }
-                    isVideoLoading = false;
                     startViewProgressTracking();
                 } else {
                     stopViewProgressTracking();
@@ -5001,6 +5007,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void initializePlayer() {
+        isVideoLoading = true;
+        hasRenderedFirstFrame = false;
+        updatePlayPauseAndLoadingState(true);
         // Create LoadControl with larger buffer for 4K support
         LoadControl loadControl = new DefaultLoadControl.Builder()
                 .setBufferDurationsMs(
@@ -5265,6 +5274,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private void handleAnimelibPlayer(EpisodeResponse.PlayerData playerData, long seekToPosition) {
         Log.d("AnimelibPlayer", "Handling Animelib player");
+        isVideoLoading = true;
+        hasRenderedFirstFrame = false;
+        updatePlayPauseAndLoadingState(true);
 
         if (isDownloadedQuality(preferredQuality)) {
             com.example.animelib.data.entity.DownloadedEpisodeEntity downloadedEp = getDownloadedEpisodeForActive();
@@ -5895,6 +5907,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void initializeHlsPlayer(String hlsUrl) {
+        isVideoLoading = true;
+        hasRenderedFirstFrame = false;
+        updatePlayPauseAndLoadingState(true);
         // Create HLS media source with OkHttp data source
         OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
@@ -6950,28 +6965,28 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private void scheduleEndSeekingState(long delayMs) {
         if (seekResetHandler != null) {
             seekResetHandler.removeCallbacksAndMessages(null);
-            if (delayMs <= 0) {
+            Runnable r = () -> {
                 if (!isScrubbingTimeBar) {
-                    if (player == null || !player.getPlayWhenReady() || player.isPlaying()) {
+                    boolean isReadyAndRendered = (player != null) && (player.getPlaybackState() == Player.STATE_READY) && hasRenderedFirstFrame;
+                    if (player == null || player.isPlaying() || isReadyAndRendered) {
                         isSeeking = false;
                     }
                     updatePlayPauseAndLoadingState(true);
                 }
+            };
+            if (delayMs <= 0) {
+                r.run();
             } else {
-                seekResetHandler.postDelayed(() -> {
-                    if (!isScrubbingTimeBar) {
-                        if (player == null || !player.getPlayWhenReady() || player.isPlaying()) {
-                            isSeeking = false;
-                        }
-                        updatePlayPauseAndLoadingState(true);
-                    }
-                }, delayMs);
+                seekResetHandler.postDelayed(r, delayMs);
             }
         } else {
-            if (player == null || !player.getPlayWhenReady() || player.isPlaying()) {
-                isSeeking = false;
+            if (!isScrubbingTimeBar) {
+                boolean isReadyAndRendered = (player != null) && (player.getPlaybackState() == Player.STATE_READY) && hasRenderedFirstFrame;
+                if (player == null || player.isPlaying() || isReadyAndRendered) {
+                    isSeeking = false;
+                }
+                updatePlayPauseAndLoadingState(true);
             }
-            updatePlayPauseAndLoadingState(true);
         }
     }
 
@@ -7065,17 +7080,17 @@ public class VideoPlayerActivity extends AppCompatActivity {
             boolean isLoading = (player != null) && player.isLoading();
 
             // Буферизация / загрузка / перемотка:
-            // 1) ExoPlayer находится в STATE_BUFFERING или player.isLoading()
-            // 2) Активна загрузка видео (isVideoLoading)
+            // 1) Активна загрузка видео (isVideoLoading) или еще не отрисован первый кадр
+            // 2) ExoPlayer находится в STATE_BUFFERING
             // 3) Выполняется перемотка пользователем (isSeeking, isScrubbingTimeBar)
             // 4) Видео должно воспроизводиться (isPlayWhenReady), но ещё фактически не играет (!realIsPlaying)
-            boolean isBuffering = !isEnded && playbackState != Player.STATE_IDLE && (
-                    playbackState == Player.STATE_BUFFERING
-                    || (isPlayWhenReady && !realIsPlaying)
-                    || isLoading
-                    || isVideoLoading
+            boolean isBuffering = !isEnded && (
+                    isVideoLoading
+                    || !hasRenderedFirstFrame
+                    || playbackState == Player.STATE_BUFFERING
                     || isSeeking
                     || isScrubbingTimeBar
+                    || (isPlayWhenReady && !realIsPlaying)
             );
 
             // Показываем индикатор буферизации поверх плеера/контролов, если не активен полноэкранный loadingOverlay
