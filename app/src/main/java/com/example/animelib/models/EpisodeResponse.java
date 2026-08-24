@@ -74,6 +74,8 @@ public class EpisodeResponse {
     }
 
     public static class PlayerData {
+        @SerializedName("id")
+        private int id;
         private String player;
         @SerializedName("translation_type")
         private TranslationType translationType;
@@ -100,6 +102,14 @@ public class EpisodeResponse {
         private com.google.gson.JsonElement icon;
 
         public PlayerData() {}
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
 
         public String getPlayer() {
             return player;

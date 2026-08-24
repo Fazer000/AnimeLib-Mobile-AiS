@@ -1286,6 +1286,81 @@ public class ApiService {
         });
     }
 
+    public interface ViewCallback {
+        void onSuccess();
+        void onError(String error);
+    }
+
+    /**
+     * Помечает эпизод просмотренным (Синхронно)
+     * POST https://hapi.hentaicdn.org/api/anime/{anime_id}/players/{player_id}/view
+     */
+    public boolean markEpisodeViewedSync(String animeId, int playerId) {
+        if (animeId == null || animeId.isEmpty() || playerId <= 0) {
+            Log.e("ApiService", "Invalid parameters for markEpisodeViewedSync: animeId=" + animeId + ", playerId=" + playerId);
+            return false;
+        }
+        String cleanAnimeId = com.example.animelib.ui.VideoUrlHelper.extractAnimeId(animeId);
+        if (cleanAnimeId == null || cleanAnimeId.isEmpty()) {
+            cleanAnimeId = animeId;
+        }
+        String url = "https://hapi.hentaicdn.org/api/anime/" + cleanAnimeId + "/players/" + playerId + "/view";
+        Log.d("ApiService", "Marking episode viewed: " + url);
+        try {
+            okhttp3.RequestBody emptyBody = okhttp3.RequestBody.create("", okhttp3.MediaType.parse("application/json; charset=utf-8"));
+            Request request = buildApiRequest(url)
+                    .post(emptyBody)
+                    .build();
+            try (Response response = httpClient.newCall(request).execute()) {
+                boolean success = response.isSuccessful();
+                Log.d("ApiService", "markEpisodeViewedSync response code: " + response.code() + ", success: " + success);
+                return success;
+            }
+        } catch (Exception e) {
+            Log.e("ApiService", "Error in markEpisodeViewedSync for " + url, e);
+            return false;
+        }
+    }
+
+    /**
+     * Помечает эпизод просмотренным (Асинхронно)
+     */
+    public void markEpisodeViewed(String animeId, int playerId, ViewCallback callback) {
+        safeExecute(() -> {
+            boolean success = markEpisodeViewedSync(animeId, playerId);
+            if (success) {
+                if (callback != null) safeRunOnUiThread(callback::onSuccess);
+            } else {
+                if (callback != null) safeRunOnUiThread(() -> callback.onError("Failed to mark episode as viewed"));
+            }
+        });
+    }
+
+    /**
+     * Добавляет серию в закладки (Синхронно)
+     */
+    public boolean addBookmarkSync(String mediaSlug, int episodeId, int teamId, int episodeNumber, String currentTimecode) {
+        if (mediaSlug == null || mediaSlug.isEmpty()) return false;
+        try {
+            com.google.gson.JsonObject requestBody = createBookmarkRequestBody(
+                    mediaSlug, episodeId, teamId, episodeNumber, currentTimecode
+            );
+            String jsonString = gson.toJson(requestBody);
+            okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonString, okhttp3.MediaType.get("application/json; charset=utf-8"));
+            Request request = buildApiRequest("https://api.cdnlibs.org/api/bookmarks")
+                    .post(body)
+                    .build();
+            try (Response response = httpClient.newCall(request).execute()) {
+                boolean success = response.isSuccessful();
+                Log.d("ApiService", "addBookmarkSync response code: " + response.code() + ", success: " + success);
+                return success;
+            }
+        } catch (Exception e) {
+            Log.e("ApiService", "Error in addBookmarkSync", e);
+            return false;
+        }
+    }
+
     /**
      * Добавляет серию в закладки
      * @param mediaSlug Слаг медиа (например: "23811--kaijuu-8-gou-2nd-season-anime")

@@ -79,33 +79,21 @@ public class BookmarkManager {
                    ", episodeNumber: " + episodeNumber +
                    ", timecode: " + timecode);
         
-        // Добавляем закладку через ApiService
-        apiService.addBookmark(
+        // Передаем в OfflineSyncManager, который выполнит запрос или добавит в офлайн-очередь с ретраями
+        OfflineSyncManager.getInstance(context).enqueueBookmarkTask(
             mediaSlug,
             currentEpisode.getId(),
             teamId,
             episodeNumber,
-            timecode,
-            new ApiService.BookmarkCallback() {
-                @Override
-                public void onSuccess(String message) {
-                    if (showSuccessToast) {
-                        showToast(message);
-                    }
-                    if (callback != null) {
-                        callback.onBookmarkAdded(currentEpisode.getId());
-                    }
-                }
-                
-                @Override
-                public void onError(String error) {
-                    showToast(error); // Всегда показываем ошибки
-                    if (callback != null) {
-                        callback.onBookmarkError(error);
-                    }
-                }
-            }
+            timecode
         );
+
+        if (showSuccessToast) {
+            showToast("Закладка сохранена (" + timecode + ")");
+        }
+        if (callback != null) {
+            callback.onBookmarkAdded(currentEpisode.getId());
+        }
     }
     
     /**

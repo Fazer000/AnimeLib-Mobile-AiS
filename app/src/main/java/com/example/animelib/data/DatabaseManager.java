@@ -777,6 +777,43 @@ public class DatabaseManager {
         });
     }
 
+    // ========== Pending Sync Tasks операции ==========
+
+    public void savePendingSyncTask(com.example.animelib.data.entity.PendingSyncTaskEntity task) {
+        try {
+            db.pendingSyncTaskDao().insertTask(task);
+            Log.d(TAG, "Saved pending sync task: " + task.getTaskType());
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to save pending sync task", e);
+        }
+    }
+
+    public java.util.List<com.example.animelib.data.entity.PendingSyncTaskEntity> getAllPendingSyncTasksSync() {
+        try {
+            return db.pendingSyncTaskDao().getAllTasksSync();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to get pending sync tasks", e);
+            return new java.util.ArrayList<>();
+        }
+    }
+
+    public void deletePendingSyncTaskById(long id) {
+        try {
+            db.pendingSyncTaskDao().deleteTaskById(id);
+            Log.d(TAG, "Deleted pending sync task id: " + id);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to delete pending sync task id " + id, e);
+        }
+    }
+
+    public void updatePendingSyncTask(com.example.animelib.data.entity.PendingSyncTaskEntity task) {
+        try {
+            db.pendingSyncTaskDao().updateTask(task);
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to update pending sync task", e);
+        }
+    }
+
     private void deleteDir(java.io.File dir) {
         if (dir != null && dir.exists()) {
             java.io.File[] files = dir.listFiles();

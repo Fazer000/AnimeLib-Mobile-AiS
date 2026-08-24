@@ -259,6 +259,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
     
     // Timecode manager
     private TimecodeManager timecodeManager;
+
+    // View progress tracking (60% threshold)
+    private boolean isCurrentEpisodeMarkedViewed = false;
+    private final Handler viewProgressHandler = new Handler(Looper.getMainLooper());
+    private Runnable viewProgressRunnable;
     
     // Ambient light manager
     private AmbientLightManager ambientLightManager;
@@ -2801,6 +2806,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
                         }
                     }
                     isVideoLoading = false;
+                    startViewProgressTracking();
+                } else {
+                    stopViewProgressTracking();
                 }
                 updatePlayerControlsState();
                 updatePlayPauseAndLoadingState(true);
@@ -2827,6 +2835,55 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
         };
         player.addListener(playerEventListener);
+    }
+
+    private void startViewProgressTracking() {
+        stopViewProgressTracking();
+        viewProgressRunnable = new Runnable() {
+            @Override
+            public void run() {
+                checkPlaybackViewProgress();
+                if (player != null && player.isPlaying() && !isCurrentEpisodeMarkedViewed) {
+                    viewProgressHandler.postDelayed(this, 1000);
+                }
+            }
+        };
+        viewProgressHandler.post(viewProgressRunnable);
+    }
+
+    private void stopViewProgressTracking() {
+        if (viewProgressRunnable != null) {
+            viewProgressHandler.removeCallbacks(viewProgressRunnable);
+            viewProgressRunnable = null;
+        }
+    }
+
+    private void checkPlaybackViewProgress() {
+        if (isCurrentEpisodeMarkedViewed || player == null) return;
+        long duration = player.getDuration();
+        long currentPos = player.getCurrentPosition();
+
+        if (duration > 0 && currentPos >= (long) (duration * 0.60)) {
+            isCurrentEpisodeMarkedViewed = true;
+            Log.d("VideoPlayer", "60% view threshold reached: " + currentPos + "/" + duration + "ms");
+
+            String animeId = currentAnimeId;
+            if (animeId == null || animeId.isEmpty()) {
+                animeId = (getIntent() != null) ? getIntent().getStringExtra("EXTRA_ANIME_ID") : null;
+            }
+
+            int playerId = 0;
+            if (playersManager != null && playersManager.getCurrentPlayerData() != null) {
+                playerId = playersManager.getCurrentPlayerData().getId();
+            }
+
+            if (animeId != null && !animeId.isEmpty() && playerId > 0) {
+                Log.d("VideoPlayer", "Enqueuing VIEW task for animeId: " + animeId + ", playerId: " + playerId);
+                com.example.animelib.managers.OfflineSyncManager.getInstance(this).enqueueViewTask(animeId, playerId);
+            } else {
+                Log.w("VideoPlayer", "Cannot enqueue VIEW task: animeId=" + animeId + ", playerId=" + playerId);
+            }
+        }
     }
     
     /**
@@ -3680,7 +3737,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         // Reset bookmark timecode for new episode selection
         bookmarkTimecode = 0;
-        Log.d("VideoPlayer", "Reset bookmark timecode for new episode");
+        isCurrentEpisodeMarkedViewed = false;
+        Log.d("VideoPlayer", "Reset bookmark timecode and viewed status for new episode");
         
         // Reset saved player position for new episode
         savedPlayerPosition = 0;
@@ -7647,6 +7705,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        stopViewProgressTracking();
         
         if (orientationEventListener != null) {
             orientationEventListener.disable();
