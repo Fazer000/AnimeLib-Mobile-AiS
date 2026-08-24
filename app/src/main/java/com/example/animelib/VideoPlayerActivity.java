@@ -413,26 +413,36 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         playerView = findViewById(R.id.playerView);
         playerContainer = findViewById(R.id.playerContainer);
-        if (playerContainer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            playerContainer.setOutlineProvider(new ViewOutlineProvider() {
-                @Override
-                public void getOutline(View view, Outline outline) {
-                    int l = Math.round(currentOutlineLeft);
-                    int t = Math.round(currentOutlineTop);
-                    int r = Math.round(currentOutlineRight);
-                    int b = Math.round(currentOutlineBottom);
-                    if (r > l && b > t && (l > 0 || t > 0 || r < view.getWidth() || b < view.getHeight() || currentCornerRadiusPx > 0)) {
-                        if (currentCornerRadiusPx > 0) {
-                            outline.setRoundRect(l, t, r, b, currentCornerRadiusPx);
+        if (playerContainer != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                playerContainer.setOutlineProvider(new ViewOutlineProvider() {
+                    @Override
+                    public void getOutline(View view, Outline outline) {
+                        int l = Math.round(currentOutlineLeft);
+                        int t = Math.round(currentOutlineTop);
+                        int r = Math.round(currentOutlineRight);
+                        int b = Math.round(currentOutlineBottom);
+                        if (r > l && b > t && (l > 0 || t > 0 || r < view.getWidth() || b < view.getHeight() || currentCornerRadiusPx > 0)) {
+                            if (currentCornerRadiusPx > 0) {
+                                outline.setRoundRect(l, t, r, b, currentCornerRadiusPx);
+                            } else {
+                                outline.setRect(l, t, r, b);
+                            }
                         } else {
-                            outline.setRect(l, t, r, b);
+                            outline.setRect(0, 0, view.getWidth(), view.getHeight());
                         }
-                    } else {
-                        outline.setRect(0, 0, view.getWidth(), view.getHeight());
+                    }
+                });
+                playerContainer.setClipToOutline(true);
+            }
+            playerContainer.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
+                    boolean isPortrait = getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT;
+                    if (isPortrait) {
+                        applyPlayerSidePanelTransform(0f);
                     }
                 }
             });
-            playerContainer.setClipToOutline(true);
         }
         loadingOverlay = findViewById(R.id.loadingOverlay);
 
@@ -1478,9 +1488,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
             com.example.animelib.ui.AmbientVignetteOverlayView ambientVignetteOverlay = findViewById(R.id.ambientVignetteOverlay);
             if (ambientVignetteOverlay != null) {
-                ambientVignetteOverlay.setVideoBounds(lsLeft, lsTop, lsLeft + lsW, lsTop + lsH);
+                ambientVignetteOverlay.clearCustomVideoBounds();
             }
-            updateAmbientPlayerTransform(lsLeft, lsTop, lsW, lsH, true);
+            updateAmbientPlayerTransform(0f, 0f, sw, sh, false);
             android.view.ViewGroup.LayoutParams rawLp = playerContainer.getLayoutParams();
             if (rawLp != null) {
                 if (rawLp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT ||
@@ -1675,48 +1685,29 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 }
                 updateAmbientPlayerTransform(portLeft, portTop, portW, portH, true);
             } else {
-                float aspect = 16f / 9f;
-                if (player != null && player.getVideoSize() != null) {
-                    int vw = player.getVideoSize().width;
-                    int vh = player.getVideoSize().height;
-                    if (vw > 0 && vh > 0) {
-                        aspect = (float) vw / vh;
-                    }
-                }
-                float scAspect = (screenWidth > 0 && screenHeight > 0) ? ((float) screenWidth / screenHeight) : (16f / 9f);
-                float lsW, lsH;
-                if (scAspect > aspect) {
-                    lsH = screenHeight;
-                    lsW = screenHeight * aspect;
-                } else {
-                    lsW = screenWidth;
-                    lsH = screenWidth / aspect;
-                }
-                float lsLeft = (screenWidth - lsW) / 2f;
-                float lsTop = (screenHeight - lsH) / 2f;
                 if (ambientVignetteOverlay != null) {
-                    ambientVignetteOverlay.setVideoBounds(lsLeft, lsTop, lsLeft + lsW, lsTop + lsH);
+                    ambientVignetteOverlay.clearCustomVideoBounds();
                 }
-                updateAmbientPlayerTransform(lsLeft, lsTop, lsW, lsH, true);
+                updateAmbientPlayerTransform(0f, 0f, screenWidth, screenHeight, false);
             }
         }
     }
 
     private void updateAmbientPlayerTransform(float vLeft, float vTop, float vWidth, float vHeight, boolean isCroppedToVideo) {
         androidx.media3.ui.PlayerView ambientPlayerView = findViewById(R.id.ambientPlayerView);
-        if (ambientPlayerView != null && vWidth > 0 && vHeight > 0) {
-            int targetW = (int) Math.ceil(vWidth);
-            int targetH = (int) Math.ceil(vHeight);
+        if (ambientPlayerView != null) {
             android.view.ViewGroup.LayoutParams lp = ambientPlayerView.getLayoutParams();
-            if (lp != null && (lp.width != targetW || lp.height != targetH)) {
-                lp.width = targetW;
-                lp.height = targetH;
-                if (lp instanceof FrameLayout.LayoutParams) {
-                    ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
+            if (isCroppedToVideo && vWidth > 0 && vHeight > 0) {
+                int targetW = (int) Math.ceil(vWidth);
+                int targetH = (int) Math.ceil(vHeight);
+                if (lp != null && (lp.width != targetW || lp.height != targetH)) {
+                    lp.width = targetW;
+                    lp.height = targetH;
+                    if (lp instanceof FrameLayout.LayoutParams) {
+                        ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
+                    }
+                    ambientPlayerView.setLayoutParams(lp);
                 }
-                ambientPlayerView.setLayoutParams(lp);
-            }
-            if (isCroppedToVideo) {
                 ambientPlayerView.setPivotX(vWidth / 2f);
                 ambientPlayerView.setPivotY(vHeight / 2f);
                 ambientPlayerView.setTranslationX(vLeft);
@@ -1725,8 +1716,14 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 ambientPlayerView.setScaleX(1.12f);
                 ambientPlayerView.setScaleY(1.12f);
             } else {
-                ambientPlayerView.setPivotX(vWidth / 2f);
-                ambientPlayerView.setPivotY(vHeight / 2f);
+                if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
+                    lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                    lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                    if (lp instanceof FrameLayout.LayoutParams) {
+                        ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
+                    }
+                    ambientPlayerView.setLayoutParams(lp);
+                }
                 ambientPlayerView.setTranslationX(0f);
                 ambientPlayerView.setTranslationY(0f);
 
