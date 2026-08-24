@@ -6952,19 +6952,25 @@ public class VideoPlayerActivity extends AppCompatActivity {
             seekResetHandler.removeCallbacksAndMessages(null);
             if (delayMs <= 0) {
                 if (!isScrubbingTimeBar) {
-                    isSeeking = false;
+                    if (player == null || !player.getPlayWhenReady() || player.isPlaying()) {
+                        isSeeking = false;
+                    }
                     updatePlayPauseAndLoadingState(true);
                 }
             } else {
                 seekResetHandler.postDelayed(() -> {
                     if (!isScrubbingTimeBar) {
-                        isSeeking = false;
+                        if (player == null || !player.getPlayWhenReady() || player.isPlaying()) {
+                            isSeeking = false;
+                        }
                         updatePlayPauseAndLoadingState(true);
                     }
                 }, delayMs);
             }
         } else {
-            isSeeking = false;
+            if (player == null || !player.getPlayWhenReady() || player.isPlaying()) {
+                isSeeking = false;
+            }
             updatePlayPauseAndLoadingState(true);
         }
     }
@@ -7055,15 +7061,18 @@ public class VideoPlayerActivity extends AppCompatActivity {
             boolean isEnded = (player != null) && (player.getPlaybackState() == Player.STATE_ENDED);
             boolean isPlayWhenReady = (player != null) && player.getPlayWhenReady();
             int playbackState = (player != null) ? player.getPlaybackState() : Player.STATE_IDLE;
-            boolean isPlaying = (player != null) && (player.isPlaying() || (isPlayWhenReady && playbackState == Player.STATE_READY));
+            boolean realIsPlaying = (player != null) && player.isPlaying();
             boolean isLoading = (player != null) && player.isLoading();
 
             // Буферизация / загрузка / перемотка:
             // 1) ExoPlayer находится в STATE_BUFFERING или player.isLoading()
             // 2) Активна загрузка видео (isVideoLoading)
             // 3) Выполняется перемотка пользователем (isSeeking, isScrubbingTimeBar)
-            boolean isBuffering = !isEnded && (
+            // 4) Видео должно воспроизводиться (isPlayWhenReady), но ещё фактически не играет (!realIsPlaying)
+            boolean isBuffering = !isEnded && playbackState != Player.STATE_IDLE && (
                     playbackState == Player.STATE_BUFFERING
+                    || (isPlayWhenReady && !realIsPlaying)
+                    || isLoading
                     || isVideoLoading
                     || isSeeking
                     || isScrubbingTimeBar
@@ -7114,14 +7123,19 @@ public class VideoPlayerActivity extends AppCompatActivity {
             int targetState;
             if (showBuffering) {
                 targetState = 2; // LOADING
-            } else if (isPlaying) {
+            } else if (realIsPlaying || (isPlayWhenReady && playbackState == Player.STATE_READY)) {
                 targetState = 1; // PAUSE
             } else {
                 targetState = 0; // PLAY
             }
 
             if (currentControlState == targetState && currentControlState != -1) {
-                // Состояние уже активно — не прерываем текущую выполняющуюся анимацию
+                // Убедимся, что нужная view точно видима при совпадении состояния
+                View activeView = (targetState == 2) ? spinner : ((targetState == 1) ? pause : play);
+                if (activeView.getVisibility() != View.VISIBLE) {
+                    activeView.setVisibility(View.VISIBLE);
+                    activeView.setAlpha(1.0f);
+                }
                 return;
             }
 
