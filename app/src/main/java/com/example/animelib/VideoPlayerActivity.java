@@ -1359,21 +1359,55 @@ public class VideoPlayerActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 playerContainer.invalidateOutline();
             }
+            View ambientContainer = findViewById(R.id.ambientContainer);
             int sbHeight = getStatusBarHeight();
+            float actualTop = sbHeight;
+            float actualLeft = 0f;
+            if (playerContainer != null && ambientContainer != null) {
+                int[] pLoc = new int[2];
+                int[] aLoc = new int[2];
+                playerContainer.getLocationOnScreen(pLoc);
+                ambientContainer.getLocationOnScreen(aLoc);
+                if (pLoc[1] > 0 || aLoc[1] > 0) {
+                    actualTop = pLoc[1] - aLoc[1];
+                    actualLeft = pLoc[0] - aLoc[0];
+                }
+            }
+
             int sw = getResources().getDisplayMetrics().widthPixels;
-            float portH = sw * 9 / 16f;
+            float containerW = (playerContainer != null && playerContainer.getWidth() > 0) ? playerContainer.getWidth() : sw;
+            float containerH = (playerContainer != null && playerContainer.getHeight() > 0) ? playerContainer.getHeight() : (sw * 9f / 16f);
+
+            float portW = containerW;
+            float portH = containerH;
+            float portLeft = actualLeft;
+            float portTop = actualTop;
+
             if (player != null && player.getVideoSize() != null) {
                 int vw = player.getVideoSize().width;
                 int vh = player.getVideoSize().height;
                 if (vw > 0 && vh > 0) {
-                    portH = sw / ((float) vw / vh);
+                    float videoAspect = (float) vw / vh;
+                    float containerAspect = containerW / containerH;
+                    if (containerAspect > videoAspect) {
+                        portH = containerH;
+                        portW = containerH * videoAspect;
+                        portLeft = actualLeft + (containerW - portW) / 2f;
+                        portTop = actualTop;
+                    } else {
+                        portW = containerW;
+                        portH = containerW / videoAspect;
+                        portLeft = actualLeft;
+                        portTop = actualTop + (containerH - portH) / 2f;
+                    }
                 }
             }
+
             com.example.animelib.ui.AmbientVignetteOverlayView ambientVignetteOverlay = findViewById(R.id.ambientVignetteOverlay);
             if (ambientVignetteOverlay != null) {
-                ambientVignetteOverlay.setVideoBounds(0, sbHeight, sw, sbHeight + portH);
+                ambientVignetteOverlay.setVideoBounds(portLeft, portTop, portLeft + portW, portTop + portH);
             }
-            updateAmbientPlayerTransform(0f, sbHeight, sw, portH, true);
+            updateAmbientPlayerTransform(portLeft, portTop, portW, portH, true);
             android.view.ViewGroup.LayoutParams lp = playerContainer.getLayoutParams();
             if (lp != null) {
                 int screenWidth = getResources().getDisplayMetrics().widthPixels;
@@ -1411,8 +1445,17 @@ public class VideoPlayerActivity extends AppCompatActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 playerContainer.invalidateOutline();
             }
-            int sw = getResources().getDisplayMetrics().widthPixels;
-            int sh = getResources().getDisplayMetrics().heightPixels;
+            int sw = 0;
+            int sh = 0;
+            View decorView = getWindow().getDecorView();
+            if (decorView != null && decorView.getWidth() > 0 && decorView.getHeight() > 0) {
+                sw = decorView.getWidth();
+                sh = decorView.getHeight();
+            } else {
+                DisplayMetrics dm = getResources().getDisplayMetrics();
+                sw = dm.widthPixels;
+                sh = dm.heightPixels;
+            }
             float aspect = 16f / 9f;
             if (player != null && player.getVideoSize() != null) {
                 int vw = player.getVideoSize().width;
@@ -1421,7 +1464,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     aspect = (float) vw / vh;
                 }
             }
-            float screenAspect = (float) sw / sh;
+            float screenAspect = (sw > 0 && sh > 0) ? ((float) sw / sh) : (16f / 9f);
             float lsW, lsH;
             if (screenAspect > aspect) {
                 lsH = sh;
@@ -1435,9 +1478,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
             com.example.animelib.ui.AmbientVignetteOverlayView ambientVignetteOverlay = findViewById(R.id.ambientVignetteOverlay);
             if (ambientVignetteOverlay != null) {
-                ambientVignetteOverlay.clearCustomVideoBounds();
+                ambientVignetteOverlay.setVideoBounds(lsLeft, lsTop, lsLeft + lsW, lsTop + lsH);
             }
-            updateAmbientPlayerTransform(0f, 0f, sw, sh, false);
+            updateAmbientPlayerTransform(lsLeft, lsTop, lsW, lsH, true);
             android.view.ViewGroup.LayoutParams rawLp = playerContainer.getLayoutParams();
             if (rawLp != null) {
                 if (rawLp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT ||
@@ -1589,16 +1632,72 @@ public class VideoPlayerActivity extends AppCompatActivity {
             updateAmbientPlayerTransform(currentLeft, currentTop, currentVideoW, currentVideoH, true);
         } else {
             if (isPortrait) {
-                int sbHeight = getStatusBarHeight();
-                if (ambientVignetteOverlay != null) {
-                    ambientVignetteOverlay.setVideoBounds(0, sbHeight, screenWidth, sbHeight + currentVideoH);
+                View ambientContainer = findViewById(R.id.ambientContainer);
+                float actualTop = getStatusBarHeight();
+                float actualLeft = 0f;
+                if (playerContainer != null && ambientContainer != null) {
+                    int[] pLoc = new int[2];
+                    int[] aLoc = new int[2];
+                    playerContainer.getLocationOnScreen(pLoc);
+                    ambientContainer.getLocationOnScreen(aLoc);
+                    if (pLoc[1] > 0 || aLoc[1] > 0) {
+                        actualTop = pLoc[1] - aLoc[1];
+                        actualLeft = pLoc[0] - aLoc[0];
+                    }
                 }
-                updateAmbientPlayerTransform(0f, sbHeight, screenWidth, currentVideoH, true);
+                float containerW = (playerContainer != null && playerContainer.getWidth() > 0) ? playerContainer.getWidth() : screenWidth;
+                float containerH = (playerContainer != null && playerContainer.getHeight() > 0) ? playerContainer.getHeight() : (screenWidth * 9f / 16f);
+                float portW = containerW;
+                float portH = containerH;
+                float portLeft = actualLeft;
+                float portTop = actualTop;
+                if (player != null && player.getVideoSize() != null) {
+                    int vw = player.getVideoSize().width;
+                    int vh = player.getVideoSize().height;
+                    if (vw > 0 && vh > 0) {
+                        float vAspect = (float) vw / vh;
+                        float containerAspect = containerW / containerH;
+                        if (containerAspect > vAspect) {
+                            portH = containerH;
+                            portW = containerH * vAspect;
+                            portLeft = actualLeft + (containerW - portW) / 2f;
+                            portTop = actualTop;
+                        } else {
+                            portW = containerW;
+                            portH = containerW / vAspect;
+                            portLeft = actualLeft;
+                            portTop = actualTop + (containerH - portH) / 2f;
+                        }
+                    }
+                }
+                if (ambientVignetteOverlay != null) {
+                    ambientVignetteOverlay.setVideoBounds(portLeft, portTop, portLeft + portW, portTop + portH);
+                }
+                updateAmbientPlayerTransform(portLeft, portTop, portW, portH, true);
             } else {
-                if (ambientVignetteOverlay != null) {
-                    ambientVignetteOverlay.clearCustomVideoBounds();
+                float aspect = 16f / 9f;
+                if (player != null && player.getVideoSize() != null) {
+                    int vw = player.getVideoSize().width;
+                    int vh = player.getVideoSize().height;
+                    if (vw > 0 && vh > 0) {
+                        aspect = (float) vw / vh;
+                    }
                 }
-                updateAmbientPlayerTransform(0f, 0f, screenWidth, screenHeight, false);
+                float scAspect = (screenWidth > 0 && screenHeight > 0) ? ((float) screenWidth / screenHeight) : (16f / 9f);
+                float lsW, lsH;
+                if (scAspect > aspect) {
+                    lsH = screenHeight;
+                    lsW = screenHeight * aspect;
+                } else {
+                    lsW = screenWidth;
+                    lsH = screenWidth / aspect;
+                }
+                float lsLeft = (screenWidth - lsW) / 2f;
+                float lsTop = (screenHeight - lsH) / 2f;
+                if (ambientVignetteOverlay != null) {
+                    ambientVignetteOverlay.setVideoBounds(lsLeft, lsTop, lsLeft + lsW, lsTop + lsH);
+                }
+                updateAmbientPlayerTransform(lsLeft, lsTop, lsW, lsH, true);
             }
         }
     }
