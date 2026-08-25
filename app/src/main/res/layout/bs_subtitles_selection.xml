@@ -61,177 +61,196 @@
 
         <!-- Toggle Switch Row -->
         <LinearLayout
-            android:id="@+id/subtitlesEnableRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp">
+            android:layout_marginTop="8dp">
 
-            <ImageView
-                android:layout_width="22dp"
-                android:layout_height="22dp"
-                android:src="@drawable/ic_subtitles"
-                app:tint="@color/accent_text_color"
-                android:layout_marginEnd="12dp"/>
-
-            <TextView
-                android:layout_width="0dp"
+            <LinearLayout
+                android:id="@+id/subtitlesEnableRow"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Отображать субтитры"
-                android:textColor="@color/primary_text_color"
-                android:textSize="16sp"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="12dp"
+                android:background="@drawable/bg_m3_item_single"
+                android:clickable="true"
+                android:focusable="true">
 
-            <com.google.android.material.materialswitch.MaterialSwitch
-                android:id="@+id/subtitlesEnableSwitch"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:checked="true"/>
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Отображать субтитры"
+                    android:textColor="@color/primary_text_color"
+                    android:fontFamily="@font/open_sans_bold"
+                    android:textSize="15.5sp"/>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/subtitlesEnableSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    app:trackTint="@color/switch_track_tint"
+                    app:thumbTint="@color/switch_thumb_tint"
+                    android:checked="true"/>
+            </LinearLayout>
         </LinearLayout>
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0.5dp"
-            android:background="@color/bs_divider_color"/>
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="12dp"
-            android:paddingBottom="6dp"
+            android:paddingHorizontal="30dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="10dp"
             android:text="@string/bs_subtitle_format_default"
-            android:textColor="@color/secondary_text_color"
-            android:textSize="@dimen/bs_subtitle_text_size"
+            android:textColor="@color/primary_text_color"
+            android:textSize="14sp"
             android:textStyle="bold"
             android:fontFamily="@font/open_sans_bold"/>
 
-        <!-- Auto Option -->
         <LinearLayout
-            android:id="@+id/subtitlesAutoOption"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp"
-            android:background="@android:color/transparent"
-            android:foreground="?attr/selectableItemBackground">
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp">
 
+            <!-- Auto Option -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:id="@+id/subtitlesAutoOption"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="12dp"
+                android:layout_marginBottom="3dp"
+                android:background="@drawable/bg_m3_item_top"
+                android:clickable="true"
+                android:focusable="true">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Автоматически"
-                    android:textColor="@color/primary_text_color"
-                    android:textSize="16sp"/>
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Предпочитать ASS, затем VTT"
-                    android:textColor="@color/secondary_text_color"
-                    android:textSize="12sp"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Автоматически"
+                        android:textColor="@color/primary_text_color"
+                        android:fontFamily="@font/open_sans_bold"
+                        android:textSize="15.5sp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Предпочитать ASS, затем VTT"
+                        android:textColor="@color/secondary_text_color"
+                        android:textSize="12.5sp"/>
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/subtitlesAutoCheck"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_check"
+                    app:tint="@color/purple_primary"
+                    android:visibility="gone" />
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/subtitlesAutoCheck"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_check"
-                app:tint="@color/secondary_text_color"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <!-- ASS Option -->
-        <LinearLayout
-            android:id="@+id/subtitlesAssOption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp"
-            android:background="@android:color/transparent"
-            android:foreground="?attr/selectableItemBackground">
-
+            <!-- ASS Option -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:id="@+id/subtitlesAssOption"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="12dp"
+                android:layout_marginBottom="3dp"
+                android:background="@drawable/bg_m3_item_middle"
+                android:clickable="true"
+                android:focusable="true">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="ASS (Advanced SubStation Alpha)"
-                    android:textColor="@color/primary_text_color"
-                    android:textSize="16sp"/>
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Полный стиль и оформление аниме"
-                    android:textColor="@color/secondary_text_color"
-                    android:textSize="12sp"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ASS (Advanced SubStation Alpha)"
+                        android:textColor="@color/primary_text_color"
+                        android:fontFamily="@font/open_sans_bold"
+                        android:textSize="15.5sp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Полный стиль и оформление аниме"
+                        android:textColor="@color/secondary_text_color"
+                        android:textSize="12.5sp"/>
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/subtitlesAssCheck"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_check"
+                    app:tint="@color/purple_primary"
+                    android:visibility="gone" />
             </LinearLayout>
 
-            <ImageView
-                android:id="@+id/subtitlesAssCheck"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_check"
-                app:tint="@color/secondary_text_color"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <!-- VTT Option -->
-        <LinearLayout
-            android:id="@+id/subtitlesVttOption"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="12dp"
-            android:background="@android:color/transparent"
-            android:foreground="?attr/selectableItemBackground">
-
+            <!-- VTT Option -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:id="@+id/subtitlesVttOption"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="18dp"
+                android:paddingVertical="12dp"
+                android:background="@drawable/bg_m3_item_bottom"
+                android:clickable="true"
+                android:focusable="true">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="WebVTT (VTT)"
-                    android:textColor="@color/primary_text_color"
-                    android:textSize="16sp"/>
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Стандартные текстовые субтитры"
-                    android:textColor="@color/secondary_text_color"
-                    android:textSize="12sp"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="WebVTT (VTT)"
+                        android:textColor="@color/primary_text_color"
+                        android:fontFamily="@font/open_sans_bold"
+                        android:textSize="15.5sp"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="Стандартные текстовые субтитры"
+                        android:textColor="@color/secondary_text_color"
+                        android:textSize="12.5sp"/>
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/subtitlesVttCheck"
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_check"
+                    app:tint="@color/purple_primary"
+                    android:visibility="gone" />
             </LinearLayout>
-
-            <ImageView
-                android:id="@+id/subtitlesVttCheck"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:src="@drawable/ic_check"
-                app:tint="@color/secondary_text_color"
-                android:visibility="gone" />
         </LinearLayout>
 
         <!-- Subtitle Style Section -->

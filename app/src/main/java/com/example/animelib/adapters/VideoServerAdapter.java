@@ -56,33 +56,51 @@ public class VideoServerAdapter extends RecyclerView.Adapter<VideoServerAdapter.
     public void onBindViewHolder(@NonNull ServerViewHolder holder, int position) {
         ServerOption option = servers.get(position);
         holder.serverNameText.setText(option.name);
-
-        boolean isCurrent = option.domain.equalsIgnoreCase(currentDomain);
-        holder.currentIndicator.setVisibility(isCurrent ? View.VISIBLE : View.GONE);
-        holder.itemView.setSelected(isCurrent);
-
-        TypedValue typedValue = new TypedValue();
-        Context context = holder.itemView.getContext();
-
-        if (isCurrent) {
-            context.getTheme().resolveAttribute(R.attr.secondaryTextColor, typedValue, true);
-            holder.serverNameText.setTextColor(typedValue.data);
-        } else {
-            context.getTheme().resolveAttribute(R.attr.primaryTextColor, typedValue, true);
-            holder.serverNameText.setTextColor(typedValue.data);
+        if (holder.serverSubtitleText != null) {
+            holder.serverSubtitleText.setText(option.url != null ? option.url : "Сервер трансляции");
         }
 
-        holder.itemView.setScaleX(1.0f);
-        holder.itemView.setScaleY(1.0f);
-        com.example.animelib.util.ItemAnimationUtils.animateItemStateTransition(holder.itemView, isCurrent);
+        int totalCount = getItemCount();
+        if (holder.itemContainer != null) {
+            if (totalCount <= 1) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_single);
+            } else if (position == 0) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_top);
+            } else if (position == totalCount - 1) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_bottom);
+            } else {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_middle);
+            }
+        }
 
-        holder.itemView.setOnClickListener(v -> {
+        boolean isCurrent = option.domain.equalsIgnoreCase(currentDomain);
+        if (holder.selectedPill != null) {
+            holder.selectedPill.setVisibility(isCurrent ? View.VISIBLE : View.GONE);
+        }
+        if (holder.unselectedIndicator != null) {
+            holder.unselectedIndicator.setVisibility(isCurrent ? View.GONE : View.VISIBLE);
+        }
+
+        Context context = holder.itemView.getContext();
+        TypedValue primaryColorVal = new TypedValue();
+        TypedValue secondaryColorVal = new TypedValue();
+        context.getTheme().resolveAttribute(R.attr.primaryTextColor, primaryColorVal, true);
+        context.getTheme().resolveAttribute(R.attr.secondaryColor, secondaryColorVal, true);
+
+        holder.serverNameText.setTextColor(isCurrent ? secondaryColorVal.data : primaryColorVal.data);
+        holder.itemView.setSelected(isCurrent);
+
+        View.OnClickListener clickListener = v -> {
             com.example.animelib.util.ItemAnimationUtils.animateItemClick(v, () -> {
                 if (listener != null) {
                     listener.onServerSelected(option.domain);
                 }
             });
-        });
+        };
+        holder.itemView.setOnClickListener(clickListener);
+        if (holder.itemContainer != null) {
+            holder.itemContainer.setOnClickListener(clickListener);
+        }
     }
 
     @Override
@@ -97,13 +115,19 @@ public class VideoServerAdapter extends RecyclerView.Adapter<VideoServerAdapter.
     }
 
     public static class ServerViewHolder extends RecyclerView.ViewHolder {
+        View itemContainer;
         TextView serverNameText;
-        ImageView currentIndicator;
+        TextView serverSubtitleText;
+        View selectedPill;
+        View unselectedIndicator;
 
         ServerViewHolder(@NonNull View itemView) {
             super(itemView);
+            itemContainer = itemView.findViewById(R.id.itemContainer);
             serverNameText = itemView.findViewById(R.id.serverNameText);
-            currentIndicator = itemView.findViewById(R.id.currentIndicator);
+            serverSubtitleText = itemView.findViewById(R.id.serverSubtitleText);
+            selectedPill = itemView.findViewById(R.id.selectedPill);
+            unselectedIndicator = itemView.findViewById(R.id.unselectedIndicator);
         }
     }
 }

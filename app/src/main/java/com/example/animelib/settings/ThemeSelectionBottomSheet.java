@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
@@ -13,14 +12,6 @@ import androidx.annotation.NonNull;
 import com.example.animelib.R;
 import com.example.animelib.util.FlexibleBottomSheetDialog;
 import com.example.animelib.util.ThemeUtils;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-
-import android.widget.FrameLayout;
-import android.view.ViewGroup;
-import android.util.TypedValue;
-
-import java.util.Objects;
 
 public class ThemeSelectionBottomSheet extends FlexibleBottomSheetDialog {
     
@@ -36,9 +27,12 @@ public class ThemeSelectionBottomSheet extends FlexibleBottomSheetDialog {
     private OnBackPressedListener onBackPressedListener;
     private int currentTheme;
     
-    private ImageView themeAutoCheck;
-    private ImageView themeLightCheck;
-    private ImageView themeDarkCheck;
+    private View themeAutoPill;
+    private View themeAutoUnselected;
+    private View themeLightPill;
+    private View themeLightUnselected;
+    private View themeDarkPill;
+    private View themeDarkUnselected;
     
     public ThemeSelectionBottomSheet(@NonNull Context context, int currentTheme, OnThemeChangedListener listener) {
         super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
@@ -60,9 +54,12 @@ public class ThemeSelectionBottomSheet extends FlexibleBottomSheetDialog {
         LinearLayout themeLightOption = view.findViewById(R.id.themeLightOption);
         LinearLayout themeDarkOption = view.findViewById(R.id.themeDarkOption);
         
-        themeAutoCheck = view.findViewById(R.id.themeAutoCheck);
-        themeLightCheck = view.findViewById(R.id.themeLightCheck);
-        themeDarkCheck = view.findViewById(R.id.themeDarkCheck);
+        themeAutoPill = view.findViewById(R.id.themeAutoPill);
+        themeAutoUnselected = view.findViewById(R.id.themeAutoUnselected);
+        themeLightPill = view.findViewById(R.id.themeLightPill);
+        themeLightUnselected = view.findViewById(R.id.themeLightUnselected);
+        themeDarkPill = view.findViewById(R.id.themeDarkPill);
+        themeDarkUnselected = view.findViewById(R.id.themeDarkUnselected);
         
         // Устанавливаем текущую тему
         updateThemeSelection();
@@ -97,7 +94,6 @@ public class ThemeSelectionBottomSheet extends FlexibleBottomSheetDialog {
             } else {
                 ThemeUtils.applyTheme(themeMode);
             }
-            // Сохранение в Room базу данных будет выполнено в VideoPlayerActivity
             
             // Уведомляем слушателя
             if (listener != null) {
@@ -108,23 +104,18 @@ public class ThemeSelectionBottomSheet extends FlexibleBottomSheetDialog {
     }
     
     private void updateThemeSelection() {
-        // Скрываем все галочки
-        themeAutoCheck.setVisibility(View.GONE);
-        themeLightCheck.setVisibility(View.GONE);
-        themeDarkCheck.setVisibility(View.GONE);
-        
-        // Показываем галочку для текущей темы
-        switch (currentTheme) {
-            case ThemeUtils.THEME_SYSTEM:
-                themeAutoCheck.setVisibility(View.VISIBLE);
-                break;
-            case ThemeUtils.THEME_LIGHT:
-                themeLightCheck.setVisibility(View.VISIBLE);
-                break;
-            case ThemeUtils.THEME_DARK:
-                themeDarkCheck.setVisibility(View.VISIBLE);
-                break;
-        }
+        boolean isAuto = currentTheme == ThemeUtils.THEME_SYSTEM;
+        boolean isLight = currentTheme == ThemeUtils.THEME_LIGHT;
+        boolean isDark = currentTheme == ThemeUtils.THEME_DARK;
+
+        if (themeAutoPill != null) themeAutoPill.setVisibility(isAuto ? View.VISIBLE : View.GONE);
+        if (themeAutoUnselected != null) themeAutoUnselected.setVisibility(isAuto ? View.GONE : View.VISIBLE);
+
+        if (themeLightPill != null) themeLightPill.setVisibility(isLight ? View.VISIBLE : View.GONE);
+        if (themeLightUnselected != null) themeLightUnselected.setVisibility(isLight ? View.GONE : View.VISIBLE);
+
+        if (themeDarkPill != null) themeDarkPill.setVisibility(isDark ? View.VISIBLE : View.GONE);
+        if (themeDarkUnselected != null) themeDarkUnselected.setVisibility(isDark ? View.GONE : View.VISIBLE);
     }
     
     public int getCurrentTheme() {

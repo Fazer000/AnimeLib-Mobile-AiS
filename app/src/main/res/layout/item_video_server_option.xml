@@ -3,18 +3,20 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:foreground="?attr/selectableItemBackground"
-    android:orientation="vertical"
-    android:clickable="true"
-    android:focusable="true">
+    android:orientation="vertical">
 
     <LinearLayout
+        android:id="@+id/itemContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="22dp"
+        android:paddingHorizontal="18dp"
         android:paddingVertical="14dp"
+        android:layout_marginBottom="3dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:background="@drawable/bg_m3_item_single"
+        android:clickable="true"
+        android:focusable="true">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -27,20 +29,49 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="?attr/primaryTextColor"
-                android:textSize="16sp"
-                android:text="Основной"
-                android:letterSpacing="0.01" />
+                android:textSize="15.5sp"
+                android:fontFamily="@font/open_sans_bold"
+                android:text="Основной"/>
+
+            <TextView
+                android:id="@+id/serverSubtitleText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="?attr/accentTextColor"
+                android:textSize="12.5sp"
+                android:fontFamily="@font/open_sans"
+                android:text="Сервер трансляции"/>
+
         </LinearLayout>
 
-        <ImageView
-            android:id="@+id/currentIndicator"
+        <!-- Selected Pill Indicator -->
+        <FrameLayout
+            android:id="@+id/selectedPill"
+            android:layout_width="38dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_m3_selected_pill"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check"
+                app:tint="#FFFFFF"
+                android:contentDescription="Selected"/>
+        </FrameLayout>
+
+        <!-- Unselected Indicator -->
+        <View
+            android:id="@+id/unselectedIndicator"
             android:layout_width="20dp"
             android:layout_height="20dp"
-            android:src="@drawable/ic_check"
-            android:visibility="gone"
-            android:contentDescription="Current Server"
-            android:layout_marginStart="8dp"
-            app:tint="?attr/secondaryColor" />
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_m3_unselected_circle"
+            android:visibility="visible"/>
+
     </LinearLayout>
 
 </LinearLayout>

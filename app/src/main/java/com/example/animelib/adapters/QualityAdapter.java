@@ -99,13 +99,17 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
 
         holder.itemView.setSelected(isCurrent);
 
-        holder.itemView.setOnClickListener(v -> {
+        View.OnClickListener clickListener = v -> {
             com.example.animelib.util.ItemAnimationUtils.animateItemClick(v, () -> {
                 if (listener != null) {
                     listener.onQualitySelected(quality);
                 }
             });
-        });
+        };
+        holder.itemView.setOnClickListener(clickListener);
+        if (holder.itemContainer != null) {
+            holder.itemContainer.setOnClickListener(clickListener);
+        }
     }
 
     private static String getQualitySubtitle(String quality) {
