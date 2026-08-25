@@ -7,12 +7,27 @@
     android:padding="20dp"
     android:background="@drawable/bg_ignore_dialog">
 
-    <!-- Title Row with Close Button -->
+    <!-- Title Row with Icon, Title, and Close Button -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
+
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_btn_ignore_danger"
+            android:layout_marginEnd="12dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_ignore_user"
+                app:tint="@color/dialog_danger_text"
+                android:contentDescription="Игнор-лист" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tvIgnoreDialogTitle"
