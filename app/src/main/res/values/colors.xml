@@ -118,4 +118,30 @@
     <color name="player_item_inactive_stroke">#33FFFFFF</color>
     <color name="player_item_active_text">#FFFFFF</color>
     <color name="player_item_active_stroke">@color/purple_primary</color>
+
+    <!-- Dialog Colors (Light Theme Defaults) -->
+    <color name="dialog_bg">#FFFFFF</color>
+    <color name="dialog_card_bg">#F3F4F6</color>
+    <color name="dialog_input_bg">#F9FAFB</color>
+    <color name="dialog_input_stroke">#E5E7EB</color>
+    <color name="dialog_text_title">#1F2937</color>
+    <color name="dialog_text_body">#4B5563</color>
+    <color name="dialog_text_muted">#6B7280</color>
+    <color name="dialog_text_hint">#9CA3AF</color>
+    <color name="dialog_icon_close">#6B7280</color>
+
+    <color name="dialog_danger_bg">#FEE2E2</color>
+    <color name="dialog_danger_text">#DC2626</color>
+    <color name="dialog_cancel_text">#4B5563</color>
+
+    <color name="dialog_btn_neutral_bg">#E5E7EB</color>
+    <color name="dialog_btn_neutral_text">#1F2937</color>
+
+    <color name="dialog_btn_secondary_bg">#F9FAFB</color>
+    <color name="dialog_btn_secondary_stroke">#E5E7EB</color>
+    <color name="dialog_btn_secondary_text">#4B5563</color>
+
+    <color name="dialog_ripple_color">#1A000000</color>
+    <color name="dialog_rules_num_bg">@color/purple_primary</color>
+    <color name="dialog_rules_num_text">#FFFFFF</color>
 </resources>

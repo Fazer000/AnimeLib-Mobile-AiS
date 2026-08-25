@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Добавление в игнор-лист"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/dialog_text_title"
             android:textSize="18sp"
             android:fontFamily="@font/open_sans_bold"
             android:textStyle="bold" />
@@ -31,7 +31,7 @@
             android:layout_height="32dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
-            app:tint="#9CA3AF"
+            app:tint="@color/dialog_icon_close"
             android:contentDescription="Закрыть"
             android:padding="4dp" />
     </LinearLayout>
@@ -43,7 +43,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
         android:text="Комментарий (необязательно)"
-        android:textColor="#9CA3AF"
+        android:textColor="@color/dialog_text_muted"
         android:textSize="13.5sp"
         android:fontFamily="@font/open_sans" />
 
@@ -57,8 +57,8 @@
         android:padding="12dp"
         android:background="@drawable/bg_ignore_input"
         android:hint="Позволит вам помнить причину по которой вы добавили пользователя в игнор-лист"
-        android:textColorHint="#6B7280"
-        android:textColor="#FFFFFF"
+        android:textColorHint="@color/dialog_text_hint"
+        android:textColor="@color/dialog_text_title"
         android:textSize="13.5sp"
         android:fontFamily="@font/open_sans"
         android:inputType="textMultiLine"
@@ -71,8 +71,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:orientation="vertical"
-        android:background="@drawable/bg_ignore_info_card"
-        android:padding="14dp">
+        android:background="@drawable/bg_ignore_info_card">
 
         <!-- Info Header (Clickable for collapse/expand) -->
         <LinearLayout
@@ -81,16 +80,17 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
+            android:padding="14dp"
             android:clickable="true"
             android:focusable="true"
-            android:background="?attr/selectableItemBackground">
+            android:background="@drawable/bg_card_header_ripple">
 
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Что позволяет игнор-лист?"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/dialog_text_title"
                 android:textSize="15sp"
                 android:fontFamily="@font/open_sans_bold"
                 android:textStyle="bold" />
@@ -100,7 +100,7 @@
                 android:layout_width="20dp"
                 android:layout_height="20dp"
                 android:src="@drawable/ic_chevron_up"
-                app:tint="#9CA3AF"
+                app:tint="@color/dialog_icon_close"
                 android:contentDescription="Свернуть/Развернуть" />
         </LinearLayout>
 
@@ -109,7 +109,8 @@
             android:id="@+id/ignoreInfoContentContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:paddingHorizontal="14dp"
+            android:paddingBottom="14dp"
             android:orientation="vertical"
             android:visibility="visible">
 
@@ -118,7 +119,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:text="• Скрывает комментарии этого пользователя"
-                android:textColor="#D1D5DB"
+                android:textColor="@color/dialog_text_body"
                 android:textSize="13sp"
                 android:fontFamily="@font/open_sans"
                 android:lineSpacingExtra="2dp" />
@@ -128,7 +129,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:text="• Запрещает этому пользователю отвечать на ваши комментарии"
-                android:textColor="#D1D5DB"
+                android:textColor="@color/dialog_text_body"
                 android:textSize="13sp"
                 android:fontFamily="@font/open_sans"
                 android:lineSpacingExtra="2dp" />
@@ -138,7 +139,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:text="• Запрещает этому пользователю писать вам личные сообщения"
-                android:textColor="#D1D5DB"
+                android:textColor="@color/dialog_text_body"
                 android:textSize="13sp"
                 android:fontFamily="@font/open_sans"
                 android:lineSpacingExtra="2dp" />
@@ -147,7 +148,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="• Запрещает этому пользователю писать в вашей теме или отвечать на ваши посты форума"
-                android:textColor="#D1D5DB"
+                android:textColor="@color/dialog_text_body"
                 android:textSize="13sp"
                 android:fontFamily="@font/open_sans"
                 android:lineSpacingExtra="2dp" />
@@ -169,12 +170,12 @@
             android:paddingHorizontal="16dp"
             android:paddingVertical="10dp"
             android:text="Отмена"
-            android:textColor="#D1D5DB"
+            android:textColor="@color/dialog_cancel_text"
             android:textSize="14sp"
             android:fontFamily="@font/open_sans_semibold"
             android:clickable="true"
             android:focusable="true"
-            android:background="?attr/selectableItemBackground"
+            android:background="@drawable/bg_btn_cancel_ripple"
             android:layout_marginEnd="8dp" />
 
         <TextView
@@ -184,7 +185,7 @@
             android:paddingHorizontal="18dp"
             android:paddingVertical="10dp"
             android:text="Добавить в игнор"
-            android:textColor="#FCA5A5"
+            android:textColor="@color/dialog_danger_text"
             android:textSize="14sp"
             android:fontFamily="@font/open_sans_bold"
             android:textStyle="bold"

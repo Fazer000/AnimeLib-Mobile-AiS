@@ -5,14 +5,29 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="20dp"
-    android:background="@drawable/settings_dialog_background">
+    android:background="@drawable/bg_ignore_dialog">
 
-    <!-- Header with Error Title -->
+    <!-- Header with Icon, Title, and Close cross -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical">
+
+        <FrameLayout
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_btn_ignore_danger"
+            android:layout_marginEnd="12dp">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_toast_warning"
+                app:tint="@color/dialog_danger_text"
+                android:contentDescription="Ошибка" />
+        </FrameLayout>
 
         <TextView
             android:id="@+id/errorTitleText"
@@ -20,8 +35,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Ошибка загрузки видео"
-            android:textColor="?attr/primaryTextColor"
+            android:textColor="@color/dialog_text_title"
             android:textSize="18sp"
+            android:fontFamily="@font/open_sans_bold"
             android:textStyle="bold" />
 
         <ImageButton
@@ -30,26 +46,21 @@
             android:layout_height="32dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
-            app:tint="?attr/primaryTextColor"
+            app:tint="@color/dialog_icon_close"
             android:contentDescription="Закрыть"
             android:padding="4dp" />
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"
-        android:background="?attr/lineColor" />
 
     <!-- Error message details -->
     <TextView
         android:id="@+id/errorMessageText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
         android:text="Не удалось воспроизвести видео с выбранного источника."
-        android:textColor="?attr/primaryTextColor"
+        android:textColor="@color/dialog_text_body"
         android:textSize="14sp"
+        android:fontFamily="@font/open_sans"
         android:lineSpacingExtra="2dp" />
 
     <!-- Current player & quality details -->
@@ -58,9 +69,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
+        android:padding="10dp"
         android:text="Плеер: -"
-        android:textColor="?attr/secondaryTextColor"
+        android:textColor="@color/dialog_text_muted"
         android:textSize="13sp"
+        android:fontFamily="@font/open_sans"
+        android:background="@drawable/bg_ignore_info_card"
         android:visibility="visible" />
 
     <!-- Action buttons -->
@@ -73,52 +87,56 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/retryButton"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="46dp"
             android:text="Повторить попытку"
-            android:textColor="@color/white_color"
+            android:textColor="@color/dialog_btn_neutral_text"
             android:textSize="14sp"
+            android:fontFamily="@font/open_sans_bold"
             android:textStyle="bold"
             app:icon="@drawable/ic_refresh"
             app:iconGravity="textStart"
             app:iconPadding="8dp"
-            app:iconTint="@color/white_color"
-            android:backgroundTint="?attr/secondaryColor"
-            app:cornerRadius="12dp" />
+            app:iconTint="@color/dialog_btn_neutral_text"
+            android:backgroundTint="@color/dialog_btn_neutral_bg"
+            app:cornerRadius="8dp"
+            app:strokeWidth="0dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/goToDownloadsButton"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="46dp"
             android:layout_marginTop="8dp"
             android:text="Перейти к скачанному"
-            android:textColor="?attr/secondaryColor"
+            android:textColor="@color/purple_primary"
             android:textSize="14sp"
+            android:fontFamily="@font/open_sans_semibold"
             android:visibility="visible"
             app:icon="@drawable/ic_download"
             app:iconGravity="textStart"
             app:iconPadding="8dp"
-            app:iconTint="?attr/secondaryColor"
-            app:strokeColor="?attr/secondaryColor"
-            app:strokeWidth="0.5dp"
-            app:cornerRadius="12dp" />
+            app:iconTint="@color/purple_primary"
+            android:backgroundTint="@color/dialog_btn_secondary_bg"
+            app:strokeColor="@color/dialog_btn_secondary_stroke"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/switchPlayerButton"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="46dp"
             android:layout_marginTop="8dp"
             android:text="Выбрать другую озвучку"
-            android:textColor="?attr/primaryTextColor"
+            android:textColor="@color/dialog_btn_secondary_text"
             android:textSize="14sp"
+            android:fontFamily="@font/open_sans_semibold"
             app:icon="@drawable/ic_voice"
             app:iconGravity="textStart"
             app:iconPadding="8dp"
-            app:iconTint="?attr/primaryTextColor"
-            app:strokeColor="?attr/borderColor"
-            app:strokeWidth="0.5dp"
-            app:cornerRadius="12dp" />
+            app:iconTint="@color/dialog_btn_secondary_text"
+            android:backgroundTint="@color/dialog_btn_secondary_bg"
+            app:strokeColor="@color/dialog_btn_secondary_stroke"
+            app:strokeWidth="1dp"
+            app:cornerRadius="8dp" />
     </LinearLayout>
 
 </LinearLayout>

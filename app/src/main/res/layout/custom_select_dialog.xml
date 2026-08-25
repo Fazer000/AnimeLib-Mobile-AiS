@@ -2,26 +2,23 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="10dp"
-    android:layout_marginBottom="10dp"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginBottom="12dp"
     android:layout_gravity="bottom"
     android:orientation="vertical"
-    android:background="@drawable/non_stroke_background">
+    android:padding="16dp"
+    android:background="@drawable/bg_ignore_dialog">
 
     <TextView
         android:id="@+id/dialog_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textColor="?attr/primaryTextColor"
-        android:textSize="16sp"
+        android:textColor="@color/dialog_text_title"
+        android:textSize="17sp"
+        android:fontFamily="@font/open_sans_bold"
         android:textStyle="bold"
         android:gravity="start"
-        android:padding="16dp"/>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:background="?attr/lineColor" />
+        android:paddingBottom="12dp"/>
 
     <LinearLayout
         android:id="@+id/options_layout"

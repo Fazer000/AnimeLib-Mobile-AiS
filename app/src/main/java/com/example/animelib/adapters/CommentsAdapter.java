@@ -285,10 +285,10 @@ public class CommentsAdapter extends RecyclerView.Adapter<CommentsAdapter.Commen
             int down = item.getVotes().getDown();
             int score = up - down;
             if (score > 0) {
-                holder.votesView.setText("+" + score);
+                holder.votesView.setText(String.valueOf(score));
                 holder.votesView.setTextColor(android.graphics.Color.parseColor("#4ADE80"));
             } else if (score < 0) {
-                holder.votesView.setText(String.valueOf(score));
+                holder.votesView.setText(String.valueOf(Math.abs(score)));
                 holder.votesView.setTextColor(android.graphics.Color.parseColor("#F87171"));
             } else {
                 holder.votesView.setText("0");

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="320dp"
+    android:layout_width="340dp"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="20dp"
-    android:background="@drawable/settings_dialog_background">
+    android:background="@drawable/bg_ignore_dialog">
 
     <!-- Header with Icon, Title, and Close cross -->
     <LinearLayout
@@ -17,7 +17,7 @@
         <FrameLayout
             android:layout_width="36dp"
             android:layout_height="36dp"
-            android:background="@drawable/bg_delete_icon_circle"
+            android:background="@drawable/bg_btn_ignore_danger"
             android:layout_marginEnd="12dp">
 
             <ImageView
@@ -25,7 +25,7 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_trash_delete"
-                app:tint="#EF4444"
+                app:tint="@color/dialog_danger_text"
                 android:contentDescription="Удалить" />
         </FrameLayout>
 
@@ -35,8 +35,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Удалить аниме?"
-            android:textColor="?attr/primaryTextColor"
-            android:textSize="17sp"
+            android:textColor="@color/dialog_text_title"
+            android:textSize="18sp"
+            android:fontFamily="@font/open_sans_bold"
             android:textStyle="bold" />
 
         <ImageButton
@@ -45,64 +46,60 @@
             android:layout_height="32dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_close"
-            app:tint="?attr/primaryTextColor"
+            app:tint="@color/dialog_icon_close"
             android:contentDescription="Закрыть"
             android:padding="4dp" />
     </LinearLayout>
-
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0.5dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="12dp"
-        android:background="?attr/lineColor" />
 
     <!-- Message -->
     <TextView
         android:id="@+id/dialogMessage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
         android:text="Вы уверены, что хотите удалить это аниме и все скачанные серии из памяти устройства?"
-        android:textColor="?attr/primaryTextColor"
+        android:textColor="@color/dialog_text_body"
         android:textSize="14sp"
+        android:fontFamily="@font/open_sans"
         android:lineSpacingExtra="2dp" />
 
-    <!-- Buttons -->
+    <!-- Action Buttons Row -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:orientation="horizontal"
-        android:layout_marginTop="20dp">
+        android:gravity="end|center_vertical">
 
-        <com.google.android.material.button.MaterialButton
+        <TextView
             android:id="@+id/btnCancel"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="46dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="10dp"
             android:text="Отмена"
-            android:textColor="?attr/primaryTextColor"
+            android:textColor="@color/dialog_cancel_text"
             android:textSize="14sp"
-            app:strokeColor="?attr/borderColor"
-            app:strokeWidth="0.5dp"
-            app:cornerRadius="12dp" />
+            android:fontFamily="@font/open_sans_semibold"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/bg_btn_cancel_ripple"
+            android:layout_marginEnd="8dp" />
 
-        <com.google.android.material.button.MaterialButton
+        <TextView
             android:id="@+id/btnDelete"
-            android:layout_width="0dp"
-            android:layout_height="46dp"
-            android:layout_weight="1"
-            android:layout_marginStart="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="18dp"
+            android:paddingVertical="10dp"
             android:text="Удалить"
-            android:textColor="@color/white_color"
+            android:textColor="@color/dialog_danger_text"
             android:textSize="14sp"
+            android:fontFamily="@font/open_sans_bold"
             android:textStyle="bold"
-            app:icon="@drawable/ic_trash_delete"
-            app:iconGravity="textStart"
-            app:iconPadding="6dp"
-            app:iconTint="@color/white_color"
-            android:backgroundTint="#EF4444"
-            app:cornerRadius="12dp" />
+            android:background="@drawable/bg_btn_ignore_danger"
+            android:clickable="true"
+            android:focusable="true" />
     </LinearLayout>
 
 </LinearLayout>
