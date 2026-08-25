@@ -56,9 +56,6 @@ public class VideoServerAdapter extends RecyclerView.Adapter<VideoServerAdapter.
     public void onBindViewHolder(@NonNull ServerViewHolder holder, int position) {
         ServerOption option = servers.get(position);
         holder.serverNameText.setText(option.name);
-        if (holder.serverSubtitleText != null) {
-            holder.serverSubtitleText.setText(option.url != null ? option.url : "Сервер трансляции");
-        }
 
         int totalCount = getItemCount();
         if (holder.itemContainer != null) {
@@ -117,7 +114,6 @@ public class VideoServerAdapter extends RecyclerView.Adapter<VideoServerAdapter.
     public static class ServerViewHolder extends RecyclerView.ViewHolder {
         View itemContainer;
         TextView serverNameText;
-        TextView serverSubtitleText;
         View selectedPill;
         View unselectedIndicator;
 
@@ -125,7 +121,6 @@ public class VideoServerAdapter extends RecyclerView.Adapter<VideoServerAdapter.
             super(itemView);
             itemContainer = itemView.findViewById(R.id.itemContainer);
             serverNameText = itemView.findViewById(R.id.serverNameText);
-            serverSubtitleText = itemView.findViewById(R.id.serverSubtitleText);
             selectedPill = itemView.findViewById(R.id.selectedPill);
             unselectedIndicator = itemView.findViewById(R.id.unselectedIndicator);
         }

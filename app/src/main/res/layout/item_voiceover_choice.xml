@@ -1,62 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/itemContainer"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="0dp"
-    android:layout_marginVertical="3dp"
-    android:background="@drawable/episode_item_normal"
-    android:clickable="true"
-    android:focusable="true"
-    android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical">
-
-    <!-- Иконка / Логотип озвучки -->
-    <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/teamIcon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginEnd="12dp"
-        android:layout_gravity="center_vertical"
-        android:scaleType="centerCrop"
-        android:src="@drawable/ic_avatar_placeholder"
-        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Small"
-        android:contentDescription="Voiceover Icon" />
+    android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:id="@+id/itemContainer"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:orientation="vertical">
+        android:paddingHorizontal="18dp"
+        android:paddingVertical="12dp"
+        android:layout_marginBottom="3dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_m3_item_single"
+        android:clickable="true"
+        android:focusable="true">
 
-        <TextView
-            android:id="@+id/tvVoiceoverName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/primary_text_color"
-            android:textSize="14sp"
-            android:fontFamily="@font/open_sans_semibold" />
+        <!-- Иконка / Логотип озвучки -->
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/teamIcon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="12dp"
+            android:layout_gravity="center_vertical"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_avatar_placeholder"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Small"
+            android:contentDescription="Voiceover Icon" />
 
-        <TextView
-            android:id="@+id/tvVoiceoverDetails"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textColor="@color/accent_text_color"
-            android:textSize="12sp"
-            android:fontFamily="@font/open_sans" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvVoiceoverName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/primary_text_color"
+                android:textSize="15.5sp"
+                android:fontFamily="@font/open_sans_bold" />
+
+            <TextView
+                android:id="@+id/tvVoiceoverDetails"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="@color/accent_text_color"
+                android:textSize="12.5sp"
+                android:fontFamily="@font/open_sans" />
+        </LinearLayout>
+
+        <!-- Selected Pill Indicator -->
+        <FrameLayout
+            android:id="@+id/selectedPill"
+            android:layout_width="38dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_m3_selected_pill"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_check"
+                app:tint="#FFFFFF"
+                android:contentDescription="Selected"/>
+        </FrameLayout>
+
+        <!-- Unselected Circle Indicator -->
+        <View
+            android:id="@+id/unselectedIndicator"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_marginStart="12dp"
+            android:background="@drawable/bg_m3_unselected_circle"
+            android:visibility="visible"/>
+
     </LinearLayout>
-
-    <ImageView
-        android:id="@+id/ivCheck"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="8dp"
-        android:src="@drawable/ic_check"
-        android:visibility="gone"
-        app:tint="@color/secondary_text_color"
-        android:contentDescription="Selected" />
 
 </LinearLayout>

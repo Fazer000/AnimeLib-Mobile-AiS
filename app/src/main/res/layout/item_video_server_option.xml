@@ -33,16 +33,6 @@
                 android:fontFamily="@font/open_sans_bold"
                 android:text="Основной"/>
 
-            <TextView
-                android:id="@+id/serverSubtitleText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:textColor="?attr/accentTextColor"
-                android:textSize="12.5sp"
-                android:fontFamily="@font/open_sans"
-                android:text="Сервер трансляции"/>
-
         </LinearLayout>
 
         <!-- Selected Pill Indicator -->

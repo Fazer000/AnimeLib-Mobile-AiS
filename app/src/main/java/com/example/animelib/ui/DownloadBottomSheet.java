@@ -952,18 +952,29 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
                 }
             }
 
+            int count = getItemCount();
+            if (holder.itemContainer != null) {
+                if (count == 1) {
+                    holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_single);
+                } else if (position == 0) {
+                    holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_top);
+                } else if (position == count - 1) {
+                    holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_bottom);
+                } else {
+                    holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_middle);
+                }
+            }
+
             boolean isSelected = (selectedVoiceover != null && selectedVoiceover.equals(vo));
-            if (isSelected) {
-                holder.itemContainer.setBackgroundResource(R.drawable.episode_item_selected);
-                holder.ivCheck.setVisibility(View.VISIBLE);
-            } else {
-                holder.itemContainer.setBackgroundResource(R.drawable.episode_item_normal);
-                holder.ivCheck.setVisibility(View.GONE);
+            if (holder.selectedPill != null) {
+                holder.selectedPill.setVisibility(isSelected ? View.VISIBLE : View.GONE);
+            }
+            if (holder.unselectedIndicator != null) {
+                holder.unselectedIndicator.setVisibility(isSelected ? View.GONE : View.VISIBLE);
             }
 
             holder.itemContainer.setScaleX(1.0f);
             holder.itemContainer.setScaleY(1.0f);
-            com.example.animelib.util.ItemAnimationUtils.animateItemStateTransition(holder.itemContainer, isSelected);
 
             holder.itemContainer.setOnClickListener(v -> {
                 com.example.animelib.util.ItemAnimationUtils.animateItemClick(v, () -> {
@@ -984,7 +995,8 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
             ImageView teamIcon;
             TextView tvVoiceoverName;
             TextView tvVoiceoverDetails;
-            ImageView ivCheck;
+            View selectedPill;
+            View unselectedIndicator;
 
             ViewHolder(@NonNull View itemView) {
                 super(itemView);
@@ -992,7 +1004,8 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
                 teamIcon = itemView.findViewById(R.id.teamIcon);
                 tvVoiceoverName = itemView.findViewById(R.id.tvVoiceoverName);
                 tvVoiceoverDetails = itemView.findViewById(R.id.tvVoiceoverDetails);
-                ivCheck = itemView.findViewById(R.id.ivCheck);
+                selectedPill = itemView.findViewById(R.id.selectedPill);
+                unselectedIndicator = itemView.findViewById(R.id.unselectedIndicator);
             }
         }
     }

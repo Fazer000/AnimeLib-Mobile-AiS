@@ -144,7 +144,7 @@
                     android:textSize="@dimen/bs_subtitle_text_size"
                     android:textStyle="bold"
                     android:fontFamily="@font/open_sans_bold"
-                    android:textColor="@color/secondary_text_color" />
+                    android:textColor="@color/primary_text_color" />
 
             </LinearLayout>
 
@@ -220,7 +220,7 @@
                     android:textSize="@dimen/bs_subtitle_text_size"
                     android:textStyle="bold"
                     android:fontFamily="@font/open_sans_bold"
-                    android:textColor="@color/secondary_text_color" />
+                    android:textColor="@color/primary_text_color" />
 
             </LinearLayout>
 
@@ -343,7 +343,7 @@
                     android:textSize="@dimen/bs_subtitle_text_size"
                     android:textStyle="bold"
                     android:fontFamily="@font/open_sans_bold"
-                    android:textColor="@color/secondary_text_color" />
+                    android:textColor="@color/primary_text_color" />
 
             </LinearLayout>
 
