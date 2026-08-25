@@ -222,6 +222,36 @@
 
         </LinearLayout>
 
+        <!-- Блок Связанное (карусель связанных тайтлов) в вертикальном режиме -->
+        <LinearLayout
+            android:id="@+id/portraitRelatedTitlesContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tvPortraitRelatedTitlesHeader"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:layout_marginBottom="10dp"
+                android:text="Связанное"
+                android:textColor="@color/primary_text_color"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/portraitRelatedTitlesRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="16dp"
+                android:clipToPadding="false"
+                android:orientation="horizontal"
+                android:overScrollMode="never" />
+        </LinearLayout>
+
         <!-- 4. Комментарии -->
         <LinearLayout
             android:id="@+id/portraitCommentsContainer"

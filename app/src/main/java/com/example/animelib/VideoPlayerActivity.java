@@ -123,6 +123,7 @@ import com.example.animelib.services.DownloadService;
 import com.example.animelib.settings.QualityBottomSheet;
 import com.example.animelib.ui.VideoUrlHelper;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.List;
@@ -380,9 +381,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private TextView tvPortraitEmptyComments;
     private View portraitCommentsLoadingOverlay;
     private androidx.core.widget.NestedScrollView portraitScrollView;
+    private FloatingActionButton btnPortraitScrollToTop;
     private View portraitDownloadProgressContainer;
     private View portraitDownloadProgressCard;
     private TextView tvPortraitDownloadPercent;
+    private View portraitRelatedTitlesContainer;
+    private RecyclerView portraitRelatedTitlesRecyclerView;
+    private HorizontalRelatedTitlesAdapter portraitRelatedTitlesAdapter;
 
     // User preferences are now managed by PlayersManager
     private String preferredQuality;
@@ -1936,6 +1941,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private void initializePortraitViews() {
         portraitScrollView = findViewById(R.id.portraitScrollView);
+        btnPortraitScrollToTop = findViewById(R.id.btnPortraitScrollToTop);
         portraitVoiceoverPlayerButton = findViewById(R.id.portraitVoiceoverPlayerButton);
         tvPortraitVoiceover = findViewById(R.id.tvPortraitVoiceover);
         tvPortraitPlayer = findViewById(R.id.tvPortraitPlayer);
@@ -1955,6 +1961,24 @@ public class VideoPlayerActivity extends AppCompatActivity {
         portraitDownloadProgressContainer = findViewById(R.id.portraitDownloadProgressContainer);
         portraitDownloadProgressCard = findViewById(R.id.portraitDownloadProgressCard);
         tvPortraitDownloadPercent = findViewById(R.id.tvPortraitDownloadPercent);
+        portraitRelatedTitlesContainer = findViewById(R.id.portraitRelatedTitlesContainer);
+        portraitRelatedTitlesRecyclerView = findViewById(R.id.portraitRelatedTitlesRecyclerView);
+
+        if (portraitRelatedTitlesRecyclerView != null) {
+            portraitRelatedTitlesRecyclerView.setLayoutManager(
+                    new androidx.recyclerview.widget.LinearLayoutManager(this,
+                            androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
+            );
+            portraitRelatedTitlesAdapter = new HorizontalRelatedTitlesAdapter(
+                    new java.util.ArrayList<>(),
+                    this::onRelatedTitleSelected
+            );
+            portraitRelatedTitlesRecyclerView.setAdapter(portraitRelatedTitlesAdapter);
+        }
+
+        if (isOfflineMode && portraitRelatedTitlesContainer != null) {
+            portraitRelatedTitlesContainer.setVisibility(View.GONE);
+        }
 
         if (portraitDownloadProgressCard != null) {
             portraitDownloadProgressCard.setOnClickListener(v -> showDownloadProgressBottomSheet());
@@ -2012,8 +2036,28 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
         }
 
+        if (btnPortraitScrollToTop != null) {
+            btnPortraitScrollToTop.setOnClickListener(v -> {
+                if (portraitScrollView != null) {
+                    portraitScrollView.smoothScrollTo(0, 0);
+                }
+            });
+        }
+
         if (portraitScrollView != null) {
             portraitScrollView.setOnScrollChangeListener((androidx.core.widget.NestedScrollView.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+                if (btnPortraitScrollToTop != null) {
+                    if (scrollY > 300) {
+                        if (btnPortraitScrollToTop.getVisibility() != View.VISIBLE) {
+                            btnPortraitScrollToTop.show();
+                        }
+                    } else {
+                        if (btnPortraitScrollToTop.getVisibility() == View.VISIBLE) {
+                            btnPortraitScrollToTop.hide();
+                        }
+                    }
+                }
+
                 if (scrollY >= (v.getChildAt(0).getMeasuredHeight() - v.getMeasuredHeight() - 200)) {
                     if (commentsManager != null && !isOfflineMode && getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT) {
                         commentsManager.loadNextCommentsPageIfAvailable();
@@ -2353,6 +2397,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
                         showRelatedTitles(response.getData());
                     } else {
                         Log.d("VideoPlayer", "No related titles found");
+                        if (portraitRelatedTitlesContainer != null) {
+                            portraitRelatedTitlesContainer.setVisibility(View.GONE);
+                        }
                     }
                 });
             }
@@ -2360,6 +2407,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
             @Override
             public void onError(String error) {
                 Log.e("VideoPlayer", "Error loading related titles: " + error);
+                runOnUiThread(() -> {
+                    if (portraitRelatedTitlesContainer != null) {
+                        portraitRelatedTitlesContainer.setVisibility(View.GONE);
+                    }
+                });
             }
         });
     }
@@ -2370,6 +2422,16 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private void showRelatedTitles(List<RelatedTitlesResponse.RelatedTitle> relatedTitles) {
         if (relatedTitlesManager != null) {
             relatedTitlesManager.updateRelatedTitles(relatedTitles);
+        }
+        if (portraitRelatedTitlesAdapter != null) {
+            portraitRelatedTitlesAdapter.updateData(relatedTitles);
+            if (portraitRelatedTitlesContainer != null) {
+                if (portraitRelatedTitlesAdapter.getItemCount() > 0 && !isOfflineMode) {
+                    portraitRelatedTitlesContainer.setVisibility(View.VISIBLE);
+                } else {
+                    portraitRelatedTitlesContainer.setVisibility(View.GONE);
+                }
+            }
         }
     }
     
