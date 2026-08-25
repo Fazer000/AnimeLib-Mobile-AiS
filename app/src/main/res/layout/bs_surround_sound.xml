@@ -27,15 +27,15 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="4dp">
+            android:paddingHorizontal="18dp"
+            android:paddingBottom="12dp">
 
             <ImageButton
                 android:id="@+id/backButton"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:padding="6dp"
-                app:tint="@color/accent_text_color"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:padding="7dp"
+                app:tint="?attr/accentTextColor"
                 android:background="@drawable/button_close_background"
                 android:src="@drawable/ic_arrow_back"
                 android:scaleType="fitCenter"
@@ -46,12 +46,11 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/bs_title_surround_sound"
-                android:textColor="@color/primary_text_color"
+                android:textColor="?attr/primaryTextColor"
                 android:textStyle="bold"
                 android:fontFamily="@font/open_sans_bold"
-                android:paddingVertical="8dp"
-                android:textSize="@dimen/bs_title_text_size"
-                android:layout_marginStart="8dp"/>
+                android:textSize="18sp"
+                android:layout_marginStart="12dp"/>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -67,10 +66,10 @@
 
             <ImageButton
                 android:id="@+id/closeButton"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
-                android:padding="6dp"
-                app:tint="@color/accent_text_color"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:padding="7dp"
+                app:tint="?attr/accentTextColor"
                 android:background="@drawable/button_close_background"
                 android:src="@drawable/ic_close"
                 android:scaleType="fitCenter"
@@ -78,17 +77,11 @@
 
         </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="0.5dp"
-            android:background="@color/bs_divider_color"/>
-
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingHorizontal="16dp"
-            android:paddingTop="16dp">
+            android:paddingHorizontal="16dp">
 
             <!-- Main Toggle Box -->
             <LinearLayout
@@ -96,15 +89,16 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:paddingHorizontal="16dp"
+                android:paddingHorizontal="18dp"
                 android:paddingVertical="14dp"
-                android:background="@drawable/settings_option_background">
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/bg_m3_item_single">
 
                 <ImageView
                     android:layout_width="26dp"
                     android:layout_height="26dp"
                     android:src="@drawable/ic_surround_sound"
-                    app:tint="@color/secondary_text_color"
+                    app:tint="?attr/secondaryColor"
                     android:layout_marginEnd="12dp"/>
 
                 <LinearLayout
@@ -117,7 +111,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Объемный звук"
-                        android:textColor="@color/primary_text_color"
+                        android:textColor="?attr/primaryTextColor"
                         android:fontFamily="@font/open_sans_bold"
                         android:textSize="16sp"/>
 
@@ -126,7 +120,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="2dp"
                         android:text="Пространственная аудиосистема"
-                        android:textColor="@color/accent_text_color"
+                        android:textColor="?attr/accentTextColor"
                         android:textSize="12sp"/>
                 </LinearLayout>
 
@@ -165,10 +159,10 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="12dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/settings_option_background"
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="14dp"
+                    android:layout_marginBottom="3dp"
+                    android:background="@drawable/bg_m3_item_top"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -176,7 +170,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_tv"
-                        app:tint="@color/secondary_text_color"
+                        app:tint="?attr/secondaryColor"
                         android:layout_marginEnd="12dp"/>
 
                     <LinearLayout
@@ -189,25 +183,43 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🎬 Кинотеатр 3D"
-                            android:textColor="@color/primary_text_color"
+                            android:textColor="?attr/primaryTextColor"
                             android:fontFamily="@font/open_sans_bold"
-                            android:textSize="15sp"/>
+                            android:textSize="15.5sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Глубокая сцена, кинобас и объемный эффект"
-                            android:textColor="@color/accent_text_color"
-                            android:textSize="12sp"/>
+                            android:textColor="?attr/accentTextColor"
+                            android:textSize="12.5sp"/>
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/checkCinema"
+                    <FrameLayout
+                        android:id="@+id/pillCinema"
+                        android:layout_width="38dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_selected_pill"
+                        android:visibility="visible">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Selected"/>
+                    </FrameLayout>
+
+                    <View
+                        android:id="@+id/unselectedCinema"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/ic_check"
-                        app:tint="@color/secondary_text_color"
-                        android:visibility="visible"/>
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_unselected_circle"
+                        android:visibility="gone"/>
                 </LinearLayout>
 
                 <!-- Mode Option 1: Concert 3D -->
@@ -217,10 +229,10 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="12dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/settings_option_background"
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="14dp"
+                    android:layout_marginBottom="3dp"
+                    android:background="@drawable/bg_m3_item_middle"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -228,7 +240,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_star"
-                        app:tint="@color/accent_text_color"
+                        app:tint="?attr/secondaryColor"
                         android:layout_marginEnd="12dp"/>
 
                     <LinearLayout
@@ -241,25 +253,43 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🎧 Концерт &amp; OST 3D"
-                            android:textColor="@color/primary_text_color"
+                            android:textColor="?attr/primaryTextColor"
                             android:fontFamily="@font/open_sans_bold"
-                            android:textSize="15sp"/>
+                            android:textSize="15.5sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Широкое стерео и чистые опенинги"
-                            android:textColor="@color/accent_text_color"
-                            android:textSize="12sp"/>
+                            android:textColor="?attr/accentTextColor"
+                            android:textSize="12.5sp"/>
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/checkConcert"
+                    <FrameLayout
+                        android:id="@+id/pillConcert"
+                        android:layout_width="38dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_selected_pill"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Selected"/>
+                    </FrameLayout>
+
+                    <View
+                        android:id="@+id/unselectedConcert"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/ic_check"
-                        app:tint="@color/secondary_text_color"
-                        android:visibility="gone"/>
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_unselected_circle"
+                        android:visibility="visible"/>
                 </LinearLayout>
 
                 <!-- Mode Option 2: Voice Focus 3D -->
@@ -269,10 +299,10 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="12dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/settings_option_background"
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="14dp"
+                    android:layout_marginBottom="3dp"
+                    android:background="@drawable/bg_m3_item_middle"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -280,7 +310,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_voice"
-                        app:tint="@color/accent_text_color"
+                        app:tint="?attr/secondaryColor"
                         android:layout_marginEnd="12dp"/>
 
                     <LinearLayout
@@ -293,25 +323,43 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🎙️ Четкая Озвучка 3D"
-                            android:textColor="@color/primary_text_color"
+                            android:textColor="?attr/primaryTextColor"
                             android:fontFamily="@font/open_sans_bold"
-                            android:textSize="15sp"/>
+                            android:textSize="15.5sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Фокус на голосах сейю и дубляжа"
-                            android:textColor="@color/accent_text_color"
-                            android:textSize="12sp"/>
+                            android:textColor="?attr/accentTextColor"
+                            android:textSize="12.5sp"/>
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/checkVoice"
+                    <FrameLayout
+                        android:id="@+id/pillVoice"
+                        android:layout_width="38dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_selected_pill"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Selected"/>
+                    </FrameLayout>
+
+                    <View
+                        android:id="@+id/unselectedVoice"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/ic_check"
-                        app:tint="@color/secondary_text_color"
-                        android:visibility="gone"/>
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_unselected_circle"
+                        android:visibility="visible"/>
                 </LinearLayout>
 
                 <!-- Mode Option 3: Classic 5.1 -->
@@ -321,10 +369,10 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="12dp"
-                    android:layout_marginBottom="8dp"
-                    android:background="@drawable/settings_option_background"
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="14dp"
+                    android:layout_marginBottom="3dp"
+                    android:background="@drawable/bg_m3_item_middle"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -332,7 +380,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_surround_sound"
-                        app:tint="@color/accent_text_color"
+                        app:tint="?attr/secondaryColor"
                         android:layout_marginEnd="12dp"/>
 
                     <LinearLayout
@@ -345,25 +393,43 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🔊 Классический 5.1"
-                            android:textColor="@color/primary_text_color"
+                            android:textColor="?attr/primaryTextColor"
                             android:fontFamily="@font/open_sans_bold"
-                            android:textSize="15sp"/>
+                            android:textSize="15.5sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Стандартный естественный 5.1 микс"
-                            android:textColor="@color/accent_text_color"
-                            android:textSize="12sp"/>
+                            android:textColor="?attr/accentTextColor"
+                            android:textSize="12.5sp"/>
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/checkClassic"
+                    <FrameLayout
+                        android:id="@+id/pillClassic"
+                        android:layout_width="38dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_selected_pill"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Selected"/>
+                    </FrameLayout>
+
+                    <View
+                        android:id="@+id/unselectedClassic"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/ic_check"
-                        app:tint="@color/secondary_text_color"
-                        android:visibility="gone"/>
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_unselected_circle"
+                        android:visibility="visible"/>
                 </LinearLayout>
 
                 <!-- Mode Option 4: Extreme 3D HRTF -->
@@ -373,10 +439,10 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:paddingHorizontal="14dp"
-                    android:paddingVertical="12dp"
+                    android:paddingHorizontal="18dp"
+                    android:paddingVertical="14dp"
                     android:layout_marginBottom="16dp"
-                    android:background="@drawable/settings_option_background"
+                    android:background="@drawable/bg_m3_item_bottom"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -384,7 +450,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_tune_sliders"
-                        app:tint="@color/accent_text_color"
+                        app:tint="?attr/secondaryColor"
                         android:layout_marginEnd="12dp"/>
 
                     <LinearLayout
@@ -397,25 +463,43 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="🌌 Экстрим 3D HRTF"
-                            android:textColor="@color/primary_text_color"
+                            android:textColor="?attr/primaryTextColor"
                             android:fontFamily="@font/open_sans_bold"
-                            android:textSize="15sp"/>
+                            android:textSize="15.5sp"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
                             android:text="Максимальная бинауральная 3D глубина"
-                            android:textColor="@color/accent_text_color"
-                            android:textSize="12sp"/>
+                            android:textColor="?attr/accentTextColor"
+                            android:textSize="12.5sp"/>
                     </LinearLayout>
 
-                    <ImageView
-                        android:id="@+id/checkExtreme"
+                    <FrameLayout
+                        android:id="@+id/pillExtreme"
+                        android:layout_width="38dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_selected_pill"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Selected"/>
+                    </FrameLayout>
+
+                    <View
+                        android:id="@+id/unselectedExtreme"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/ic_check"
-                        app:tint="@color/secondary_text_color"
-                        android:visibility="gone"/>
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_unselected_circle"
+                        android:visibility="visible"/>
                 </LinearLayout>
 
                 <!-- Section: Fine Tuning Controls -->

@@ -53,9 +53,8 @@ public class SubtitlesBottomSheet extends FlexibleBottomSheetDialog {
     private OnSubtitleStyleChangedListener styleListener;
     private OnBackPressedListener onBackPressedListener;
 
-    private ImageView autoCheck;
-    private ImageView assCheck;
-    private ImageView vttCheck;
+    private View pillAuto, pillAss, pillVtt;
+    private View unselectedAuto, unselectedAss, unselectedVtt;
     private MaterialSwitch enableSwitch;
     private TextView subtitlePreviewText;
 
@@ -108,9 +107,13 @@ public class SubtitlesBottomSheet extends FlexibleBottomSheetDialog {
         LinearLayout assOption = view.findViewById(R.id.subtitlesAssOption);
         LinearLayout vttOption = view.findViewById(R.id.subtitlesVttOption);
 
-        autoCheck = view.findViewById(R.id.subtitlesAutoCheck);
-        assCheck = view.findViewById(R.id.subtitlesAssCheck);
-        vttCheck = view.findViewById(R.id.subtitlesVttCheck);
+        pillAuto = view.findViewById(R.id.pillAuto);
+        pillAss = view.findViewById(R.id.pillAss);
+        pillVtt = view.findViewById(R.id.pillVtt);
+
+        unselectedAuto = view.findViewById(R.id.unselectedAuto);
+        unselectedAss = view.findViewById(R.id.unselectedAss);
+        unselectedVtt = view.findViewById(R.id.unselectedVtt);
 
         subtitlePreviewText = view.findViewById(R.id.subtitlePreviewText);
 
@@ -203,7 +206,8 @@ public class SubtitlesBottomSheet extends FlexibleBottomSheetDialog {
                 View trackRow = LayoutInflater.from(getContext()).inflate(R.layout.item_subtitle_track, tracksList, false);
                 TextView trackTitle = trackRow.findViewById(R.id.subtitleTrackTitle);
                 TextView trackFormat = trackRow.findViewById(R.id.subtitleTrackFormat);
-                ImageView trackCheck = trackRow.findViewById(R.id.subtitleTrackCheck);
+                View selectedPill = trackRow.findViewById(R.id.selectedPill);
+                View unselectedIndicator = trackRow.findViewById(R.id.unselectedIndicator);
 
                 String formatUpper = sub.getFormat() != null ? sub.getFormat().toUpperCase() : "SUB";
                 String title = sub.getFilename() != null ? sub.getFilename() : ("Субтитры #" + (i + 1));
@@ -215,9 +219,8 @@ public class SubtitlesBottomSheet extends FlexibleBottomSheetDialog {
                 if (trackFormat != null) trackFormat.setText(formatUpper);
 
                 boolean isSelected = sub.getFormat() != null && sub.getFormat().equalsIgnoreCase(currentFormat);
-                if (trackCheck != null) {
-                    trackCheck.setVisibility(isSelected ? View.VISIBLE : View.GONE);
-                }
+                if (selectedPill != null) selectedPill.setVisibility(isSelected ? View.VISIBLE : View.GONE);
+                if (unselectedIndicator != null) unselectedIndicator.setVisibility(isSelected ? View.GONE : View.VISIBLE);
 
                 String fmt = sub.getFormat() != null ? sub.getFormat().toLowerCase() : "ass";
                 trackRow.setOnClickListener(v -> selectFormat(fmt));
@@ -240,9 +243,18 @@ public class SubtitlesBottomSheet extends FlexibleBottomSheetDialog {
     }
 
     private void updateSelection() {
-        if (autoCheck != null) autoCheck.setVisibility("auto".equalsIgnoreCase(currentFormat) ? View.VISIBLE : View.GONE);
-        if (assCheck != null) assCheck.setVisibility("ass".equalsIgnoreCase(currentFormat) ? View.VISIBLE : View.GONE);
-        if (vttCheck != null) vttCheck.setVisibility("vtt".equalsIgnoreCase(currentFormat) ? View.VISIBLE : View.GONE);
+        boolean isAuto = "auto".equalsIgnoreCase(currentFormat);
+        boolean isAss = "ass".equalsIgnoreCase(currentFormat);
+        boolean isVtt = "vtt".equalsIgnoreCase(currentFormat);
+
+        if (pillAuto != null) pillAuto.setVisibility(isAuto ? View.VISIBLE : View.GONE);
+        if (unselectedAuto != null) unselectedAuto.setVisibility(isAuto ? View.GONE : View.VISIBLE);
+
+        if (pillAss != null) pillAss.setVisibility(isAss ? View.VISIBLE : View.GONE);
+        if (unselectedAss != null) unselectedAss.setVisibility(isAss ? View.GONE : View.VISIBLE);
+
+        if (pillVtt != null) pillVtt.setVisibility(isVtt ? View.VISIBLE : View.GONE);
+        if (unselectedVtt != null) unselectedVtt.setVisibility(isVtt ? View.GONE : View.VISIBLE);
     }
 
     private void updateStyleUI() {

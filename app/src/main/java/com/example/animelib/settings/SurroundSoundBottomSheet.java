@@ -42,7 +42,8 @@ public class SurroundSoundBottomSheet extends FlexibleBottomSheetDialog {
     private MaterialSwitch mainSwitch;
     private LinearLayout controlsContainer;
 
-    private ImageView checkCinema, checkConcert, checkVoice, checkClassic, checkExtreme;
+    private View pillCinema, pillConcert, pillVoice, pillClassic, pillExtreme;
+    private View unselectedCinema, unselectedConcert, unselectedVoice, unselectedClassic, unselectedExtreme;
     private TextView[] widthChips = new TextView[4];
     private TextView[] dialogueChips = new TextView[4];
     private TextView[] bassChips = new TextView[4];
@@ -89,11 +90,17 @@ public class SurroundSoundBottomSheet extends FlexibleBottomSheetDialog {
         mainSwitch = view.findViewById(R.id.surroundMainSwitch);
         controlsContainer = view.findViewById(R.id.surroundControlsContainer);
 
-        checkCinema = view.findViewById(R.id.checkCinema);
-        checkConcert = view.findViewById(R.id.checkConcert);
-        checkVoice = view.findViewById(R.id.checkVoice);
-        checkClassic = view.findViewById(R.id.checkClassic);
-        checkExtreme = view.findViewById(R.id.checkExtreme);
+        pillCinema = view.findViewById(R.id.pillCinema);
+        pillConcert = view.findViewById(R.id.pillConcert);
+        pillVoice = view.findViewById(R.id.pillVoice);
+        pillClassic = view.findViewById(R.id.pillClassic);
+        pillExtreme = view.findViewById(R.id.pillExtreme);
+
+        unselectedCinema = view.findViewById(R.id.unselectedCinema);
+        unselectedConcert = view.findViewById(R.id.unselectedConcert);
+        unselectedVoice = view.findViewById(R.id.unselectedVoice);
+        unselectedClassic = view.findViewById(R.id.unselectedClassic);
+        unselectedExtreme = view.findViewById(R.id.unselectedExtreme);
 
         widthChips[0] = view.findViewById(R.id.chipWidth0);
         widthChips[1] = view.findViewById(R.id.chipWidth1);
@@ -204,11 +211,26 @@ public class SurroundSoundBottomSheet extends FlexibleBottomSheetDialog {
     }
 
     private void updateModeUI() {
-        checkCinema.setVisibility(currentMode == Surround51AudioProcessor.MODE_CINEMA_3D ? View.VISIBLE : View.GONE);
-        checkConcert.setVisibility(currentMode == Surround51AudioProcessor.MODE_CONCERT_3D ? View.VISIBLE : View.GONE);
-        checkVoice.setVisibility(currentMode == Surround51AudioProcessor.MODE_VOICE_3D ? View.VISIBLE : View.GONE);
-        checkClassic.setVisibility(currentMode == Surround51AudioProcessor.MODE_CLASSIC_51 ? View.VISIBLE : View.GONE);
-        checkExtreme.setVisibility(currentMode == Surround51AudioProcessor.MODE_EXTREME_3D ? View.VISIBLE : View.GONE);
+        boolean isCinema = (currentMode == Surround51AudioProcessor.MODE_CINEMA_3D);
+        boolean isConcert = (currentMode == Surround51AudioProcessor.MODE_CONCERT_3D);
+        boolean isVoice = (currentMode == Surround51AudioProcessor.MODE_VOICE_3D);
+        boolean isClassic = (currentMode == Surround51AudioProcessor.MODE_CLASSIC_51);
+        boolean isExtreme = (currentMode == Surround51AudioProcessor.MODE_EXTREME_3D);
+
+        if (pillCinema != null) pillCinema.setVisibility(isCinema ? View.VISIBLE : View.GONE);
+        if (unselectedCinema != null) unselectedCinema.setVisibility(isCinema ? View.GONE : View.VISIBLE);
+
+        if (pillConcert != null) pillConcert.setVisibility(isConcert ? View.VISIBLE : View.GONE);
+        if (unselectedConcert != null) unselectedConcert.setVisibility(isConcert ? View.GONE : View.VISIBLE);
+
+        if (pillVoice != null) pillVoice.setVisibility(isVoice ? View.VISIBLE : View.GONE);
+        if (unselectedVoice != null) unselectedVoice.setVisibility(isVoice ? View.GONE : View.VISIBLE);
+
+        if (pillClassic != null) pillClassic.setVisibility(isClassic ? View.VISIBLE : View.GONE);
+        if (unselectedClassic != null) unselectedClassic.setVisibility(isClassic ? View.GONE : View.VISIBLE);
+
+        if (pillExtreme != null) pillExtreme.setVisibility(isExtreme ? View.VISIBLE : View.GONE);
+        if (unselectedExtreme != null) unselectedExtreme.setVisibility(isExtreme ? View.GONE : View.VISIBLE);
     }
 
     private void updateWidthChipsUI() {

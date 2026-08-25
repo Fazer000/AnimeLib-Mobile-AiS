@@ -31,14 +31,31 @@
         android:ellipsize="end"
         android:maxLines="1"
         android:text="Субтитры"
-        android:textColor="@color/primary_text_color"
+        android:textColor="?attr/primaryTextColor"
         android:textSize="15sp" />
 
-    <ImageView
-        android:id="@+id/subtitleTrackCheck"
+    <FrameLayout
+        android:id="@+id/selectedPill"
+        android:layout_width="38dp"
+        android:layout_height="26dp"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/bg_m3_selected_pill"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_check"
+            app:tint="#FFFFFF"
+            android:contentDescription="Selected"/>
+    </FrameLayout>
+
+    <View
+        android:id="@+id/unselectedIndicator"
         android:layout_width="20dp"
         android:layout_height="20dp"
-        android:src="@drawable/ic_check"
-        app:tint="@color/secondary_text_color"
-        android:visibility="gone" />
+        android:layout_marginStart="12dp"
+        android:background="@drawable/bg_m3_unselected_circle"
+        android:visibility="visible"/>
 </LinearLayout>
