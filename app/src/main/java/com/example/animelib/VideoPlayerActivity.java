@@ -311,6 +311,29 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private boolean wasCommentsVisibleBeforePiP = false;
     private boolean wasPlayingBeforeBackground = false;
 
+    // Buffering monitor for MP4 and HLS streams
+    private final Handler bufferingMonitorHandler = new Handler(Looper.getMainLooper());
+    private final Runnable bufferingMonitorRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (player != null && !isFinishing()) {
+                updatePlayPauseAndLoadingState(false);
+                if (player.getPlayWhenReady() && player.getPlaybackState() != Player.STATE_ENDED) {
+                    bufferingMonitorHandler.postDelayed(this, 300);
+                }
+            }
+        }
+    };
+
+    private void startBufferingMonitoring() {
+        bufferingMonitorHandler.removeCallbacks(bufferingMonitorRunnable);
+        bufferingMonitorHandler.post(bufferingMonitorRunnable);
+    }
+
+    private void stopBufferingMonitoring() {
+        bufferingMonitorHandler.removeCallbacks(bufferingMonitorRunnable);
+    }
+
     // Episode navigation buttons (for EpisodesManager)
     private ImageButton prevEpisodeButton;
     private ImageButton nextEpisodeButton;
@@ -2859,6 +2882,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 if (episodesManager != null) {
                     episodesManager.updateEpisodeNavigationButtonsVisibility();
                 }
+                startBufferingMonitoring();
                 updatePlayPauseAndLoadingState(true);
 
                 // Handle auto-play next episode
@@ -2878,6 +2902,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     startSeekingState();
                     scheduleEndSeekingState(600);
                 } else {
+                    startBufferingMonitoring();
                     updatePlayPauseAndLoadingState(true);
                 }
             }
@@ -2888,11 +2913,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 hasRenderedFirstFrame = true;
                 isVideoLoading = false;
                 isSeeking = false;
+                startBufferingMonitoring();
                 updatePlayPauseAndLoadingState(true);
             }
 
             @Override
             public void onIsLoadingChanged(boolean isLoading) {
+                startBufferingMonitoring();
                 updatePlayPauseAndLoadingState(true);
             }
 
@@ -2913,6 +2940,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     stopViewProgressTracking();
                 }
                 updatePlayerControlsState();
+                startBufferingMonitoring();
                 updatePlayPauseAndLoadingState(true);
                 if (isInPictureInPictureMode) {
                     updatePictureInPictureParams();
@@ -6959,6 +6987,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         if (seekResetHandler != null) {
             seekResetHandler.removeCallbacksAndMessages(null);
         }
+        startBufferingMonitoring();
         updatePlayPauseAndLoadingState(true);
     }
 
@@ -6967,11 +6996,25 @@ public class VideoPlayerActivity extends AppCompatActivity {
             seekResetHandler.removeCallbacksAndMessages(null);
             Runnable r = () -> {
                 if (!isScrubbingTimeBar) {
-                    boolean isReadyAndRendered = (player != null) && (player.getPlaybackState() == Player.STATE_READY) && hasRenderedFirstFrame;
-                    if (player == null || player.isPlaying() || isReadyAndRendered) {
+                    long currentPos = (player != null) ? player.getCurrentPosition() : 0;
+                    long bufferedPos = (player != null) ? player.getBufferedPosition() : 0;
+                    long duration = (player != null) ? player.getDuration() : 0;
+                    long bufferedAhead = bufferedPos - currentPos;
+                    boolean isNearEnd = duration > 0 && currentPos >= (duration - 2000);
+
+                    boolean isReadyAndBuffered = (player != null)
+                            && (player.getPlaybackState() == Player.STATE_READY)
+                            && (hasRenderedFirstFrame || player.isPlaying())
+                            && (isNearEnd || bufferedAhead >= 1500);
+
+                    if (player == null || !player.getPlayWhenReady() || isReadyAndBuffered) {
                         isSeeking = false;
+                        updatePlayPauseAndLoadingState(true);
+                    } else {
+                        if (seekResetHandler != null) {
+                            seekResetHandler.postDelayed(() -> scheduleEndSeekingState(0), 250);
+                        }
                     }
-                    updatePlayPauseAndLoadingState(true);
                 }
             };
             if (delayMs <= 0) {
@@ -6981,10 +7024,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
         } else {
             if (!isScrubbingTimeBar) {
-                boolean isReadyAndRendered = (player != null) && (player.getPlaybackState() == Player.STATE_READY) && hasRenderedFirstFrame;
-                if (player == null || player.isPlaying() || isReadyAndRendered) {
-                    isSeeking = false;
-                }
+                isSeeking = false;
                 updatePlayPauseAndLoadingState(true);
             }
         }
@@ -7079,18 +7119,28 @@ public class VideoPlayerActivity extends AppCompatActivity {
             boolean realIsPlaying = (player != null) && player.isPlaying();
             boolean isLoading = (player != null) && player.isLoading();
 
+            long currentPos = (player != null) ? player.getCurrentPosition() : 0;
+            long bufferedPos = (player != null) ? player.getBufferedPosition() : 0;
+            long duration = (player != null) ? player.getDuration() : 0;
+            long bufferedAheadMs = bufferedPos - currentPos;
+
+            boolean isNearEnd = duration > 0 && currentPos >= (duration - 2000);
+
+            // Детектируем реальную подгрузку/буферизацию сети (особенно для MP4 AnimeLib и HLS):
+            boolean isNetworkBuffering = isPlayWhenReady && !isNearEnd && (
+                    playbackState == Player.STATE_BUFFERING
+                    || bufferedAheadMs < 1500
+                    || (isLoading && bufferedAheadMs < 3500)
+                    || !realIsPlaying
+            );
+
             // Буферизация / загрузка / перемотка:
-            // 1) Активна загрузка видео (isVideoLoading) или еще не отрисован первый кадр
-            // 2) ExoPlayer находится в STATE_BUFFERING
-            // 3) Выполняется перемотка пользователем (isSeeking, isScrubbingTimeBar)
-            // 4) Видео должно воспроизводиться (isPlayWhenReady), но ещё фактически не играет (!realIsPlaying)
             boolean isBuffering = !isEnded && (
                     isVideoLoading
                     || !hasRenderedFirstFrame
-                    || playbackState == Player.STATE_BUFFERING
                     || isSeeking
                     || isScrubbingTimeBar
-                    || (isPlayWhenReady && !realIsPlaying)
+                    || isNetworkBuffering
             );
 
             // Показываем индикатор буферизации поверх плеера/контролов, если не активен полноэкранный loadingOverlay
@@ -7337,6 +7387,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        stopBufferingMonitoring();
 
         if (orientationEventListener != null) {
             orientationEventListener.disable();
@@ -7818,6 +7869,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         }
 
         setupFullscreen();
+        startBufferingMonitoring();
 
         // Восстанавливаем плашку прогресса при возврате в плеер
         if (DownloadService.isRunning()) {
@@ -7831,6 +7883,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopViewProgressTracking();
+        stopBufferingMonitoring();
         
         if (orientationEventListener != null) {
             orientationEventListener.disable();
