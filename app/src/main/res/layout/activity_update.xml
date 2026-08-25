@@ -173,33 +173,22 @@
             <!-- Download Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDownload"
+                style="@style/Widget.AnimeLIB.Button"
                 android:layout_width="match_parent"
-                android:layout_height="52dp"
+                android:layout_height="@dimen/button_height_large"
                 android:layout_marginTop="16dp"
-                android:text="Скачать и установить APK"
-                android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                app:cornerRadius="12dp"
-                app:backgroundTint="@color/purple_primary"
+                android:text="@string/btn_download_apk"
                 app:icon="@drawable/ic_download"
-                app:iconGravity="textStart"
-                app:iconPadding="8dp"
-                app:iconTint="#FFFFFF" />
+                app:iconGravity="textStart" />
 
             <!-- GitHub Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnOpenGithub"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Widget.AnimeLIB.Button.Outlined"
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
+                android:layout_height="@dimen/button_height_standard"
                 android:layout_marginTop="8dp"
-                android:text="Открыть страницу на GitHub"
-                android:textColor="@color/primary_text_color"
-                android:textSize="14sp"
-                app:cornerRadius="12dp"
-                app:strokeColor="@color/bs_divider_color"
-                app:strokeWidth="0.5dp" />
+                android:text="@string/btn_open_github" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

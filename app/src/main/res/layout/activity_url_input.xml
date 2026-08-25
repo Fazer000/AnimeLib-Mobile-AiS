@@ -87,21 +87,14 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveButton"
+                style="@style/Widget.AnimeLIB.Button.Outlined"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:textAllCaps="false"
-                android:text="Сохранить"
+                android:layout_height="@dimen/button_height_standard"
+                android:text="@string/btn_save"
                 android:textColor="?attr/secondaryColor"
-                android:textSize="14dp"
-                app:rippleColor="@color/dt_line_color"
                 app:icon="@drawable/ic_check"
                 app:iconTint="?attr/secondaryColor"
-                app:iconGravity="textStart"
-                app:iconSize="19dp"
-                style="@style/Widget.Material3.Button.OutlinedButton"
-                app:strokeColor="?attr/secondaryColor"
-                app:strokeWidth="0.5dp"
-                app:cornerRadius="12dp" />
+                app:iconGravity="textStart" />
 
         </LinearLayout>
     </androidx.cardview.widget.CardView>

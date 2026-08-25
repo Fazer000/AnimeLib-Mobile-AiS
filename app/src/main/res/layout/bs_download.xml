@@ -359,25 +359,14 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnNextStep"
+                style="@style/Widget.AnimeLIB.Button"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="@dimen/button_height_standard"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="16dp"
-                android:padding="0dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
                 android:text="Далее"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:fontFamily="@font/open_sans_bold"
-                android:textStyle="bold"
-                app:backgroundTint="@color/purple_primary"
                 app:icon="@drawable/ic_arrow_forward"
-                app:iconTint="#FFFFFF"
-                app:iconGravity="textEnd"
-                app:iconPadding="8dp"
-                app:strokeWidth="0dp"
-                app:cornerRadius="10dp" />
+                app:iconGravity="textEnd" />
 
         </LinearLayout>
 
@@ -482,24 +471,13 @@
             <!-- Download action button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDownload"
+                style="@style/Widget.AnimeLIB.Button"
                 android:layout_width="match_parent"
-                android:layout_height="46dp"
+                android:layout_height="@dimen/button_height_standard"
                 android:layout_marginHorizontal="16dp"
-                android:padding="0dp"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:text="Скачать"
-                android:textColor="#FFFFFF"
-                android:textSize="14sp"
-                android:fontFamily="@font/open_sans_bold"
-                android:textStyle="bold"
-                app:backgroundTint="@color/purple_primary"
+                android:text="@string/btn_download"
                 app:icon="@drawable/ic_download"
-                app:iconTint="#FFFFFF"
-                app:iconGravity="textStart"
-                app:iconPadding="8dp"
-                app:strokeWidth="0dp"
-                app:cornerRadius="10dp" />
+                app:iconGravity="textStart" />
 
         </LinearLayout>
 

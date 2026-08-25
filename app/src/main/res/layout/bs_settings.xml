@@ -96,7 +96,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_quality"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -151,7 +151,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_server"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -192,7 +192,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_speed"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -232,7 +232,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_resize_mode_fit"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -291,7 +291,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_subtitles"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -345,7 +345,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_light"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -385,7 +385,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_play"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -425,7 +425,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_surround_sound"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <LinearLayout
@@ -499,7 +499,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_4k"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -539,7 +539,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_tune_sliders"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -579,7 +579,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_skip"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -639,7 +639,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_theme"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
@@ -680,7 +680,7 @@
                         android:layout_width="22dp"
                         android:layout_height="22dp"
                         android:src="@drawable/ic_refresh"
-                        app:tint="?attr/secondaryColor"
+                        app:tint="@color/primary_text_color"
                         android:layout_marginEnd="12dp"/>
 
                     <TextView
