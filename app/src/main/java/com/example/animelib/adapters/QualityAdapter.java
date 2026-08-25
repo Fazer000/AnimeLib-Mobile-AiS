@@ -6,7 +6,6 @@ import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -43,7 +42,26 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
     @Override
     public void onBindViewHolder(@NonNull QualityViewHolder holder, int position) {
         String quality = qualities.get(position);
-        holder.qualityText.setText(quality);
+        Context context = holder.itemView.getContext();
+
+        // 1. Grouped M3 background shape
+        int itemCount = getItemCount();
+        if (holder.itemContainer != null) {
+            if (itemCount == 1) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_single);
+            } else if (position == 0) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_top);
+            } else if (position == itemCount - 1) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_bottom);
+            } else {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_middle);
+            }
+        }
+
+        // 2. Title & Tag
+        if (holder.qualityText != null) {
+            holder.qualityText.setText(quality);
+        }
 
         String tag = com.example.animelib.util.FloatingBottomSheetUtils.getQualityTag(quality);
         if (holder.qualityTagText != null) {
@@ -55,26 +73,31 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
             }
         }
 
-        boolean isCurrent = quality.equals(currentQuality);
-        holder.currentIndicator.setVisibility(isCurrent ? View.VISIBLE : View.GONE);
-        holder.itemView.setSelected(isCurrent);
-
-        // На этот код:
-        TypedValue typedValue = new TypedValue();
-        Context context = holder.itemView.getContext();
-
-        if (isCurrent) {
-            context.getTheme().resolveAttribute(R.attr.secondaryTextColor, typedValue, true);
-            holder.qualityText.setTextColor(typedValue.data);
-        } else {
-            context.getTheme().resolveAttribute(R.attr.primaryTextColor, typedValue, true);
-            holder.qualityText.setTextColor(typedValue.data);
+        // 3. Subtitle description
+        if (holder.qualitySubtitleText != null) {
+            holder.qualitySubtitleText.setText(getQualitySubtitle(quality));
         }
 
-        // Smooth transition for active vs inactive state without scaling
-        holder.itemView.setScaleX(1.0f);
-        holder.itemView.setScaleY(1.0f);
-        com.example.animelib.util.ItemAnimationUtils.animateItemStateTransition(holder.itemView, isCurrent);
+        // 4. Active / Inactive selection state
+        boolean isCurrent = quality != null && quality.equalsIgnoreCase(currentQuality);
+
+        if (holder.selectedPill != null) {
+            holder.selectedPill.setVisibility(isCurrent ? View.VISIBLE : View.GONE);
+        }
+        if (holder.unselectedIndicator != null) {
+            holder.unselectedIndicator.setVisibility(isCurrent ? View.GONE : View.VISIBLE);
+        }
+
+        TypedValue primaryColorVal = new TypedValue();
+        TypedValue secondaryColorVal = new TypedValue();
+        context.getTheme().resolveAttribute(R.attr.primaryTextColor, primaryColorVal, true);
+        context.getTheme().resolveAttribute(R.attr.secondaryColor, secondaryColorVal, true);
+
+        if (holder.qualityText != null) {
+            holder.qualityText.setTextColor(isCurrent ? secondaryColorVal.data : primaryColorVal.data);
+        }
+
+        holder.itemView.setSelected(isCurrent);
 
         holder.itemView.setOnClickListener(v -> {
             com.example.animelib.util.ItemAnimationUtils.animateItemClick(v, () -> {
@@ -85,9 +108,32 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
         });
     }
 
+    private static String getQualitySubtitle(String quality) {
+        if (quality == null) return "Видеопоток";
+        String q = quality.toLowerCase().trim();
+        if (q.contains("2160") || q.contains("4k")) {
+            return "Максимальная четкость";
+        } else if (q.contains("1440") || q.contains("2k")) {
+            return "Высокая детализация";
+        } else if (q.contains("1080") || q.contains("fhd")) {
+            return "Высокое качество";
+        } else if (q.contains("720") || q.contains("hd")) {
+            return "Оптимально для большинства";
+        } else if (q.contains("480")) {
+            return "Хороший баланс";
+        } else if (q.contains("360") || q.contains("240") || q.contains("sd")) {
+            return "Экономия трафика";
+        } else if (q.contains("auto") || q.contains("авто")) {
+            return "Автоматический выбор качества";
+        } else if (q.contains("скачан") || q.contains("офлайн") || q.contains("локальн")) {
+            return "Загруженный медиафайл";
+        }
+        return "Стандартный видеопоток";
+    }
+
     @Override
     public int getItemCount() {
-        return qualities.size();
+        return qualities != null ? qualities.size() : 0;
     }
     
     @SuppressLint("NotifyDataSetChanged")
@@ -96,27 +142,34 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
         notifyDataSetChanged();
     }
     
-    /**
-     * Обновляет список качеств и текущее качество
-     */
     @SuppressLint("NotifyDataSetChanged")
     public void updateQualities(List<String> newQualities, String newCurrentQuality) {
-        this.qualities.clear();
-        this.qualities.addAll(newQualities);
+        if (this.qualities != null) {
+            this.qualities.clear();
+            if (newQualities != null) {
+                this.qualities.addAll(newQualities);
+            }
+        }
         this.currentQuality = newCurrentQuality;
         notifyDataSetChanged();
     }
 
     public static class QualityViewHolder extends RecyclerView.ViewHolder {
+        View itemContainer;
         TextView qualityText;
         TextView qualityTagText;
-        ImageView currentIndicator;
+        TextView qualitySubtitleText;
+        View selectedPill;
+        View unselectedIndicator;
 
         QualityViewHolder(@NonNull View itemView) {
             super(itemView);
+            itemContainer = itemView.findViewById(R.id.itemContainer);
             qualityText = itemView.findViewById(R.id.qualityText);
             qualityTagText = itemView.findViewById(R.id.qualityTagText);
-            currentIndicator = itemView.findViewById(R.id.currentIndicator);
+            qualitySubtitleText = itemView.findViewById(R.id.qualitySubtitleText);
+            selectedPill = itemView.findViewById(R.id.selectedPill);
+            unselectedIndicator = itemView.findViewById(R.id.unselectedIndicator);
         }
     }
 }

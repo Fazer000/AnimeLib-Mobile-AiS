@@ -121,7 +121,7 @@
 
     <!-- Dialog Colors (Light Theme Defaults) -->
     <color name="dialog_bg">#FFFFFF</color>
-    <color name="dialog_card_bg">#F3F4F6</color>
+    <color name="dialog_card_bg">#E0E6F0</color>
     <color name="dialog_input_bg">#F9FAFB</color>
     <color name="dialog_input_stroke">#E5E7EB</color>
     <color name="dialog_text_title">#1F2937</color>
