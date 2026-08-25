@@ -23,6 +23,7 @@
             android:layout_height="24dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_exclamation_mark"
+            app:tint="@color/dialog_danger_text"
             android:contentDescription="Ошибка" />
     </FrameLayout>
 
@@ -56,19 +57,23 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRetryLoad"
-            android:layout_width="48dp"
+            android:layout_width="wrap_content"
             android:layout_height="48dp"
-            android:padding="0dp"
+            android:paddingHorizontal="16dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
+            android:text="Обновить"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:fontFamily="@font/open_sans_bold"
             app:backgroundTint="?attr/secondaryColor"
             app:cornerRadius="14dp"
             app:strokeWidth="0dp"
             app:icon="@drawable/ic_refresh"
             app:iconGravity="textStart"
-            app:iconPadding="0dp"
+            app:iconPadding="8dp"
             app:iconTint="#FFFFFF"
-            android:contentDescription="Повторить" />
+            android:contentDescription="Обновить" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnOpenDownloads"

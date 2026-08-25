@@ -40,7 +40,6 @@ public class DownloadProgressBottomSheet extends FlexibleBottomSheetDialogFragme
     private ProgressBar pbOverall;
     private RecyclerView rvProgressTasks;
     private MaterialButton btnOpenDownloadSheet;
-    private MaterialButton btnGoToDownloads;
     private MaterialButton btnStopDownload;
 
     private final List<DownloadService.TaskProgressItem> taskItems = new ArrayList<>();
@@ -105,32 +104,25 @@ public class DownloadProgressBottomSheet extends FlexibleBottomSheetDialogFragme
         pbOverall = view.findViewById(R.id.pbOverall);
         rvProgressTasks = view.findViewById(R.id.rvProgressTasks);
         btnOpenDownloadSheet = view.findViewById(R.id.btnOpenDownloadSheet);
-        btnGoToDownloads = view.findViewById(R.id.btnGoToDownloads);
         btnStopDownload = view.findViewById(R.id.btnStopDownload);
 
         if (btnProgressClose != null) {
             btnProgressClose.setOnClickListener(v -> dismiss());
         }
 
-        View.OnClickListener openDownloadSheetListener = v -> {
-            dismiss();
-            if (getActivity() instanceof com.example.animelib.VideoPlayerActivity) {
-                ((com.example.animelib.VideoPlayerActivity) getActivity()).showDownloadBottomSheet();
-            }
-        };
-
         if (btnHeaderOpenDownloadSheet != null) {
-            btnHeaderOpenDownloadSheet.setOnClickListener(openDownloadSheetListener);
+            btnHeaderOpenDownloadSheet.setOnClickListener(v -> {
+                dismiss();
+                DownloadsActivity.start(requireContext());
+            });
         }
 
         if (btnOpenDownloadSheet != null) {
-            btnOpenDownloadSheet.setOnClickListener(openDownloadSheetListener);
-        }
-
-        if (btnGoToDownloads != null) {
-            btnGoToDownloads.setOnClickListener(v -> {
+            btnOpenDownloadSheet.setOnClickListener(v -> {
                 dismiss();
-                DownloadsActivity.start(requireContext());
+                if (getActivity() instanceof com.example.animelib.VideoPlayerActivity) {
+                    ((com.example.animelib.VideoPlayerActivity) getActivity()).showDownloadBottomSheet();
+                }
             });
         }
 
@@ -252,7 +244,12 @@ public class DownloadProgressBottomSheet extends FlexibleBottomSheetDialogFragme
             tvOverallText.setText("Очередь пуста");
             tvOverallPercent.setText("0%");
             pbOverall.setProgress(0);
-            btnStopDownload.setText("Закрыть");
+            if (btnStopDownload != null) {
+                btnStopDownload.setText("Закрыть");
+                btnStopDownload.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                        ContextCompat.getColor(requireContext(), R.color.dialog_danger_bg)));
+                btnStopDownload.setTextColor(ContextCompat.getColor(requireContext(), R.color.dialog_danger_text));
+            }
             return;
         }
 
@@ -267,13 +264,23 @@ public class DownloadProgressBottomSheet extends FlexibleBottomSheetDialogFragme
             tvOverallText.setText("Обработано " + completed + " из " + total + " серий");
             tvOverallPercent.setText(overallProgress + "%");
             pbOverall.setProgress(overallProgress);
-            btnStopDownload.setText("Остановить скачивание");
+            if (btnStopDownload != null) {
+                btnStopDownload.setText("Остановить");
+                btnStopDownload.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                        ContextCompat.getColor(requireContext(), R.color.dialog_danger_bg)));
+                btnStopDownload.setTextColor(ContextCompat.getColor(requireContext(), R.color.dialog_danger_text));
+            }
         } else {
             tvProgressHeaderSubtitle.setText("Завершено");
             tvOverallText.setText("Обработано " + completed + " из " + total + " серий");
             tvOverallPercent.setText(overallProgress + "%");
             pbOverall.setProgress(overallProgress);
-            btnStopDownload.setText("Закрыть");
+            if (btnStopDownload != null) {
+                btnStopDownload.setText("Закрыть");
+                btnStopDownload.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
+                        ContextCompat.getColor(requireContext(), R.color.dialog_danger_bg)));
+                btnStopDownload.setTextColor(ContextCompat.getColor(requireContext(), R.color.dialog_danger_text));
+            }
         }
     }
 

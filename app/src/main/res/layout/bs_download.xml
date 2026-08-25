@@ -360,19 +360,24 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnNextStep"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="46dp"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginTop="16dp"
+                android:padding="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
                 android:text="Далее"
                 android:textColor="#FFFFFF"
-                android:textSize="15sp"
+                android:textSize="14sp"
                 android:fontFamily="@font/open_sans_bold"
-                app:backgroundTint="@color/secondary_text_color"
+                android:textStyle="bold"
+                app:backgroundTint="@color/purple_primary"
                 app:icon="@drawable/ic_arrow_forward"
                 app:iconTint="#FFFFFF"
                 app:iconGravity="textEnd"
                 app:iconPadding="8dp"
-                app:cornerRadius="12dp" />
+                app:strokeWidth="0dp"
+                app:cornerRadius="10dp" />
 
         </LinearLayout>
 
@@ -450,7 +455,7 @@
                     android:id="@+id/tvSelectedCounter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0 / 0"
+                    android:text="0 из 0"
                     android:textSize="13sp"
                     android:fontFamily="@font/open_sans_bold"
                     android:textColor="@color/secondary_text_color" />
@@ -478,18 +483,23 @@
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnDownload"
                 android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_height="46dp"
                 android:layout_marginHorizontal="16dp"
+                android:padding="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
                 android:text="Скачать"
                 android:textColor="#FFFFFF"
-                android:textSize="15sp"
+                android:textSize="14sp"
                 android:fontFamily="@font/open_sans_bold"
-                app:backgroundTint="@color/secondary_text_color"
+                android:textStyle="bold"
+                app:backgroundTint="@color/purple_primary"
                 app:icon="@drawable/ic_download"
                 app:iconTint="#FFFFFF"
                 app:iconGravity="textStart"
                 app:iconPadding="8dp"
-                app:cornerRadius="12dp" />
+                app:strokeWidth="0dp"
+                app:cornerRadius="10dp" />
 
         </LinearLayout>
 

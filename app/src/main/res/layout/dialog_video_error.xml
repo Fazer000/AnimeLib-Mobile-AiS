@@ -25,6 +25,7 @@
                 android:layout_height="20dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_exclamation_mark"
+                app:tint="@color/dialog_danger_text"
                 android:contentDescription="Ошибка" />
         </FrameLayout>
 
@@ -125,11 +126,15 @@
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="46dp"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:padding="0dp"
             android:text="Выйти"
-            android:textColor="#EF4444"
+            android:textColor="@color/dialog_danger_text"
             android:textSize="13sp"
-            android:fontFamily="@font/open_sans_semibold"
-            android:backgroundTint="#26EF4444"
+            android:fontFamily="@font/open_sans_bold"
+            android:textStyle="bold"
+            android:backgroundTint="@color/dialog_danger_bg"
             app:strokeWidth="0dp"
             app:cornerRadius="10dp" />
     </LinearLayout>

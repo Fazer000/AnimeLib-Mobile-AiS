@@ -168,56 +168,55 @@
             android:layout_marginTop="6dp"
             android:layout_marginBottom="10dp" />
 
-        <!-- Bottom Action Buttons -->
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnOpenDownloadSheet"
+        <!-- Bottom Action Buttons in One Line -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="50dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:layout_marginHorizontal="16dp"
-            android:text="Выбрать серии для скачивания"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:fontFamily="@font/open_sans_bold"
-            app:backgroundTint="@color/secondary_text_color"
-            app:icon="@drawable/ic_download"
-            app:iconTint="#FFFFFF"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp"
-            app:cornerRadius="12dp" />
+            android:layout_marginTop="6dp">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnGoToDownloads"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
-            android:text="Перейти в сохраненные загрузки"
-            android:textColor="@color/primary_text_color"
-            android:textSize="14sp"
-            android:fontFamily="@font/open_sans_bold"
-            app:backgroundTint="@color/chip_unselected_bg"
-            app:strokeColor="@color/bs_divider_color"
-            app:strokeWidth="0.5dp"
-            app:cornerRadius="12dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnOpenDownloadSheet"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="46dp"
+                android:layout_marginEnd="8dp"
+                android:padding="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="Выбрать серии"
+                android:textColor="@color/dialog_btn_neutral_text"
+                android:textSize="13sp"
+                android:fontFamily="@font/open_sans_bold"
+                android:textStyle="bold"
+                android:backgroundTint="@color/dialog_btn_neutral_bg"
+                app:icon="@drawable/ic_download"
+                app:iconTint="@color/dialog_btn_neutral_text"
+                app:iconGravity="textStart"
+                app:iconPadding="6dp"
+                app:iconSize="18dp"
+                app:strokeWidth="0dp"
+                app:cornerRadius="10dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnStopDownload"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="8dp"
-            android:text="Остановить скачивание"
-            android:textColor="@color/stop_btn_text"
-            android:textSize="14sp"
-            android:fontFamily="@font/open_sans_bold"
-            app:backgroundTint="@color/stop_btn_bg"
-            app:icon="@drawable/ic_close"
-            app:iconTint="@color/stop_btn_text"
-            app:iconGravity="textStart"
-            app:iconPadding="8dp"
-            app:strokeColor="@color/stop_btn_stroke"
-            app:strokeWidth="0.5dp"
-            app:cornerRadius="12dp" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStopDownload"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="46dp"
+                android:padding="0dp"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:text="Закрыть"
+                android:textColor="@color/dialog_danger_text"
+                android:textSize="13sp"
+                android:fontFamily="@font/open_sans_bold"
+                android:textStyle="bold"
+                android:backgroundTint="@color/dialog_danger_bg"
+                app:strokeWidth="0dp"
+                app:cornerRadius="10dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
 

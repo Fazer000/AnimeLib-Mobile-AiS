@@ -316,8 +316,7 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
     private void showStep2() {
         btnBsBack.setVisibility(View.VISIBLE);
         tvTitle.setText("Выбор серий");
-        String info = (selectedVoiceover != null ? selectedVoiceover.teamName : "Озвучка") + " • " + selectedQuality;
-        tvSubtitle.setText(info);
+        updateDownloadButtonText();
 
         if (selectedVoiceover != null) {
             checkVoiceoverAvailability(selectedVoiceover);
@@ -839,15 +838,18 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
         }
 
         if (tvSelectedCounter != null) {
-            tvSelectedCounter.setText(selectedCount + " / " + checkItems.size());
+            tvSelectedCounter.setText(selectedCount + " из " + checkItems.size());
         }
 
-        if (selectedCount > 0) {
-            btnDownload.setText("Скачать (" + selectedCount + " серий)");
-            btnDownload.setEnabled(true);
-        } else {
-            btnDownload.setText("Выберите серии");
-            btnDownload.setEnabled(false);
+        if (tvSubtitle != null && layoutStep2 != null && layoutStep2.getVisibility() == View.VISIBLE) {
+            String voiceoverName = (selectedVoiceover != null ? selectedVoiceover.teamName : "Озвучка");
+            String qualityName = selectedQuality != null ? selectedQuality : "";
+            tvSubtitle.setText(voiceoverName + " • " + qualityName);
+        }
+
+        if (btnDownload != null) {
+            btnDownload.setText("Скачать");
+            btnDownload.setEnabled(selectedCount > 0);
         }
     }
 
