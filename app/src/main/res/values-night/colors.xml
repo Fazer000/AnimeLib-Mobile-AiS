@@ -12,18 +12,18 @@
     <color name="toolbar_header_bg">@color/dt_header_color</color>
     <color name="bs_bg_color">#131316</color>
     <color name="bs_divider_color">#2D2D36</color>
-    <color name="card_bg_color">#252527</color>
+    <color name="card_bg_color">#1F1F24</color>
     <color name="primary_text_color">#E2E8F0</color>
     <color name="secondary_text_color">@color/purple_primary</color>
     <color name="accent_text_color">#94A3B8</color>
-    <color name="comment_input_bg">#18181C</color>
-    <color name="comment_input_stroke">#2D2D36</color>
+    <color name="comment_input_bg">#1F1F24</color>
+    <color name="comment_input_stroke">#33333C</color>
     <color name="chip_selected_bg">@color/purple_secondary_dark</color>
     <color name="chip_selected_stroke">@color/purple_primary</color>
     <color name="chip_unselected_bg">#1F1F24</color>
     <color name="chip_unselected_stroke">#33333C</color>
     <color name="close_btn_bg">#20FFFFFF</color>
-    <color name="placeholder_bg">#252527</color>
+    <color name="placeholder_bg">#282830</color>
     <color name="stop_btn_bg">#2A1B20</color>
     <color name="sort_popup_item_selected_bg">#2A2D37</color>
     <color name="sort_popup_item_selected_text">#FFFFFF</color>
@@ -39,9 +39,9 @@
 
     <!-- Dialog Colors (Dark Theme Overrides) -->
     <color name="dialog_bg">#1F1F22</color>
-    <color name="dialog_card_bg">#28282C</color>
-    <color name="dialog_input_bg">#161618</color>
-    <color name="dialog_input_stroke">#2D2D32</color>
+    <color name="dialog_card_bg">#1F1F24</color>
+    <color name="dialog_input_bg">#1F1F24</color>
+    <color name="dialog_input_stroke">#33333C</color>
     <color name="dialog_text_title">#FFFFFF</color>
     <color name="dialog_text_body">#D1D5DB</color>
     <color name="dialog_text_muted">#9CA3AF</color>
@@ -52,11 +52,11 @@
     <color name="dialog_danger_text">#FCA5A5</color>
     <color name="dialog_cancel_text">#D1D5DB</color>
 
-    <color name="dialog_btn_neutral_bg">#28282C</color>
+    <color name="dialog_btn_neutral_bg">#1F1F24</color>
     <color name="dialog_btn_neutral_text">#FFFFFF</color>
 
-    <color name="dialog_btn_secondary_bg">#161618</color>
-    <color name="dialog_btn_secondary_stroke">#2D2D32</color>
+    <color name="dialog_btn_secondary_bg">#1F1F24</color>
+    <color name="dialog_btn_secondary_stroke">#33333C</color>
     <color name="dialog_btn_secondary_text">#D1D5DB</color>
 
     <color name="dialog_ripple_color">#33FFFFFF</color>

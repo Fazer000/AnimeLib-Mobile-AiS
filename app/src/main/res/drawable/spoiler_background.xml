@@ -5,5 +5,5 @@
     <corners android:radius="10dp" />
     <stroke
         android:width="0.5dp"
-        android:color="@color/bs_divider_color" />
+        android:color="@color/comment_input_stroke" />
 </shape>

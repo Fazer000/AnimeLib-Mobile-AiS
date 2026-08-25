@@ -36,7 +36,7 @@
     <color name="dt_accent_text_color">#80F5F5FA</color>
     
     <!-- Anime Info Colors -->
-    <color name="dt_card_background">#252527</color>
+    <color name="dt_card_background">#1F1F24</color>
     <color name="dt_bookmark_card_bg">#36363B</color>
     <color name="dt_card_elevation">#40000000</color>
     <color name="dt_rating_star">#FFD700</color>

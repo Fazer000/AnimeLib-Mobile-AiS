@@ -102,7 +102,7 @@ public class SpoilerView extends LinearLayout {
 
         // Разделительная линия
         lineView = new View(getContext());
-        lineView.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.bs_divider_color));
+        lineView.setBackgroundColor(ContextCompat.getColor(getContext(), R.color.comment_input_stroke));
         lineView.setVisibility(View.GONE);
         LinearLayout.LayoutParams lineParams = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dpToPx(1));
         lineView.setLayoutParams(lineParams);
