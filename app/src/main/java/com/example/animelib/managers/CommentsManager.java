@@ -379,7 +379,7 @@ public class CommentsManager {
 
             PopupWindow popupWindow = new PopupWindow(
                     popupView,
-                    dpToPx(180),
+                    dpToPx(200),
                     ViewGroup.LayoutParams.WRAP_CONTENT,
                     true
             );
@@ -392,7 +392,9 @@ public class CommentsManager {
             View itemEdit = popupView.findViewById(R.id.item_comment_edit);
             View itemDelete = popupView.findViewById(R.id.item_comment_delete);
             View itemReport = popupView.findViewById(R.id.item_comment_report);
+            View itemIgnore = popupView.findViewById(R.id.item_comment_ignore);
 
+            boolean isAuth = apiService != null && apiService.isAuthorized();
             boolean isOwn = isOwnComment(comment);
 
             if (itemEdit != null) {
@@ -424,9 +426,130 @@ public class CommentsManager {
                 });
             }
 
+            if (itemIgnore != null) {
+                boolean canIgnore = isAuth && !isOwn && comment.getUser() != null;
+                itemIgnore.setVisibility(canIgnore ? View.VISIBLE : View.GONE);
+                itemIgnore.setOnClickListener(v -> {
+                    try {
+                        popupWindow.dismiss();
+                    } catch (Exception ignored) {}
+                    showIgnoreUserDialog(comment);
+                });
+            }
+
             popupWindow.showAsDropDown(anchorView, 0, dpToPx(4));
         } catch (Exception e) {
             Log.e(TAG, "Error showing comment actions popup", e);
+        }
+    }
+
+    /**
+     * Диалог добавления пользователя в игнор-лист
+     */
+    public void showIgnoreUserDialog(CommentsResponse.CommentItem comment) {
+        if (comment == null || comment.getUser() == null || context == null) return;
+
+        try {
+            View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_ignore_user, null);
+            android.widget.ImageButton btnClose = dialogView.findViewById(R.id.btnCloseIgnoreDialog);
+            android.widget.EditText etComment = dialogView.findViewById(R.id.etIgnoreComment);
+            View btnToggleInfo = dialogView.findViewById(R.id.btnToggleIgnoreInfo);
+            android.widget.ImageView ivChevron = dialogView.findViewById(R.id.ivIgnoreInfoChevron);
+            View infoContent = dialogView.findViewById(R.id.ignoreInfoContentContainer);
+            View btnCancel = dialogView.findViewById(R.id.btnCancelIgnore);
+            View btnConfirm = dialogView.findViewById(R.id.btnConfirmIgnore);
+
+            if (btnToggleInfo != null && infoContent != null) {
+                btnToggleInfo.setOnClickListener(v -> {
+                    if (infoContent.getVisibility() == View.VISIBLE) {
+                        infoContent.setVisibility(View.GONE);
+                        if (ivChevron != null) {
+                            ivChevron.setImageResource(R.drawable.ic_chevron_down);
+                        }
+                    } else {
+                        infoContent.setVisibility(View.VISIBLE);
+                        if (ivChevron != null) {
+                            ivChevron.setImageResource(R.drawable.ic_chevron_up);
+                        }
+                    }
+                });
+            }
+
+            androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(context);
+            builder.setView(dialogView);
+            androidx.appcompat.app.AlertDialog dialog = builder.create();
+
+            if (dialog.getWindow() != null) {
+                dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            }
+
+            if (btnClose != null) {
+                btnClose.setOnClickListener(v -> dialog.dismiss());
+            }
+            if (btnCancel != null) {
+                btnCancel.setOnClickListener(v -> dialog.dismiss());
+            }
+
+            if (btnConfirm != null) {
+                btnConfirm.setOnClickListener(v -> {
+                    String commentText = etComment != null && etComment.getText() != null
+                            ? etComment.getText().toString().trim() : "";
+
+                    long targetUserId = comment.getUser().getId();
+                    long sourceableId = 0;
+
+                    if (apiService != null) {
+                        String currentUserIdStr = apiService.getCurrentUserId();
+                        if (currentUserIdStr != null && !currentUserIdStr.trim().isEmpty()) {
+                            try {
+                                sourceableId = Long.parseLong(currentUserIdStr.trim());
+                            } catch (Exception ignored) {}
+                        }
+                    }
+
+                    if (sourceableId <= 0) {
+                        try {
+                            DatabaseManager db = apiService != null ? apiService.getDatabaseManager() : new DatabaseManager(context);
+                            if (db != null && db.getToken() != null) {
+                                String uId = db.getToken().getUserId();
+                                if (uId != null && !uId.trim().isEmpty()) {
+                                    sourceableId = Long.parseLong(uId.trim());
+                                }
+                            }
+                        } catch (Exception ignored) {}
+                    }
+
+                    if (sourceableId <= 0) {
+                        CustomToast.showWarning(context, "Не удалось определить ID пользователя");
+                        return;
+                    }
+
+                    dialog.dismiss();
+                    CustomToast.showInfo(context, "Добавление в игнор-лист...");
+
+                    if (apiService != null) {
+                        apiService.ignoreUser(sourceableId, targetUserId, commentText, new ApiService.IgnoreUserCallback() {
+                            @Override
+                            public void onSuccess(String message) {
+                                safeRunOnUiThread(() -> {
+                                    CustomToast.showSuccess(context, "Пользователь добавлен в игнор-лист");
+                                    resetCommentsOnEpisodeChange(false);
+                                    loadCommentsPage(1);
+                                });
+                            }
+
+                            @Override
+                            public void onError(String errorMsg) {
+                                safeRunOnUiThread(() -> CustomToast.showWarning(context, errorMsg));
+                            }
+                        });
+                    }
+                });
+            }
+
+            dialog.show();
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing ignore user dialog", e);
         }
     }
 

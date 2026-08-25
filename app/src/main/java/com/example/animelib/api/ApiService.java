@@ -913,6 +913,79 @@ public class ApiService {
         });
     }
 
+    public interface IgnoreUserCallback {
+        void onSuccess(String message);
+        void onError(String errorMsg);
+    }
+
+    /**
+     * Добавление пользователя в игнор-лист (POST https://hapi.hentaicdn.org/api/ignore)
+     */
+    public void ignoreUser(long sourceableId, long targetUserId, String commentText, IgnoreUserCallback callback) {
+        safeExecute(() -> {
+            try {
+                TokenEntity tokenEntity = databaseManager.getToken();
+                if (tokenEntity == null || tokenEntity.getAccessToken() == null || tokenEntity.getAccessToken().trim().isEmpty()) {
+                    Log.d("ApiService", "No token in DB. Cannot ignore user.");
+                    safeRunOnUiThread(() -> callback.onError("Необходима авторизация. Войдите в аккаунт."));
+                    return;
+                }
+
+                String apiUrl = "https://hapi.hentaicdn.org/api/ignore";
+                com.google.gson.JsonObject requestBody = new com.google.gson.JsonObject();
+                requestBody.addProperty("sourceable_id", sourceableId);
+                requestBody.addProperty("sourceable_type", "user");
+                requestBody.addProperty("user_id", targetUserId);
+                if (commentText != null && !commentText.trim().isEmpty()) {
+                    requestBody.addProperty("comment", commentText.trim());
+                }
+
+                String jsonString = requestBody.toString();
+                Log.d("ApiService", "Ignore user payload: " + jsonString);
+
+                okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonString, okhttp3.MediaType.get("application/json; charset=utf-8"));
+
+                Request request = new Request.Builder()
+                        .url(apiUrl)
+                        .addHeader("Authorization", "Bearer " + getBearerToken())
+                        .addHeader("Referer", "https://v5.animelib.org/")
+                        .post(body)
+                        .build();
+
+                httpClient.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                        Log.e("ApiService", "Ignore user request failed", e);
+                        safeRunOnUiThread(() -> callback.onError("Ошибка сети: " + e.getMessage()));
+                    }
+
+                    @Override
+                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        try (response) {
+                            String responseBody = response.body() != null ? response.body().string() : "";
+                            Log.d("ApiService", "Ignore user response (" + response.code() + "): " + responseBody);
+
+                            if (response.isSuccessful()) {
+                                safeRunOnUiThread(() -> callback.onSuccess("Пользователь добавлен в игнор-лист"));
+                            } else if (response.code() == 401) {
+                                safeRunOnUiThread(() -> callback.onError("Ошибка 401: Сессия истекла. Авторизуйтесь заново."));
+                            } else {
+                                String err = extractServerErrorMessage(responseBody, response.code());
+                                safeRunOnUiThread(() -> callback.onError(err));
+                            }
+                        } catch (Exception e) {
+                            Log.e("ApiService", "Error parsing ignore user response", e);
+                            safeRunOnUiThread(() -> callback.onError("Ошибка обработки ответа: " + e.getMessage()));
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                Log.e("ApiService", "Error ignoring user", e);
+                safeRunOnUiThread(() -> callback.onError("Ошибка: " + e.getMessage()));
+            }
+        });
+    }
+
     /**
      * Creates OkHttpClient with disabled SSL verification for domains with certificate issues
      */
@@ -1768,14 +1841,34 @@ public class ApiService {
                             }
                         }
                     }
-                    // 3. Проверяем message и errors
+
+                    // 3. Проверяем валидационные ошибки по полям {"data":{"sourceable_id":["Пользователь уже добавлен в игнор-лист"]}} или {"errors":{...}}
+                    List<String> fieldErrors = new ArrayList<>();
+                    if (errObj.has("data") && errObj.get("data").isJsonObject()) {
+                        extractFieldErrorsFromObject(errObj.getAsJsonObject("data"), fieldErrors);
+                    }
+                    if (errObj.has("errors") && errObj.get("errors").isJsonObject()) {
+                        extractFieldErrorsFromObject(errObj.getAsJsonObject("errors"), fieldErrors);
+                    }
+                    if (!fieldErrors.isEmpty()) {
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < fieldErrors.size(); i++) {
+                            if (i > 0) sb.append("\n");
+                            sb.append(fieldErrors.get(i));
+                        }
+                        return sb.toString();
+                    }
+
+                    // 4. Проверяем message и errors
                     String serverMsg = "";
                     if (errObj.has("message") && !errObj.get("message").isJsonNull()) {
                         serverMsg = errObj.get("message").getAsString();
                     }
                     if (errObj.has("errors") && !errObj.get("errors").isJsonNull()) {
                         String errorsStr = errObj.get("errors").toString();
-                        serverMsg += (serverMsg.isEmpty() ? "" : " | ") + errorsStr;
+                        if (!serverMsg.contains(errorsStr)) {
+                            serverMsg += (serverMsg.isEmpty() ? "" : " | ") + errorsStr;
+                        }
                     }
                     if (!serverMsg.isEmpty()) {
                         return serverMsg;
@@ -1786,6 +1879,30 @@ public class ApiService {
             }
         }
         return "Ошибка (" + responseCode + ")";
+    }
+
+    private void extractFieldErrorsFromObject(com.google.gson.JsonObject container, List<String> resultList) {
+        if (container == null) return;
+        for (java.util.Map.Entry<String, com.google.gson.JsonElement> entry : container.entrySet()) {
+            if ("toast".equals(entry.getKey())) continue;
+            com.google.gson.JsonElement val = entry.getValue();
+            if (val != null && val.isJsonArray()) {
+                com.google.gson.JsonArray arr = val.getAsJsonArray();
+                for (com.google.gson.JsonElement item : arr) {
+                    if (item != null && item.isJsonPrimitive()) {
+                        String s = item.getAsString();
+                        if (s != null && !s.trim().isEmpty() && !resultList.contains(s.trim())) {
+                            resultList.add(s.trim());
+                        }
+                    }
+                }
+            } else if (val != null && val.isJsonPrimitive()) {
+                String s = val.getAsString();
+                if (s != null && !s.trim().isEmpty() && !resultList.contains(s.trim())) {
+                    resultList.add(s.trim());
+                }
+            }
+        }
     }
 
     public void getRulesArticle(ArticleCallback callback) {
