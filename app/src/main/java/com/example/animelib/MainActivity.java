@@ -962,10 +962,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void disallowInterceptTouch() {
+        if (swipeRefreshLayout != null) {
+            swipeRefreshLayout.requestDisallowInterceptTouchEvent(true);
+        }
+    }
+
+    private float startTouchX = 0f;
+    private float startTouchY = 0f;
+
+    @SuppressLint("ClickableViewAccessibility")
     private void setupRefreshLayout() {
         swipeRefreshLayout.setOnRefreshListener(() -> reloadWebView());
         swipeRefreshLayout.setOnChildScrollUpCallback((parent, child) -> webView.getScrollY() > 0);
         swipeRefreshLayout.setOverScrollMode(View.OVER_SCROLL_NEVER);
+
+        if (webView != null) {
+            webView.setOnTouchListener((v, event) -> {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        startTouchX = event.getX();
+                        startTouchY = event.getY();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        float dx = Math.abs(event.getX() - startTouchX);
+                        float dy = Math.abs(event.getY() - startTouchY);
+                        if (dx > dy && dx > 10) {
+                            swipeRefreshLayout.requestDisallowInterceptTouchEvent(true);
+                        }
+                        break;
+                }
+                return false;
+            });
+        }
     }
 
     private String getRandomUserAgent() {

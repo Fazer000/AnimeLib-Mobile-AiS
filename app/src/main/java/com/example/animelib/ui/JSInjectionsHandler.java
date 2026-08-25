@@ -51,6 +51,7 @@ public class JSInjectionsHandler {
         loadAndExecuteJS(webView, "js/auth-handler.js", "Auth handler");
         loadAndExecuteJS(webView, "js/search-button-listener.js", "Search button listener");
         loadAndExecuteJS(webView, "js/downloaded-button-listener.js", "Downloaded button listener");
+        loadAndExecuteJS(webView, "js/carousel-fix.js", "Carousel scroll fix");
 //        loadAndExecuteJS(webView, "js/back-button-handler.js", "Back button handler");
         loadAndExecuteJS(webView, "js/debug-info.js", "Debug info");
         loadAndExecuteJS(webView, "js/button-checker.js", "Button checker");
@@ -68,6 +69,7 @@ public class JSInjectionsHandler {
         loadAndExecuteJS(webView, "js/theme-button-listener.js", "Theme button listener");
         loadAndExecuteJS(webView, "js/search-button-listener.js", "Search button listener");
         loadAndExecuteJS(webView, "js/downloaded-button-listener.js", "Downloaded button listener");
+        loadAndExecuteJS(webView, "js/carousel-fix.js", "Carousel scroll fix");
         loadAndExecuteJS(webView, "js/auth-handler.js", "Auth handler");
     }
 
@@ -282,6 +284,15 @@ public class JSInjectionsHandler {
                 });
             } else {
                 Log.e(TAG, "Context is not an Activity, cannot open DownloadsActivity");
+            }
+        }
+
+        @JavascriptInterface
+        public void disallowInterceptTouch() {
+            if (context instanceof com.example.animelib.MainActivity) {
+                ((android.app.Activity) context).runOnUiThread(() -> {
+                    ((com.example.animelib.MainActivity) context).disallowInterceptTouch();
+                });
             }
         }
     }
