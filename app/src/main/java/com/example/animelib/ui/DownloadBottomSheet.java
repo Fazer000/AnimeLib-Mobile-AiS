@@ -81,12 +81,14 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
         public boolean isChecked;
         public boolean isAvailable;
         public boolean isAlreadyDownloaded;
+        public boolean isDownloading;
 
         public EpisodeCheckItem(EpisodesListResponse.EpisodeItem episode, boolean isChecked, boolean isAvailable, boolean isAlreadyDownloaded) {
             this.episode = episode;
             this.isChecked = isChecked;
             this.isAvailable = isAvailable;
             this.isAlreadyDownloaded = isAlreadyDownloaded;
+            this.isDownloading = false;
         }
     }
 
@@ -810,13 +812,31 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
     private void checkVoiceoverAvailability(VoiceoverOption option) {
         if (pbLoading != null) pbLoading.setVisibility(View.VISIBLE);
         Executors.newSingleThreadExecutor().execute(() -> {
+            List<DownloadService.TaskProgressItem> activeTasks = DownloadService.getActiveTaskItems();
+
             for (EpisodeCheckItem item : checkItems) {
                 int epId = item.episode.getId();
                 String epNum = item.episode.getNumber();
                 DownloadedEpisodeEntity downloaded = databaseManager.findDownloadedEpisode(animeId, epId, epNum, option.teamName);
+
+                boolean isDownloadingOrQueued = false;
+                if (activeTasks != null) {
+                    for (DownloadService.TaskProgressItem activeItem : activeTasks) {
+                        if (activeItem.task != null &&
+                            java.util.Objects.equals(activeItem.task.getAnimeId(), animeId) &&
+                            (activeItem.task.getEpisodeId() == epId || java.util.Objects.equals(activeItem.task.getEpisodeNumber(), epNum)) &&
+                            (activeItem.status == DownloadService.TaskProgressItem.STATUS_WAITING ||
+                             activeItem.status == DownloadService.TaskProgressItem.STATUS_DOWNLOADING)) {
+                            isDownloadingOrQueued = true;
+                            break;
+                        }
+                    }
+                }
+
                 item.isAlreadyDownloaded = (downloaded != null);
+                item.isDownloading = isDownloadingOrQueued;
                 item.isAvailable = true; // By default available
-                item.isChecked = item.isAvailable && !item.isAlreadyDownloaded;
+                item.isChecked = item.isAvailable && !item.isAlreadyDownloaded && !item.isDownloading;
             }
 
             if (getActivity() != null) {
@@ -832,7 +852,7 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
     private void updateDownloadButtonText() {
         int selectedCount = 0;
         for (EpisodeCheckItem item : checkItems) {
-            if (item.isAvailable && !item.isAlreadyDownloaded && item.isChecked) {
+            if (item.isAvailable && !item.isAlreadyDownloaded && !item.isDownloading && item.isChecked) {
                 selectedCount++;
             }
         }
@@ -859,7 +879,7 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
 
         ArrayList<DownloadTask> tasks = new ArrayList<>();
         for (EpisodeCheckItem item : checkItems) {
-            if (item.isChecked && item.isAvailable && !item.isAlreadyDownloaded) {
+            if (item.isChecked && item.isAvailable && !item.isAlreadyDownloaded && !item.isDownloading) {
                 String epNum = item.episode.getNumber();
                 String rawName = item.episode.getName();
                 String epName = com.example.animelib.VideoPlayerActivity.cleanEpisodeName(rawName, epNum);
@@ -1007,6 +1027,11 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
                 holder.tvStatus.setTextColor(0xFF4CAF50); // green
                 holder.itemView.setBackgroundResource(R.drawable.episode_item_normal);
                 holder.itemView.setAlpha(0.6f);
+            } else if (item.isDownloading) {
+                holder.tvStatus.setText("Загружается");
+                holder.tvStatus.setTextColor(0xFF2196F3); // blue
+                holder.itemView.setBackgroundResource(R.drawable.episode_item_normal);
+                holder.itemView.setAlpha(0.6f);
             } else if (!item.isAvailable) {
                 holder.tvStatus.setText("Недоступно");
                 holder.tvStatus.setTextColor(0xFFF44336); // red
@@ -1028,12 +1053,12 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
 
             holder.itemView.setScaleX(1.0f);
             holder.itemView.setScaleY(1.0f);
-            if (item.isAvailable && !item.isAlreadyDownloaded) {
+            if (item.isAvailable && !item.isAlreadyDownloaded && !item.isDownloading) {
                 com.example.animelib.util.ItemAnimationUtils.animateItemStateTransition(holder.itemView, item.isChecked);
             }
 
             holder.itemView.setOnClickListener(v -> {
-                if (item.isAvailable && !item.isAlreadyDownloaded) {
+                if (item.isAvailable && !item.isAlreadyDownloaded && !item.isDownloading) {
                     com.example.animelib.util.ItemAnimationUtils.animateItemClick(v, () -> {
                         item.isChecked = !item.isChecked;
                         notifyItemChanged(holder.getBindingAdapterPosition());

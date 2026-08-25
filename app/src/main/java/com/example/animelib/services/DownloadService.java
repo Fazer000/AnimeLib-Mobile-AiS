@@ -179,6 +179,17 @@ public class DownloadService extends Service {
         }
     }
 
+    private boolean isSameEpisodeTask(DownloadTask t1, DownloadTask t2) {
+        if (t1 == null || t2 == null) return false;
+        boolean sameAnime = java.util.Objects.equals(t1.getAnimeId(), t2.getAnimeId());
+        if (!sameAnime) return false;
+
+        if (t1.getEpisodeId() > 0 && t2.getEpisodeId() > 0) {
+            return t1.getEpisodeId() == t2.getEpisodeId();
+        }
+        return java.util.Objects.equals(t1.getEpisodeNumber(), t2.getEpisodeNumber());
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent != null ? intent.getAction() : null;
@@ -220,22 +231,53 @@ public class DownloadService extends Service {
                 if (!running) {
                     activeTaskItems.clear();
                 }
+
+                ArrayList<DownloadTask> newTasksToEnqueue = new ArrayList<>();
                 synchronized (activeTaskItems) {
                     for (DownloadTask t : tasks) {
-                        activeTaskItems.add(new TaskProgressItem(t));
+                        boolean isDuplicate = false;
+                        for (TaskProgressItem existingItem : activeTaskItems) {
+                            if (existingItem.task != null && isSameEpisodeTask(existingItem.task, t)) {
+                                if (existingItem.status == TaskProgressItem.STATUS_WAITING ||
+                                    existingItem.status == TaskProgressItem.STATUS_DOWNLOADING ||
+                                    existingItem.status == TaskProgressItem.STATUS_COMPLETED) {
+                                    isDuplicate = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!isDuplicate) {
+                            for (DownloadTask queuedTask : taskQueue) {
+                                if (isSameEpisodeTask(queuedTask, t)) {
+                                    isDuplicate = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!isDuplicate) {
+                            newTasksToEnqueue.add(t);
+                            activeTaskItems.add(new TaskProgressItem(t));
+                        }
                     }
                 }
-                taskQueue.addAll(tasks);
-                acquireWakeLock();
-                startForegroundCompat(PROGRESS_NOTIFICATION_ID, buildProgressNotification("Подготовка к скачиванию...", 0));
-                if (!running) {
-                    running = true;
-                    cancelRequested = false;
-                    totalTasks = activeTaskItems.size();
-                    currentTaskIndex = 0;
-                    startNextTask();
+
+                if (!newTasksToEnqueue.isEmpty()) {
+                    taskQueue.addAll(newTasksToEnqueue);
+                    acquireWakeLock();
+                    startForegroundCompat(PROGRESS_NOTIFICATION_ID, buildProgressNotification("Подготовка к скачиванию...", 0));
+                    if (!running) {
+                        running = true;
+                        cancelRequested = false;
+                        totalTasks = activeTaskItems.size();
+                        currentTaskIndex = 0;
+                        startNextTask();
+                    } else {
+                        totalTasks = activeTaskItems.size();
+                    }
+                    notifyQueueUpdated();
+                } else {
+                    Log.d(TAG, "All enqueued tasks are duplicates and skipped.");
                 }
-                notifyQueueUpdated();
             }
         }
 
