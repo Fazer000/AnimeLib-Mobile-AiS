@@ -12,6 +12,20 @@
     android:padding="24dp"
     android:visibility="gone">
 
+    <FrameLayout
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/bg_btn_ignore_danger">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_exclamation_mark"
+            android:contentDescription="Ошибка" />
+    </FrameLayout>
+
     <TextView
         android:id="@+id/tvErrorTitle"
         android:layout_width="wrap_content"
@@ -42,25 +56,22 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnRetryLoad"
-            android:layout_width="wrap_content"
+            android:layout_width="48dp"
             android:layout_height="48dp"
-            android:fontFamily="@font/open_sans_bold"
-            android:paddingHorizontal="22dp"
-            android:text="Повторить попытку"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp"
+            android:padding="0dp"
             android:insetTop="0dp"
             android:insetBottom="0dp"
             app:backgroundTint="?attr/secondaryColor"
             app:cornerRadius="14dp"
+            app:strokeWidth="0dp"
             app:icon="@drawable/ic_refresh"
             app:iconGravity="textStart"
-            app:iconPadding="10dp"
-            app:iconTint="#FFFFFF" />
+            app:iconPadding="0dp"
+            app:iconTint="#FFFFFF"
+            android:contentDescription="Повторить" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnOpenDownloads"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_marginStart="12dp"
@@ -68,14 +79,14 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             app:backgroundTint="?attr/cardBackgroundColor"
-            app:strokeColor="?attr/borderColor"
-            app:strokeWidth="0.5dp"
+            app:strokeWidth="0dp"
             app:cornerRadius="14dp"
             app:icon="@drawable/ic_download"
             app:iconGravity="textStart"
             app:iconPadding="0dp"
             app:iconSize="22dp"
-            app:iconTint="?attr/primaryTextColor" />
+            app:iconTint="?attr/primaryTextColor"
+            android:contentDescription="Скачанное" />
 
     </LinearLayout>
 

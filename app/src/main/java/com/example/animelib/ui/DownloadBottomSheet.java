@@ -770,13 +770,12 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
             TextView messageTv = dialogView.findViewById(R.id.errorMessageText);
             TextView detailsTv = dialogView.findViewById(R.id.errorPlayerDetailsText);
             com.google.android.material.button.MaterialButton retryBtn = dialogView.findViewById(R.id.retryButton);
-            com.google.android.material.button.MaterialButton switchPlayerBtn = dialogView.findViewById(R.id.switchPlayerButton);
+            com.google.android.material.button.MaterialButton exitBtn = dialogView.findViewById(R.id.exitButton);
             ImageButton closeCrossBtn = dialogView.findViewById(R.id.closeErrorCrossButton);
 
             if (titleTv != null && title != null) titleTv.setText(title);
             if (messageTv != null && message != null) messageTv.setText(message);
             if (detailsTv != null) detailsTv.setVisibility(View.GONE);
-            if (switchPlayerBtn != null) switchPlayerBtn.setVisibility(View.GONE);
 
             androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(requireContext());
             builder.setView(dialogView);
@@ -784,6 +783,10 @@ public class DownloadBottomSheet extends FlexibleBottomSheetDialogFragment {
 
             if (dialog.getWindow() != null) {
                 dialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            }
+
+            if (exitBtn != null) {
+                exitBtn.setOnClickListener(v -> dialog.dismiss());
             }
 
             if (retryBtn != null) {

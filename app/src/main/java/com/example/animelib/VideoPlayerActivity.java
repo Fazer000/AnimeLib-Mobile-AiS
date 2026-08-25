@@ -4943,8 +4943,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
             TextView messageTv = dialogView.findViewById(R.id.errorMessageText);
             TextView detailsTv = dialogView.findViewById(R.id.errorPlayerDetailsText);
             MaterialButton retryBtn = dialogView.findViewById(R.id.retryButton);
-            MaterialButton switchPlayerBtn = dialogView.findViewById(R.id.switchPlayerButton);
             MaterialButton goToDownloadsBtn = dialogView.findViewById(R.id.goToDownloadsButton);
+            MaterialButton exitBtn = dialogView.findViewById(R.id.exitButton);
             ImageButton closeCrossBtn = dialogView.findViewById(R.id.closeErrorCrossButton);
 
             if (goToDownloadsBtn != null) {
@@ -5000,25 +5000,12 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 }
             });
 
-            if (isVoiceoverError) {
-                switchPlayerBtn.setText("Выйти");
-                switchPlayerBtn.setIcon(null);
-                switchPlayerBtn.setOnClickListener(v -> {
+            if (exitBtn != null) {
+                exitBtn.setOnClickListener(v -> {
                     if (currentErrorDialog != null) {
                         currentErrorDialog.dismiss();
                     }
                     finish();
-                });
-            } else {
-                switchPlayerBtn.setText("Выбрать другую озвучку");
-                switchPlayerBtn.setIconResource(R.drawable.ic_voice);
-                switchPlayerBtn.setOnClickListener(v -> {
-                    if (currentErrorDialog != null) {
-                        currentErrorDialog.dismiss();
-                    }
-                    if (playersManager != null) {
-                        playersManager.showMenu();
-                    }
                 });
             }
 
