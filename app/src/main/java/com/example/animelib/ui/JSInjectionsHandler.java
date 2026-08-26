@@ -84,6 +84,13 @@ public class JSInjectionsHandler {
     }
 
     /**
+     * Внедряет скрипты, специфичные для BottomSheet WebView (например, скрытие нижнего меню)
+     */
+    public void setupBottomSheetInjections(WebView webView) {
+        loadAndExecuteJS(webView, "js/remove-bottom-menu.js", "Remove bottom menu");
+    }
+
+    /**
      * Загружает и выполняет JavaScript файл из assets
      */
     private void loadAndExecuteJS(WebView webView, String assetPath, String description) {

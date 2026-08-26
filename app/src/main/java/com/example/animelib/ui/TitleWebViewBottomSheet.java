@@ -320,6 +320,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                     }
                     if (jsInjectionsHandler != null) {
                         jsInjectionsHandler.setupPlayerButtonListeners(view);
+                        jsInjectionsHandler.setupBottomSheetInjections(view);
                     }
                 }
 
@@ -331,6 +332,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                     }
                     if (jsInjectionsHandler != null) {
                         jsInjectionsHandler.reinjectDomListeners(view);
+                        jsInjectionsHandler.setupBottomSheetInjections(view);
                     }
                 }
 
@@ -358,6 +360,9 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                         } else {
                             progressBarWeb.setVisibility(View.GONE);
                         }
+                    }
+                    if (newProgress >= 20 && jsInjectionsHandler != null) {
+                        jsInjectionsHandler.setupBottomSheetInjections(view);
                     }
                 }
             });
