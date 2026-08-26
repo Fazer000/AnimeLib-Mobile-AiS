@@ -22,10 +22,24 @@ public class DatabaseManager {
     private final ExecutorService executor;
     private final Context context;
 
+    private static volatile DatabaseManager instance;
+
+    public static DatabaseManager getInstance(Context context) {
+        if (instance == null) {
+            synchronized (DatabaseManager.class) {
+                if (instance == null) {
+                    instance = new DatabaseManager(context.getApplicationContext());
+                }
+            }
+        }
+        return instance;
+    }
+
     public DatabaseManager(Context context) {
         this.context = context.getApplicationContext();
         this.db = AppDatabase.getDatabase(this.context);
         this.executor = Executors.newSingleThreadExecutor();
+        instance = this;
     }
     
     // ========== AppSettings операции ==========

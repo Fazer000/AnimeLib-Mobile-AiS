@@ -322,6 +322,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                 public void onPageStarted(WebView view, String url, Bitmap favicon) {
                     super.onPageStarted(view, url, favicon);
                     CookieSyncManager.syncFromUrl(url);
+                    CookieSyncManager.injectAuthLocalStorage(view);
                     if (progressBarWeb != null) {
                         progressBarWeb.setVisibility(View.VISIBLE);
                     }

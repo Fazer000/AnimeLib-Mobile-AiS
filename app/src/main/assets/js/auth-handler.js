@@ -145,6 +145,12 @@
                     if (window.AndroidInterface && typeof window.AndroidInterface.getAuthFromLocalStorage === 'function') {
                         window.AndroidInterface.getAuthFromLocalStorage();
                     }
+                } else if (window.AndroidInterface && typeof window.AndroidInterface.getSavedAuthJson === 'function') {
+                    const savedAuth = window.AndroidInterface.getSavedAuthJson();
+                    if (savedAuth && savedAuth !== 'null' && savedAuth !== 'undefined') {
+                        localStorage.setItem('auth', savedAuth);
+                        console.log('[auth-handler] Restored auth from Android DB to localStorage for ' + window.location.hostname);
+                    }
                 }
             }
         } catch (error) {

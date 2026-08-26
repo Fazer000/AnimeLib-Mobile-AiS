@@ -1,8 +1,14 @@
 package com.example.animelib.util;
 
+import android.content.Context;
 import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.WebView;
+
+import com.example.animelib.AnimeLibApplication;
+import com.example.animelib.data.DatabaseManager;
+import com.example.animelib.data.entity.TokenEntity;
+import com.google.gson.JsonObject;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -12,9 +18,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Менеджер синхронизации и дублирования куки и localStorage объекта auth
+ * Менеджер синхронизации и дублирования куки (включая XSRF-TOKEN) и localStorage объекта auth
  * между всеми доменам сети Lib (AnimeLib, MangaLib, RanobeLib, HentaiLib, SlashLib, Lib.Social).
- * Выполняется асинхронно, чтобы исключить подлагивания UI при переходах между страницами.
+ * Выполняется асинхронно и ТОЛЬКО при наличии авторизации на AnimeLib (токен в БД).
  */
 public class CookieSyncManager {
     private static final String TAG = "CookieSyncManager";
@@ -64,6 +70,28 @@ public class CookieSyncManager {
     );
 
     /**
+     * Проверяет, авторизован ли пользователь на AnimeLib (наличие токена в БД)
+     */
+    public static boolean isAuthorizedOnAnimeLib(Context context) {
+        if (savedAuthJson != null && !savedAuthJson.trim().isEmpty() && !"null".equals(savedAuthJson)) {
+            return true;
+        }
+        try {
+            Context appContext = context != null ? context.getApplicationContext() : AnimeLibApplication.getInstance();
+            if (appContext != null) {
+                DatabaseManager dbManager = DatabaseManager.getInstance(appContext);
+                if (dbManager != null && dbManager.hasToken()) {
+                    TokenEntity token = dbManager.getToken();
+                    return token != null && token.getAccessToken() != null && !token.getAccessToken().trim().isEmpty();
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking authorization in database", e);
+        }
+        return false;
+    }
+
+    /**
      * Сохраняет JSON объект auth из localStorage
      */
     public static void saveAuthJson(String authJson) {
@@ -78,30 +106,81 @@ public class CookieSyncManager {
      */
     public static void clearAuthJson() {
         savedAuthJson = null;
+        lastSyncedCookieHash = "";
         Log.d(TAG, "Cleared saved auth object");
     }
 
-    public static String getSavedAuthJson() {
-        return savedAuthJson;
+    /**
+     * Получает JSON строку auth. Если savedAuthJson не задан, но токен есть в БД — собирает валидный auth JSON.
+     */
+    public static String getAuthJson(Context context) {
+        if (savedAuthJson != null && !savedAuthJson.trim().isEmpty() && !"null".equals(savedAuthJson)) {
+            return savedAuthJson;
+        }
+        try {
+            Context appContext = context != null ? context.getApplicationContext() : AnimeLibApplication.getInstance();
+            if (appContext != null) {
+                DatabaseManager dbManager = DatabaseManager.getInstance(appContext);
+                TokenEntity token = dbManager.getToken();
+                if (token != null && token.getAccessToken() != null && !token.getAccessToken().isEmpty()) {
+                    JsonObject tokenObj = new JsonObject();
+                    tokenObj.addProperty("token_type", token.getTokenType() != null ? token.getTokenType() : "Bearer");
+                    tokenObj.addProperty("expires_in", token.getExpiresIn() > 0 ? token.getExpiresIn() : 2678399L);
+                    tokenObj.addProperty("access_token", token.getAccessToken());
+                    if (token.getRefreshToken() != null) {
+                        tokenObj.addProperty("refresh_token", token.getRefreshToken());
+                    }
+                    tokenObj.addProperty("timestamp", token.getTimestamp() > 0 ? token.getTimestamp() : System.currentTimeMillis());
+
+                    JsonObject root = new JsonObject();
+                    root.add("token", tokenObj);
+
+                    if (token.getUserId() != null || token.getUsername() != null) {
+                        JsonObject authObj = new JsonObject();
+                        if (token.getUserId() != null) {
+                            try {
+                                authObj.addProperty("id", Long.parseLong(token.getUserId()));
+                            } catch (Exception ignored) {
+                                authObj.addProperty("id", token.getUserId());
+                            }
+                        }
+                        if (token.getUsername() != null) {
+                            authObj.addProperty("username", token.getUsername());
+                        }
+                        root.add("auth", authObj);
+                    }
+
+                    savedAuthJson = root.toString();
+                    return savedAuthJson;
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error generating auth JSON from DB token", e);
+        }
+        return null;
     }
 
     /**
-     * Внедряет объект auth из localStorage на загруженную страницу WebView
+     * Внедряет объект auth из localStorage на загруженную страницу WebView, ТОЛЬКО ЕСЛИ есть авторизация в БД
      */
     public static void injectAuthLocalStorage(WebView webView) {
         if (webView == null) return;
-        final String authStr = savedAuthJson;
+
+        Context context = webView.getContext();
+        if (!isAuthorizedOnAnimeLib(context)) {
+            Log.d(TAG, "User is not authorized on AnimeLib (no token in DB), skipping auth injection.");
+            return;
+        }
+
+        final String authStr = getAuthJson(context);
         if (authStr == null || authStr.isEmpty() || "null".equals(authStr)) return;
 
         webView.post(() -> {
             try {
-                // Подготавливаем безопасный скрипт для записи localStorage.auth
-                String cleanAuth = authStr;
-                // Если строка уже в кавычках или объекте, форматируем правильно
                 String jsScript =
                     "(function() {" +
                     "  try {" +
-                    "    var authVal = " + cleanAuth + ";" +
+                    "    var authVal = " + authStr + ";" +
                     "    var authStr = (typeof authVal === 'string') ? authVal : JSON.stringify(authVal);" +
                     "    var current = localStorage.getItem('auth');" +
                     "    if (authStr && current !== authStr) {" +
@@ -121,24 +200,31 @@ public class CookieSyncManager {
     }
 
     /**
-     * Синхронизирует все куки с основных доменов сети Lib на все остальные (асинхронно)
+     * Синхронизирует все куки с основных доменов сети Lib на остальные (асинхронно).
+     * ВЫПОЛНЯЕТСЯ ТОЛЬКО ЕСЛИ ПОЛЬЗОВАТЕЛЬ АВТОРИЗОВАН НА ANIMELIB.
      */
     public static void syncAllCookies() {
         syncFromUrl(null);
     }
 
     /**
-     * Считывает куки с sourceUrl и асинхронно копирует на остальные сайты Lib
+     * Считывает куки с sourceUrl и асинхронно копирует на остальные сайты Lib (XSRF-TOKEN и др.).
+     * ВЫПОЛНЯЕТСЯ ТОЛЬКО ЕСЛИ ПОЛЬЗОВАТЕЛЬ АВТОРИЗОВАН НА ANIMELIB.
      */
     public static void syncFromUrl(final String sourceUrl) {
         long now = System.currentTimeMillis();
-        // Троттлинг: если прошло менее 1.5 сек с последней синхронизации и нет специфичного URL, прогоняем асинхронно
-        if (sourceUrl == null && (now - lastSyncTimestamp < 1500)) {
+        if (sourceUrl == null && (now - lastSyncTimestamp < 1000)) {
             return;
         }
 
         executor.execute(() -> {
             try {
+                Context context = AnimeLibApplication.getInstance();
+                if (!isAuthorizedOnAnimeLib(context)) {
+                    Log.d(TAG, "User is not authorized on AnimeLib (no token in DB), skipping cookie sync.");
+                    return;
+                }
+
                 CookieManager cookieManager = CookieManager.getInstance();
                 if (cookieManager == null) return;
 
@@ -183,6 +269,11 @@ public class CookieSyncManager {
 
         executor.execute(() -> {
             try {
+                Context context = AnimeLibApplication.getInstance();
+                if (!isAuthorizedOnAnimeLib(context)) {
+                    return;
+                }
+
                 CookieManager cookieManager = CookieManager.getInstance();
                 if (cookieManager == null) return;
                 cookieManager.setAcceptCookie(true);
@@ -197,7 +288,6 @@ public class CookieSyncManager {
     private static void copyCookieStringToAllDomainsInternal(CookieManager cookieManager, String cookieHeader) {
         String hash = String.valueOf(cookieHeader.hashCode());
         if (hash.equals(lastSyncedCookieHash)) {
-            // Уменьшаем избыточную перезапись, если куки не изменялись
             return;
         }
 
@@ -218,15 +308,20 @@ public class CookieSyncManager {
 
             // 1. Копируем куки на основные URL
             String cookieValue = key + "=" + val + "; Path=/; SameSite=Lax";
+            String cookieValueSecure = key + "=" + val + "; Path=/; Secure; SameSite=Lax";
+
             for (String targetUrl : ALL_LIB_URLS) {
                 cookieManager.setCookie(targetUrl, cookieValue);
+                cookieManager.setCookie(targetUrl, cookieValueSecure);
             }
 
             // 2. Копируем с директивой Domain на корневые домены
             for (String domain : ALL_LIB_DOMAINS) {
                 String domainCookieValue = key + "=" + val + "; Path=/; Domain=" + domain + "; SameSite=Lax";
+                String domainCookieValueSecure = key + "=" + val + "; Path=/; Domain=" + domain + "; Secure; SameSite=Lax";
                 String baseUrl = "https://" + (domain.startsWith(".") ? domain.substring(1) : domain);
                 cookieManager.setCookie(baseUrl, domainCookieValue);
+                cookieManager.setCookie(baseUrl, domainCookieValueSecure);
             }
             updated = true;
         }
@@ -234,7 +329,7 @@ public class CookieSyncManager {
         if (updated) {
             cookieManager.flush();
             lastSyncedCookieHash = hash;
-            Log.d(TAG, "Successfully synced cookies across all Lib domains off UI thread.");
+            Log.d(TAG, "Successfully duplicated cookies (including XSRF-TOKEN) across all Lib domains off UI thread.");
         }
     }
 }

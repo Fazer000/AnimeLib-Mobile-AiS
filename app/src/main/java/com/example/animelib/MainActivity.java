@@ -829,6 +829,7 @@ public class MainActivity extends AppCompatActivity {
 
                 // Синхронизируем куки с текущей страницы на остальные домены Lib
                 CookieSyncManager.syncFromUrl(url);
+                CookieSyncManager.injectAuthLocalStorage(view);
 
                 // Always setup listeners - let JavaScript determine if it's needed
                 JSInjectionsHandler.setupPlayerButtonListeners(view);

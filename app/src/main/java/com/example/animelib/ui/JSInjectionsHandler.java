@@ -246,6 +246,11 @@ public class JSInjectionsHandler {
         }
 
         @JavascriptInterface
+        public String getSavedAuthJson() {
+            return com.example.animelib.util.CookieSyncManager.getAuthJson(context);
+        }
+
+        @JavascriptInterface
         public void getAuthFromLocalStorage() {
             android.app.Activity activity = getActivityFromContext(context);
             if (activity != null) {
