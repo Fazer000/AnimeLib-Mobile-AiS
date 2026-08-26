@@ -27,6 +27,9 @@ import android.widget.ProgressBar;
 
 import androidx.annotation.NonNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.example.animelib.MainActivity;
 import com.example.animelib.R;
 import com.example.animelib.VideoPlayerActivity;
@@ -241,6 +244,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
             webSettings.setLoadsImagesAutomatically(true);
             webSettings.setMediaPlaybackRequiresUserGesture(false);
             webSettings.setGeolocationEnabled(true);
+            webSettings.setUserAgentString("Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36");
             try {
                 webSettings.setForceDark(WebSettings.FORCE_DARK_AUTO);
             } catch (Exception ignored) {}
@@ -361,9 +365,6 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                             progressBarWeb.setVisibility(View.GONE);
                         }
                     }
-                    if (newProgress >= 20 && jsInjectionsHandler != null) {
-                        jsInjectionsHandler.setupBottomSheetInjections(view);
-                    }
                 }
             });
         } catch (Exception e) {
@@ -371,11 +372,21 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
         }
     }
 
+    private Map<String, String> getRequestHeaders() {
+        Map<String, String> headers = new java.util.HashMap<>();
+        headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8");
+        headers.put("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
+        headers.put("Accept-Encoding", "gzip, deflate, br");
+        headers.put("Cache-Control", "max-age=0");
+        headers.put("Connection", "keep-alive");
+        return headers;
+    }
+
     private void loadUrl() {
         if (webViewTitle != null && targetUrl != null && !targetUrl.isEmpty()) {
             Log.d(TAG, "Loading URL in BottomSheet WebView: " + targetUrl);
             try {
-                webViewTitle.loadUrl(targetUrl);
+                webViewTitle.loadUrl(targetUrl, getRequestHeaders());
             } catch (Exception e) {
                 Log.e(TAG, "Failed to load URL: " + e.getMessage(), e);
             }
