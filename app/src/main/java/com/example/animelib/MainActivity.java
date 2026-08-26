@@ -1260,10 +1260,11 @@ public class MainActivity extends AppCompatActivity {
                             try {
                                 // Проверяем что это валидный JSON
                                 if (authValue.startsWith("{") && authValue.endsWith("}")) {
+                                    CookieSyncManager.saveAuthJson(authValue);
                                     Gson gson = new Gson();
                                     TokenResponse tokenResponse = gson.fromJson(authValue, TokenResponse.class);
                                     if (tokenResponse != null && tokenResponse.getToken() != null) {
-                                        saveTokensToDatabase(tokenResponse, callback);
+                                        saveTokensToDatabase(tokenResponse, authValue, callback);
                                         Log.d("MainActivity", "Successfully parsed and saved tokens");
                                     } else {
                                         Log.w("MainActivity", "Token data not found in auth response");
@@ -1316,6 +1317,10 @@ public class MainActivity extends AppCompatActivity {
      * Сохраняет токены в базу данных из TokenResponse
      */
     private void saveTokensToDatabase(TokenResponse tokenResponse, Runnable callback) {
+        saveTokensToDatabase(tokenResponse, null, callback);
+    }
+
+    private void saveTokensToDatabase(TokenResponse tokenResponse, String rawAuthJson, Runnable callback) {
         if (tokenResponse == null || tokenResponse.getToken() == null) {
             if (callback != null) runOnUiThread(callback);
             return;
@@ -1350,6 +1355,14 @@ public class MainActivity extends AppCompatActivity {
                     finalUserId,
                     finalUsername
                 );
+                if (rawAuthJson != null && !rawAuthJson.trim().isEmpty()) {
+                    tokenEntity.setAuthJson(rawAuthJson.trim());
+                } else {
+                    String saved = CookieSyncManager.getAuthJson(this);
+                    if (saved != null) {
+                        tokenEntity.setAuthJson(saved);
+                    }
+                }
                 
                 databaseManager.saveToken(tokenEntity);
                 Log.d("MainActivity", "Tokens saved to database successfully with userId: " + finalUserId + ", username: " + finalUsername);

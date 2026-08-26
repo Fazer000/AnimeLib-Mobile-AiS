@@ -92,12 +92,23 @@ public class CookieSyncManager {
     }
 
     /**
-     * Сохраняет JSON объект auth из localStorage
+     * Сохраняет JSON объект auth из localStorage и в базе данных
      */
     public static void saveAuthJson(String authJson) {
         if (authJson != null && !authJson.trim().isEmpty() && !"null".equals(authJson) && !"undefined".equals(authJson)) {
             savedAuthJson = authJson.trim();
             Log.d(TAG, "Saved auth object from localStorage for cross-domain sync");
+            try {
+                Context appContext = AnimeLibApplication.getInstance();
+                if (appContext != null) {
+                    DatabaseManager dbManager = DatabaseManager.getInstance(appContext);
+                    if (dbManager != null) {
+                        dbManager.updateAuthJson(savedAuthJson);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error persisting authJson to database", e);
+            }
         }
     }
 
@@ -111,7 +122,7 @@ public class CookieSyncManager {
     }
 
     /**
-     * Получает JSON строку auth. Если savedAuthJson не задан, но токен есть в БД — собирает валидный auth JSON.
+     * Получает JSON строку auth. Если savedAuthJson не задан в памяти, считывает колонку authJson из БД.
      */
     public static String getAuthJson(Context context) {
         if (savedAuthJson != null && !savedAuthJson.trim().isEmpty() && !"null".equals(savedAuthJson)) {
@@ -122,36 +133,42 @@ public class CookieSyncManager {
             if (appContext != null) {
                 DatabaseManager dbManager = DatabaseManager.getInstance(appContext);
                 TokenEntity token = dbManager.getToken();
-                if (token != null && token.getAccessToken() != null && !token.getAccessToken().isEmpty()) {
-                    JsonObject tokenObj = new JsonObject();
-                    tokenObj.addProperty("token_type", token.getTokenType() != null ? token.getTokenType() : "Bearer");
-                    tokenObj.addProperty("expires_in", token.getExpiresIn() > 0 ? token.getExpiresIn() : 2678399L);
-                    tokenObj.addProperty("access_token", token.getAccessToken());
-                    if (token.getRefreshToken() != null) {
-                        tokenObj.addProperty("refresh_token", token.getRefreshToken());
+                if (token != null) {
+                    if (token.getAuthJson() != null && !token.getAuthJson().trim().isEmpty() && !"null".equals(token.getAuthJson())) {
+                        savedAuthJson = token.getAuthJson().trim();
+                        return savedAuthJson;
                     }
-                    tokenObj.addProperty("timestamp", token.getTimestamp() > 0 ? token.getTimestamp() : System.currentTimeMillis());
+                    if (token.getAccessToken() != null && !token.getAccessToken().isEmpty()) {
+                        JsonObject tokenObj = new JsonObject();
+                        tokenObj.addProperty("token_type", token.getTokenType() != null ? token.getTokenType() : "Bearer");
+                        tokenObj.addProperty("expires_in", token.getExpiresIn() > 0 ? token.getExpiresIn() : 2678399L);
+                        tokenObj.addProperty("access_token", token.getAccessToken());
+                        if (token.getRefreshToken() != null) {
+                            tokenObj.addProperty("refresh_token", token.getRefreshToken());
+                        }
+                        tokenObj.addProperty("timestamp", token.getTimestamp() > 0 ? token.getTimestamp() : System.currentTimeMillis());
 
-                    JsonObject root = new JsonObject();
-                    root.add("token", tokenObj);
+                        JsonObject root = new JsonObject();
+                        root.add("token", tokenObj);
 
-                    if (token.getUserId() != null || token.getUsername() != null) {
-                        JsonObject authObj = new JsonObject();
-                        if (token.getUserId() != null) {
-                            try {
-                                authObj.addProperty("id", Long.parseLong(token.getUserId()));
-                            } catch (Exception ignored) {
-                                authObj.addProperty("id", token.getUserId());
+                        if (token.getUserId() != null || token.getUsername() != null) {
+                            JsonObject authObj = new JsonObject();
+                            if (token.getUserId() != null) {
+                                try {
+                                    authObj.addProperty("id", Long.parseLong(token.getUserId()));
+                                } catch (Exception ignored) {
+                                    authObj.addProperty("id", token.getUserId());
+                                }
                             }
+                            if (token.getUsername() != null) {
+                                authObj.addProperty("username", token.getUsername());
+                            }
+                            root.add("auth", authObj);
                         }
-                        if (token.getUsername() != null) {
-                            authObj.addProperty("username", token.getUsername());
-                        }
-                        root.add("auth", authObj);
-                    }
 
-                    savedAuthJson = root.toString();
-                    return savedAuthJson;
+                        savedAuthJson = root.toString();
+                        return savedAuthJson;
+                    }
                 }
             }
         } catch (Exception e) {

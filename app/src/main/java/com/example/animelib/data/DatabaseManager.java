@@ -529,6 +529,35 @@ public class DatabaseManager {
             }
         });
     }
+
+    /**
+     * Обновляет сырой authJson в текущем токене или создаёт токен с authJson
+     */
+    public void updateAuthJson(String authJson) {
+        if (authJson == null || authJson.trim().isEmpty() || "null".equals(authJson)) return;
+        executor.execute(() -> {
+            try {
+                TokenEntity token = db.tokenDao().getToken();
+                if (token != null) {
+                    token.setAuthJson(authJson);
+                    db.tokenDao().insertOrUpdateToken(token);
+                    cachedToken = token;
+                    Log.d(TAG, "Updated token entity with authJson in database");
+                } else {
+                    TokenEntity newToken = new TokenEntity();
+                    newToken.setAuthJson(authJson);
+                    newToken.setTokenType("Bearer");
+                    newToken.setExpiresIn(2678399L);
+                    newToken.setTimestamp(System.currentTimeMillis());
+                    db.tokenDao().insertOrUpdateToken(newToken);
+                    cachedToken = newToken;
+                    Log.d(TAG, "Saved new token entity with authJson in database");
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to update authJson in database", e);
+            }
+        });
+    }
     
     /**
      * Получает токен из базы данных

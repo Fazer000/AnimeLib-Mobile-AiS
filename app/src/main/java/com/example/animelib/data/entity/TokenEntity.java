@@ -18,6 +18,7 @@ public class TokenEntity {
     private long timestamp;
     private String userId;
     private String username;
+    private String authJson;
     
     public TokenEntity() {}
     
@@ -66,4 +67,7 @@ public class TokenEntity {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+
+    public String getAuthJson() { return authJson; }
+    public void setAuthJson(String authJson) { this.authJson = authJson; }
 }
