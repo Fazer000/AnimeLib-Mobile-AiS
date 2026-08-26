@@ -426,6 +426,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+
+        // Save bookmark and latest-view for the previous anime before switching
+        autoSaveBookmark();
+
         setIntent(intent);
 
         // Stop current player if active
@@ -442,6 +446,12 @@ public class VideoPlayerActivity extends AppCompatActivity {
         String localFilePath = intent.getStringExtra("EXTRA_LOCAL_FILE_PATH");
         currentVideoUrl = intent.getStringExtra(EXTRA_VIDEO_URL);
         animeUrl = intent.getStringExtra(EXTRA_ANIME_URL);
+
+        // Reset anime-specific metadata and state
+        currentAnimeInfo = null;
+        autoBookmarkSaved = false;
+        bookmarkTimecode = 0;
+        savedPlayerPosition = 0;
 
         if (localFilePath != null) {
             isOfflineMode = true;
@@ -5297,6 +5307,14 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void loadAnimeFromUrl(String url) {
+        this.animeUrl = url;
+        if (getIntent() != null) {
+            getIntent().putExtra(EXTRA_ANIME_URL, url);
+            getIntent().putExtra("anime_url", url);
+        }
+
+        currentAnimeInfo = null;
+
         // Извлекаем anime ID из URL
         currentAnimeId = apiService.extractAnimeId(url);
         Log.d("VideoPlayer", "Extracted anime ID from URL: " + currentAnimeId);
@@ -5306,6 +5324,25 @@ public class VideoPlayerActivity extends AppCompatActivity {
             finish();
             return;
         }
+
+        // Асинхронно получаем метаданные аниме (AnimeInfo), чтобы заголовок, обложка и slug были точными
+        String animeSlug = apiService.extractAnimeSlug(url);
+        if (animeSlug == null) animeSlug = currentAnimeId;
+
+        apiService.fetchAnimeInfo(animeSlug, new ApiService.AnimeInfoCallback() {
+            @Override
+            public void onAnimeInfoReceived(AnimeInfoResponse response) {
+                if (response != null && response.getData() != null) {
+                    currentAnimeInfo = response;
+                    Log.d("VideoPlayer", "Fetched anime info for " + response.getData().getRus_name());
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                Log.w("VideoPlayer", "Failed to fetch anime info in loadAnimeFromUrl: " + errorMessage);
+            }
+        });
         
         // Load related titles
         loadRelatedTitles();
@@ -5713,20 +5750,33 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 mediaObj.addProperty("model", "anime");
             } else {
                 int animeIdInt = 0;
+                String activeAnimeUrl = this.animeUrl != null ? this.animeUrl : (getIntent() != null ? getIntent().getStringExtra("anime_url") : null);
+
                 if (currentAnimeId != null) {
-                    try { animeIdInt = Integer.parseInt(currentAnimeId); } catch (Exception ignored) {}
+                    String extractedNumeric = com.example.animelib.ui.VideoUrlHelper.extractAnimeId(currentAnimeId);
+                    if (extractedNumeric != null) {
+                        try { animeIdInt = Integer.parseInt(extractedNumeric); } catch (Exception ignored) {}
+                    } else {
+                        try { animeIdInt = Integer.parseInt(currentAnimeId); } catch (Exception ignored) {}
+                    }
                 }
+                if (animeIdInt == 0 && activeAnimeUrl != null) {
+                    String extracted = apiService != null ? apiService.extractAnimeId(activeAnimeUrl) : null;
+                    if (extracted != null) {
+                        try { animeIdInt = Integer.parseInt(extracted); } catch (Exception ignored) {}
+                    }
+                }
+
                 String titleStr = getIntent() != null && getIntent().getStringExtra("EXTRA_ANIME_TITLE") != null ?
                         getIntent().getStringExtra("EXTRA_ANIME_TITLE") : "Anime";
-                String animeUrlStr = getIntent() != null ? getIntent().getStringExtra("anime_url") : null;
-                String slugStr = animeUrlStr != null ? ApiService.extractMediaSlugFromUrl(animeUrlStr) : "anime";
+                String slugUrlStr = activeAnimeUrl != null ? ApiService.extractMediaSlugFromUrl(activeAnimeUrl) : "anime";
 
                 mediaObj.addProperty("id", animeIdInt);
                 mediaObj.addProperty("name", titleStr);
                 mediaObj.addProperty("rus_name", titleStr);
                 mediaObj.addProperty("eng_name", titleStr);
-                mediaObj.addProperty("slug", slugStr != null ? slugStr : "anime");
-                mediaObj.addProperty("slug_url", slugStr != null ? slugStr : "anime");
+                mediaObj.addProperty("slug", slugUrlStr != null ? slugUrlStr : "anime");
+                mediaObj.addProperty("slug_url", slugUrlStr != null ? slugUrlStr : "anime");
                 com.google.gson.JsonObject coverObj = new com.google.gson.JsonObject();
                 mediaObj.add("cover", coverObj);
                 mediaObj.addProperty("site", 5);
@@ -6051,6 +6101,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             public void onAnimeInfoReceived(AnimeInfoResponse response) {
                 safeRunOnUiThread(() -> {
                     if (response != null && response.getData() != null) {
+                        currentAnimeInfo = response;
                         String rus = response.getData().getRus_name();
                         SkeletonHelper.hideSkeleton(animeTitleView, rus != null ? rus : "");
                         updatePortraitHeaderTitlesUI();
