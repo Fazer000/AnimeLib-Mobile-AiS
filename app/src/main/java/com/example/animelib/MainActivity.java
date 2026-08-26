@@ -844,6 +844,7 @@ public class MainActivity extends AppCompatActivity {
 
                 JSInjectionsHandler.reinjectDomListeners(view);
                 CookieSyncManager.syncFromUrl(url);
+                CookieSyncManager.injectAuthLocalStorage(view);
 
                 if (isFirstLoad) {
                     isFirstLoad = false;

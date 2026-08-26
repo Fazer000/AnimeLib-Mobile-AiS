@@ -241,6 +241,11 @@ public class JSInjectionsHandler {
         }
         
         @JavascriptInterface
+        public void saveAuthLocalStorage(String authJson) {
+            com.example.animelib.util.CookieSyncManager.saveAuthJson(authJson);
+        }
+
+        @JavascriptInterface
         public void getAuthFromLocalStorage() {
             android.app.Activity activity = getActivityFromContext(context);
             if (activity != null) {
@@ -257,6 +262,7 @@ public class JSInjectionsHandler {
 
         @JavascriptInterface
         public void clearAuthToken() {
+            com.example.animelib.util.CookieSyncManager.clearAuthJson();
             android.app.Activity activity = getActivityFromContext(context);
             if (activity != null) {
                 activity.runOnUiThread(() -> {

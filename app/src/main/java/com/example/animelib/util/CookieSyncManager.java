@@ -2,19 +2,30 @@ package com.example.animelib.util;
 
 import android.util.Log;
 import android.webkit.CookieManager;
+import android.webkit.WebView;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * Менеджер синхронизации и дублирования куки авторизации с AnimeLib на остальные сайты сети Lib (MangaLib, RanobeLib, HentaiLib, SlashLib, Lib.Social)
+ * Менеджер синхронизации и дублирования куки и localStorage объекта auth
+ * между всеми доменам сети Lib (AnimeLib, MangaLib, RanobeLib, HentaiLib, SlashLib, Lib.Social).
+ * Выполняется асинхронно, чтобы исключить подлагивания UI при переходах между страницами.
  */
 public class CookieSyncManager {
     private static final String TAG = "CookieSyncManager";
 
-    // Все URL доменов сети Lib для дублирования куки
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private static volatile String savedAuthJson = null;
+    private static volatile String lastSyncedCookieHash = "";
+    private static volatile long lastSyncTimestamp = 0;
+
+    // Все ключевые URL сети Lib
     public static final List<String> ALL_LIB_URLS = Arrays.asList(
         "https://animelib.me",
         "https://animelib.org",
@@ -37,7 +48,7 @@ public class CookieSyncManager {
         "https://lib.social"
     );
 
-    // Все корневые домены для директивы Domain
+    // Корневые домены для установки Domain куков
     public static final List<String> ALL_LIB_DOMAINS = Arrays.asList(
         ".animelib.org",
         ".animelib.me",
@@ -53,90 +64,177 @@ public class CookieSyncManager {
     );
 
     /**
-     * Синхронизирует все куки с анимелиба (и имеющихся доменов) на MangaLib, RanobeLib и остальные сайты
+     * Сохраняет JSON объект auth из localStorage
+     */
+    public static void saveAuthJson(String authJson) {
+        if (authJson != null && !authJson.trim().isEmpty() && !"null".equals(authJson) && !"undefined".equals(authJson)) {
+            savedAuthJson = authJson.trim();
+            Log.d(TAG, "Saved auth object from localStorage for cross-domain sync");
+        }
+    }
+
+    /**
+     * Очищает сохранённый auth объект (при выходе)
+     */
+    public static void clearAuthJson() {
+        savedAuthJson = null;
+        Log.d(TAG, "Cleared saved auth object");
+    }
+
+    public static String getSavedAuthJson() {
+        return savedAuthJson;
+    }
+
+    /**
+     * Внедряет объект auth из localStorage на загруженную страницу WebView
+     */
+    public static void injectAuthLocalStorage(WebView webView) {
+        if (webView == null) return;
+        final String authStr = savedAuthJson;
+        if (authStr == null || authStr.isEmpty() || "null".equals(authStr)) return;
+
+        webView.post(() -> {
+            try {
+                // Подготавливаем безопасный скрипт для записи localStorage.auth
+                String cleanAuth = authStr;
+                // Если строка уже в кавычках или объекте, форматируем правильно
+                String jsScript =
+                    "(function() {" +
+                    "  try {" +
+                    "    var authVal = " + cleanAuth + ";" +
+                    "    var authStr = (typeof authVal === 'string') ? authVal : JSON.stringify(authVal);" +
+                    "    var current = localStorage.getItem('auth');" +
+                    "    if (authStr && current !== authStr) {" +
+                    "      localStorage.setItem('auth', authStr);" +
+                    "      console.log('[CookieSyncManager] LocalStorage auth synced to ' + window.location.hostname);" +
+                    "    }" +
+                    "  } catch(e) {" +
+                    "    console.error('[CookieSyncManager] Auth injection error:', e);" +
+                    "  }" +
+                    "})();";
+
+                webView.evaluateJavascript(jsScript, null);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to inject auth into localStorage", e);
+            }
+        });
+    }
+
+    /**
+     * Синхронизирует все куки с основных доменов сети Lib на все остальные (асинхронно)
      */
     public static void syncAllCookies() {
         syncFromUrl(null);
     }
 
     /**
-     * Считывает куки с исходного URL (или с доменов AnimeLib) и копирует их на все остальные домены
-     * @param sourceUrl исходный URL страницы (например, текущий URL в WebView)
+     * Считывает куки с sourceUrl и асинхронно копирует на остальные сайты Lib
      */
-    public static void syncFromUrl(String sourceUrl) {
-        try {
-            CookieManager cookieManager = CookieManager.getInstance();
-            if (cookieManager == null) return;
-
-            cookieManager.setAcceptCookie(true);
-
-            Set<String> sourceUrls = new HashSet<>();
-            if (sourceUrl != null && !sourceUrl.trim().isEmpty() && sourceUrl.startsWith("http")) {
-                sourceUrls.add(sourceUrl);
-            }
-            // Всегда проверяем основные домены AnimeLib и Lib.Social
-            sourceUrls.add("https://v5.animelib.org");
-            sourceUrls.add("https://animelib.org");
-            sourceUrls.add("https://animelib.me");
-            sourceUrls.add("https://lib.social");
-
-            for (String src : sourceUrls) {
-                String cookies = cookieManager.getCookie(src);
-                if (cookies != null && !cookies.trim().isEmpty()) {
-                    copyCookieStringToAllDomains(cookies);
-                }
-            }
-
-            cookieManager.flush();
-        } catch (Exception e) {
-            Log.e(TAG, "Error in syncFromUrl", e);
+    public static void syncFromUrl(final String sourceUrl) {
+        long now = System.currentTimeMillis();
+        // Троттлинг: если прошло менее 1.5 сек с последней синхронизации и нет специфичного URL, прогоняем асинхронно
+        if (sourceUrl == null && (now - lastSyncTimestamp < 1500)) {
+            return;
         }
+
+        executor.execute(() -> {
+            try {
+                CookieManager cookieManager = CookieManager.getInstance();
+                if (cookieManager == null) return;
+
+                cookieManager.setAcceptCookie(true);
+
+                Set<String> sourceUrls = new HashSet<>();
+                if (sourceUrl != null && !sourceUrl.trim().isEmpty() && sourceUrl.startsWith("http")) {
+                    sourceUrls.add(sourceUrl);
+                }
+                sourceUrls.add("https://v5.animelib.org");
+                sourceUrls.add("https://animelib.org");
+                sourceUrls.add("https://animelib.me");
+                sourceUrls.add("https://mangalib.me");
+                sourceUrls.add("https://ranobelib.me");
+                sourceUrls.add("https://lib.social");
+
+                StringBuilder combinedCookies = new StringBuilder();
+                for (String src : sourceUrls) {
+                    String cookies = cookieManager.getCookie(src);
+                    if (cookies != null && !cookies.trim().isEmpty()) {
+                        combinedCookies.append(cookies).append("; ");
+                    }
+                }
+
+                String fullCookieStr = combinedCookies.toString().trim();
+                if (!fullCookieStr.isEmpty()) {
+                    copyCookieStringToAllDomainsInternal(cookieManager, fullCookieStr);
+                }
+
+                lastSyncTimestamp = System.currentTimeMillis();
+            } catch (Exception e) {
+                Log.e(TAG, "Error in async syncFromUrl", e);
+            }
+        });
     }
 
     /**
-     * Копирует строку куки (например, "token=xyz; remember_web=123") на все домены сети Lib
-     * @param cookieHeader строка куков в формате "key1=val1; key2=val2"
+     * Асинхронно копирует строку куки на все домены сети Lib
      */
-    public static void copyCookieStringToAllDomains(String cookieHeader) {
+    public static void copyCookieStringToAllDomains(final String cookieHeader) {
         if (cookieHeader == null || cookieHeader.trim().isEmpty()) return;
 
-        try {
-            CookieManager cookieManager = CookieManager.getInstance();
-            if (cookieManager == null) return;
+        executor.execute(() -> {
+            try {
+                CookieManager cookieManager = CookieManager.getInstance();
+                if (cookieManager == null) return;
+                cookieManager.setAcceptCookie(true);
 
-            cookieManager.setAcceptCookie(true);
+                copyCookieStringToAllDomainsInternal(cookieManager, cookieHeader);
+            } catch (Exception e) {
+                Log.e(TAG, "Error copying cookies to all domains", e);
+            }
+        });
+    }
 
-            String[] pairs = cookieHeader.split(";");
-            for (String pair : pairs) {
-                String trimmed = pair.trim();
-                if (trimmed.isEmpty()) continue;
+    private static void copyCookieStringToAllDomainsInternal(CookieManager cookieManager, String cookieHeader) {
+        String hash = String.valueOf(cookieHeader.hashCode());
+        if (hash.equals(lastSyncedCookieHash)) {
+            // Уменьшаем избыточную перезапись, если куки не изменялись
+            return;
+        }
 
-                int eqIdx = trimmed.indexOf('=');
-                if (eqIdx <= 0) continue;
+        String[] pairs = cookieHeader.split(";");
+        boolean updated = false;
 
-                String key = trimmed.substring(0, eqIdx).trim();
-                String val = trimmed.substring(eqIdx + 1).trim();
+        for (String pair : pairs) {
+            String trimmed = pair.trim();
+            if (trimmed.isEmpty()) continue;
 
-                if (key.isEmpty()) continue;
+            int eqIdx = trimmed.indexOf('=');
+            if (eqIdx <= 0) continue;
 
-                // 1. Устанавливаем куки напрямую для каждого URL
-                String cookieValue = key + "=" + val + "; Path=/; SameSite=Lax";
-                for (String targetUrl : ALL_LIB_URLS) {
-                    cookieManager.setCookie(targetUrl, cookieValue);
-                }
+            String key = trimmed.substring(0, eqIdx).trim();
+            String val = trimmed.substring(eqIdx + 1).trim();
 
-                // 2. Устанавливаем куки с явным указанием корневого домена
-                for (String domain : ALL_LIB_DOMAINS) {
-                    String domainCookieValue = key + "=" + val + "; Path=/; Domain=" + domain + "; SameSite=Lax";
-                    String baseUrl = "https://" + (domain.startsWith(".") ? domain.substring(1) : domain);
-                    cookieManager.setCookie(baseUrl, domainCookieValue);
-                }
+            if (key.isEmpty()) continue;
+
+            // 1. Копируем куки на основные URL
+            String cookieValue = key + "=" + val + "; Path=/; SameSite=Lax";
+            for (String targetUrl : ALL_LIB_URLS) {
+                cookieManager.setCookie(targetUrl, cookieValue);
             }
 
+            // 2. Копируем с директивой Domain на корневые домены
+            for (String domain : ALL_LIB_DOMAINS) {
+                String domainCookieValue = key + "=" + val + "; Path=/; Domain=" + domain + "; SameSite=Lax";
+                String baseUrl = "https://" + (domain.startsWith(".") ? domain.substring(1) : domain);
+                cookieManager.setCookie(baseUrl, domainCookieValue);
+            }
+            updated = true;
+        }
+
+        if (updated) {
             cookieManager.flush();
-            Log.d(TAG, "Duplicated cookies across all Lib domains (mangalib, ranobelib, etc.)");
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to copy cookie string to all domains", e);
+            lastSyncedCookieHash = hash;
+            Log.d(TAG, "Successfully synced cookies across all Lib domains off UI thread.");
         }
     }
 }

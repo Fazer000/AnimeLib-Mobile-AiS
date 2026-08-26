@@ -338,6 +338,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
                     CookieSyncManager.syncFromUrl(url);
+                    CookieSyncManager.injectAuthLocalStorage(view);
                     if (progressBarWeb != null) {
                         progressBarWeb.setVisibility(View.GONE);
                     }

@@ -117,11 +117,31 @@
     }
 
     // 3. Дополнительная синхронизация из localStorage и document.cookie при наличии
+    if (typeof localStorage !== 'undefined' && !window.__setItemIntercepted) {
+        window.__setItemIntercepted = true;
+        try {
+            const originalSetItem = localStorage.setItem;
+            localStorage.setItem = function(key, val) {
+                originalSetItem.apply(this, arguments);
+                if (key === 'auth' && val && val !== 'null' && val !== 'undefined') {
+                    if (window.AndroidInterface && typeof window.AndroidInterface.saveAuthLocalStorage === 'function') {
+                        window.AndroidInterface.saveAuthLocalStorage(val);
+                    }
+                }
+            };
+        } catch (e) {
+            console.error('Error overriding localStorage.setItem:', e);
+        }
+    }
+
     function syncAuthToken() {
         try {
             if (typeof localStorage !== 'undefined') {
                 const auth = localStorage.getItem('auth');
                 if (auth && auth !== 'null' && auth !== 'undefined') {
+                    if (window.AndroidInterface && typeof window.AndroidInterface.saveAuthLocalStorage === 'function') {
+                        window.AndroidInterface.saveAuthLocalStorage(auth);
+                    }
                     if (window.AndroidInterface && typeof window.AndroidInterface.getAuthFromLocalStorage === 'function') {
                         window.AndroidInterface.getAuthFromLocalStorage();
                     }
