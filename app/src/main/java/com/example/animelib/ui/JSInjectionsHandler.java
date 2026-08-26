@@ -134,11 +134,7 @@ public class JSInjectionsHandler {
                     Log.d("PlayerHandler", "Getting auth token before starting VideoPlayerActivity for URL: " + buttonHref);
                     if (activity instanceof com.example.animelib.MainActivity) {
                         ((com.example.animelib.MainActivity) activity).getAuthAndStartVideoPlayer(buttonHref);
-                    } else if (activity instanceof VideoPlayerActivity) {
-                        VideoPlayerActivity.startFromAnimePage(activity, buttonHref);
-                        activity.finish();
                     } else {
-                        Log.w("PlayerHandler", "Context is not MainActivity or VideoPlayerActivity, starting VideoPlayerActivity");
                         VideoPlayerActivity.startFromAnimePage(activity, buttonHref);
                     }
                 });

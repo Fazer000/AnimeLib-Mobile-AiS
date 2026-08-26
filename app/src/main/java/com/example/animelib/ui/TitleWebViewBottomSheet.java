@@ -66,46 +66,6 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
         return (ctx instanceof Activity) ? (Activity) ctx : null;
     }
 
-    private String resolveAnimeUrl(String href) {
-        if (href == null || href.isEmpty()) {
-            return targetUrl != null ? targetUrl : "";
-        }
-        if (href.contains("--") || href.contains("/anime/")) {
-            if (href.startsWith("http://") || href.startsWith("https://")) {
-                return href;
-            } else if (href.startsWith("/")) {
-                return "https://v5.animelib.org" + href;
-            } else {
-                return "https://v5.animelib.org/" + href;
-            }
-        }
-        if (targetUrl != null && (targetUrl.contains("--") || targetUrl.contains("/anime/"))) {
-            String baseTarget = targetUrl;
-            if (baseTarget.contains("?")) {
-                baseTarget = baseTarget.substring(0, baseTarget.indexOf("?"));
-            }
-            if (!baseTarget.endsWith("/watch")) {
-                if (baseTarget.endsWith("/")) {
-                    baseTarget += "watch";
-                } else {
-                    baseTarget += "/watch";
-                }
-            }
-            if (href.contains("?")) {
-                String query = href.substring(href.indexOf("?"));
-                return baseTarget + query;
-            }
-            return baseTarget;
-        }
-
-        if (href.startsWith("http://") || href.startsWith("https://")) {
-            return href;
-        } else if (href.startsWith("/")) {
-            return "https://v5.animelib.org" + href;
-        }
-        return href;
-    }
-
     private synchronized void openPlayerFromUrl(String rawUrl) {
         Activity act = getActivityFromContext(getContext());
         if (act == null || act.isFinishing() || act.isDestroyed()) {
@@ -122,7 +82,8 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                 isNavigatingToPlayer = true;
             }
 
-            String finalUrl = resolveAnimeUrl(rawUrl);
+            String currentUrl = (webViewTitle != null && webViewTitle.getUrl() != null) ? webViewTitle.getUrl() : targetUrl;
+            String finalUrl = VideoUrlHelper.resolveAnimeUrl(rawUrl, currentUrl);
             Log.d(TAG, "Opening VideoPlayerActivity with resolved URL: " + finalUrl);
 
             try {
@@ -133,9 +94,6 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
 
             if (act instanceof MainActivity) {
                 ((MainActivity) act).getAuthAndStartVideoPlayer(finalUrl);
-            } else if (act instanceof VideoPlayerActivity) {
-                VideoPlayerActivity.startFromAnimePage(act, finalUrl);
-                act.finish();
             } else {
                 VideoPlayerActivity.startFromAnimePage(act, finalUrl);
             }

@@ -687,6 +687,15 @@ public class MainActivity extends AppCompatActivity {
                     showDomainChangeSpinner();
                 }
                 
+                // Перехват ссылок на плеер/просмотр
+                if (url != null && (url.contains("/watch") || url.contains("episode"))) {
+                    String currentUrl = view.getUrl();
+                    String resolvedUrl = com.example.animelib.ui.VideoUrlHelper.resolveAnimeUrl(url, currentUrl);
+                    Log.d("WebView", "Intercepted watch link in shouldOverrideUrlLoading: " + url + " -> " + resolvedUrl);
+                    getAuthAndStartVideoPlayer(resolvedUrl);
+                    return true;
+                }
+
                 // ВСЕГДА загружаем с headers для корректной работы
                 // (авторизация, куки, и т.д. могут зависеть от headers)
                 Log.d("WebView", "Loading URL with headers");
@@ -1236,9 +1245,11 @@ public class MainActivity extends AppCompatActivity {
     @OptIn(markerClass = UnstableApi.class)
     public void getAuthAndStartVideoPlayer(String animeUrl) {
         Log.d("MainActivity", "Getting auth token before starting VideoPlayerActivity");
+        String currentUrl = webView != null ? webView.getUrl() : null;
+        String resolvedUrl = com.example.animelib.ui.VideoUrlHelper.resolveAnimeUrl(animeUrl, currentUrl);
         getAuthFromLocalStorage(() -> {
-            Log.d("MainActivity", "Starting VideoPlayerActivity with URL: " + animeUrl);
-            VideoPlayerActivity.startFromAnimePage(this, animeUrl);
+            Log.d("MainActivity", "Starting VideoPlayerActivity with resolved URL: " + resolvedUrl);
+            VideoPlayerActivity.startFromAnimePage(this, resolvedUrl);
         });
     }
     

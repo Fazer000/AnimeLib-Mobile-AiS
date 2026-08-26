@@ -134,14 +134,24 @@ public class VideoUrlHelper {
             return null;
         }
 
-        // Extract anime identifier from href like "/ru/anime/24653--sakamoto-days-part-2-anime/watch"
-        Pattern pattern = Pattern.compile("/ru/anime/([^/]+)/watch");
+        Pattern pattern = Pattern.compile("(?:/ru)?/anime/([^/?#]+)");
         Matcher matcher = pattern.matcher(href);
 
         if (matcher.find()) {
             String animeIdentifier = matcher.group(1);
             Log.d(TAG, "Found anime identifier: " + animeIdentifier);
             return animeIdentifier;
+        }
+
+        if (href.contains("--")) {
+            String[] parts = href.split("/");
+            for (String part : parts) {
+                if (part.contains("--")) {
+                    if (part.contains("?")) part = part.substring(0, part.indexOf("?"));
+                    if (part.contains("#")) part = part.substring(0, part.indexOf("#"));
+                    return part;
+                }
+            }
         }
 
         Log.w(TAG, "Could not extract anime identifier from href: " + href);
@@ -168,6 +178,75 @@ public class VideoUrlHelper {
         }
 
         return null;
+    }
+
+    /**
+     * Resolves an anime URL from a clicked link/href and current page context.
+     * Guarantees that the resulting URL contains the anime slug/ID if available in currentUrl.
+     */
+    public static String resolveAnimeUrl(String href, String currentUrl) {
+        if (href == null || href.isEmpty()) {
+            return currentUrl != null ? currentUrl : "";
+        }
+
+        String cleanHref = href.trim();
+
+        // 1. If href itself contains an anime identifier (e.g. contains "--" or "/anime/")
+        String hrefIdentifier = extractAnimeIdentifier(cleanHref);
+        if (hrefIdentifier != null) {
+            if (cleanHref.startsWith("http://") || cleanHref.startsWith("https://")) {
+                return cleanHref;
+            } else if (cleanHref.startsWith("/")) {
+                return "https://v5.animelib.org" + cleanHref;
+            } else {
+                return "https://v5.animelib.org/" + cleanHref;
+            }
+        }
+
+        // 2. If href does NOT contain anime identifier, try to get base anime URL from currentUrl
+        String currentIdentifier = currentUrl != null ? extractAnimeIdentifier(currentUrl) : null;
+        if (currentIdentifier != null && currentUrl != null) {
+            String cleanCurrent = currentUrl.trim();
+            if (cleanCurrent.contains("?")) {
+                cleanCurrent = cleanCurrent.substring(0, cleanCurrent.indexOf("?"));
+            }
+            if (cleanCurrent.contains("#")) {
+                cleanCurrent = cleanCurrent.substring(0, cleanCurrent.indexOf("#"));
+            }
+            if (cleanCurrent.endsWith("/watch")) {
+                cleanCurrent = cleanCurrent.substring(0, cleanCurrent.length() - "/watch".length());
+            } else if (cleanCurrent.endsWith("/watch/")) {
+                cleanCurrent = cleanCurrent.substring(0, cleanCurrent.length() - "/watch/".length());
+            }
+            if (cleanCurrent.endsWith("/")) {
+                cleanCurrent = cleanCurrent.substring(0, cleanCurrent.length() - 1);
+            }
+
+            String baseAnimeUrl;
+            if (cleanCurrent.startsWith("http://") || cleanCurrent.startsWith("https://")) {
+                baseAnimeUrl = cleanCurrent;
+            } else if (cleanCurrent.startsWith("/")) {
+                baseAnimeUrl = "https://v5.animelib.org" + cleanCurrent;
+            } else {
+                baseAnimeUrl = "https://v5.animelib.org/" + cleanCurrent;
+            }
+
+            String targetWatchUrl = baseAnimeUrl.endsWith("/watch") ? baseAnimeUrl : baseAnimeUrl + "/watch";
+            if (cleanHref.contains("?")) {
+                String query = cleanHref.substring(cleanHref.indexOf("?"));
+                return targetWatchUrl + query;
+            }
+            return targetWatchUrl;
+        }
+
+        // Fallback: make href absolute
+        if (cleanHref.startsWith("http://") || cleanHref.startsWith("https://")) {
+            return cleanHref;
+        } else if (cleanHref.startsWith("/")) {
+            return "https://v5.animelib.org" + cleanHref;
+        } else {
+            return "https://v5.animelib.org/" + cleanHref;
+        }
     }
 
     /**

@@ -416,7 +416,43 @@ public class VideoPlayerActivity extends AppCompatActivity {
     public static void startFromAnimePage(Activity context, String animeUrl) {
         Intent intent = new Intent(context, VideoPlayerActivity.class);
         intent.putExtra(EXTRA_ANIME_URL, animeUrl);
+        if (context instanceof VideoPlayerActivity) {
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        }
         context.startActivity(intent);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+
+        // Stop current player if active
+        if (player != null) {
+            try {
+                player.stop();
+                player.clearMediaItems();
+            } catch (Exception e) {
+                Log.w("VideoPlayer", "Error stopping player in onNewIntent", e);
+            }
+        }
+
+        // Process new intent data
+        String localFilePath = intent.getStringExtra("EXTRA_LOCAL_FILE_PATH");
+        currentVideoUrl = intent.getStringExtra(EXTRA_VIDEO_URL);
+        animeUrl = intent.getStringExtra(EXTRA_ANIME_URL);
+
+        if (localFilePath != null) {
+            isOfflineMode = true;
+            String animeTitle = intent.getStringExtra("EXTRA_ANIME_TITLE");
+            String episodeTitle = intent.getStringExtra("EXTRA_EPISODE_TITLE");
+            playOfflineFile(localFilePath, animeTitle, episodeTitle);
+        } else if (currentVideoUrl != null) {
+            initializePlayer();
+        } else if (animeUrl != null) {
+            showLoading("Загрузка видео...");
+            loadAnimeFromUrl(animeUrl);
+        }
     }
 
     public static void startForOfflineEpisode(Context context, String localFilePath, String animeTitle, String episodeTitle, String animeId, String episodeNumber) {

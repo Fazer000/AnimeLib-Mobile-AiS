@@ -1056,6 +1056,11 @@ public class ApiService {
                     return part.replaceAll("^(\\d+).*", "$1");
                 }
             }
+            String identifier = com.example.animelib.ui.VideoUrlHelper.extractAnimeIdentifier(url);
+            if (identifier != null) {
+                String numericId = com.example.animelib.ui.VideoUrlHelper.extractAnimeId(identifier);
+                if (numericId != null) return numericId;
+            }
         } catch (Exception e) {
             Log.e("AnimeApiService", "Error extracting anime_id from URL: " + url, e);
         }
