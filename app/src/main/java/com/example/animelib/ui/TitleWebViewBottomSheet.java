@@ -5,7 +5,9 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -14,6 +16,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -22,6 +25,7 @@ import androidx.annotation.NonNull;
 
 import com.example.animelib.R;
 import com.example.animelib.util.FlexibleBottomSheetDialog;
+import com.example.animelib.util.FloatingBottomSheetUtils;
 
 public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
 
@@ -40,7 +44,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
     private Button btnRetryWeb;
 
     public TitleWebViewBottomSheet(@NonNull Context context, String titleName, String targetUrl) {
-        super(context);
+        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
         this.titleName = titleName;
         this.targetUrl = targetUrl;
     }
@@ -48,22 +52,39 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.bs_title_webview);
 
-        initViews();
+        View view = LayoutInflater.from(getContext()).inflate(R.layout.bs_title_webview, null);
+        setContentView(view);
+        setCanceledOnTouchOutside(true);
+        setCancelable(true);
+
+        FloatingBottomSheetUtils.setupFloatingStyle(this);
+
+        FrameLayout webViewContainer = view.findViewById(R.id.webViewContainer);
+        if (webViewContainer != null) {
+            int screenHeight = getContext().getResources().getDisplayMetrics().heightPixels;
+            int targetHeight = (int) (screenHeight * 0.70f);
+            ViewGroup.LayoutParams lp = webViewContainer.getLayoutParams();
+            if (lp != null) {
+                lp.height = targetHeight;
+                webViewContainer.setLayoutParams(lp);
+            }
+        }
+
+        initViews(view);
         setupWebView();
         loadUrl();
     }
 
-    private void initViews() {
-        tvTitleWebHeader = findViewById(R.id.tvTitleWebHeader);
-        tvSubtitleWebUrl = findViewById(R.id.tvSubtitleWebUrl);
-        btnRefreshWeb = findViewById(R.id.btnRefreshWeb);
-        btnCloseWeb = findViewById(R.id.btnCloseWeb);
-        progressBarWeb = findViewById(R.id.progressBarWeb);
-        webViewTitle = findViewById(R.id.webViewTitle);
-        layoutWebError = findViewById(R.id.layoutWebError);
-        btnRetryWeb = findViewById(R.id.btnRetryWeb);
+    private void initViews(View root) {
+        tvTitleWebHeader = root.findViewById(R.id.tvTitleWebHeader);
+        tvSubtitleWebUrl = root.findViewById(R.id.tvSubtitleWebUrl);
+        btnRefreshWeb = root.findViewById(R.id.btnRefreshWeb);
+        btnCloseWeb = root.findViewById(R.id.btnCloseWeb);
+        progressBarWeb = root.findViewById(R.id.progressBarWeb);
+        webViewTitle = root.findViewById(R.id.webViewTitle);
+        layoutWebError = root.findViewById(R.id.layoutWebError);
+        btnRetryWeb = root.findViewById(R.id.btnRetryWeb);
 
         if (tvTitleWebHeader != null && titleName != null) {
             tvTitleWebHeader.setText(titleName);
@@ -110,96 +131,115 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
     private void setupWebView() {
         if (webViewTitle == null) return;
 
-        WebSettings webSettings = webViewTitle.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
-        webSettings.setDomStorageEnabled(true);
-        webSettings.setDatabaseEnabled(true);
-        webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        webSettings.setLoadWithOverviewMode(true);
-        webSettings.setUseWideViewPort(true);
-        webSettings.setBuiltInZoomControls(true);
-        webSettings.setDisplayZoomControls(false);
-        webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        webSettings.setAllowFileAccess(true);
-        webSettings.setAllowContentAccess(true);
-        webSettings.setLoadsImagesAutomatically(true);
-        webSettings.setMediaPlaybackRequiresUserGesture(false);
+        try {
+            WebSettings webSettings = webViewTitle.getSettings();
+            webSettings.setJavaScriptEnabled(true);
+            webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
+            webSettings.setDomStorageEnabled(true);
+            webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+            webSettings.setLoadWithOverviewMode(true);
+            webSettings.setUseWideViewPort(true);
+            webSettings.setBuiltInZoomControls(true);
+            webSettings.setDisplayZoomControls(false);
+            webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            webSettings.setAllowFileAccess(true);
+            webSettings.setAllowContentAccess(true);
+            webSettings.setLoadsImagesAutomatically(true);
+            webSettings.setMediaPlaybackRequiresUserGesture(false);
 
-        CookieManager cookieManager = CookieManager.getInstance();
-        cookieManager.setAcceptCookie(true);
-        cookieManager.setAcceptThirdPartyCookies(webViewTitle, true);
-
-        webViewTitle.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageStarted(WebView view, String url, Bitmap favicon) {
-                super.onPageStarted(view, url, favicon);
-                if (progressBarWeb != null) {
-                    progressBarWeb.setVisibility(View.VISIBLE);
-                }
-                if (layoutWebError != null) {
-                    layoutWebError.setVisibility(View.GONE);
-                }
-                if (tvSubtitleWebUrl != null && url != null) {
-                    tvSubtitleWebUrl.setText(url);
-                }
+            try {
+                CookieManager cookieManager = CookieManager.getInstance();
+                cookieManager.setAcceptCookie(true);
+                cookieManager.setAcceptThirdPartyCookies(webViewTitle, true);
+            } catch (Exception e) {
+                Log.w(TAG, "CookieManager setup failed: " + e.getMessage());
             }
 
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                if (progressBarWeb != null) {
-                    progressBarWeb.setVisibility(View.GONE);
-                }
-                if (view.getTitle() != null && !view.getTitle().isEmpty() && tvTitleWebHeader != null) {
-                    if (titleName == null || titleName.isEmpty() || titleName.equals("Тайтл")) {
-                        tvTitleWebHeader.setText(view.getTitle());
+            webViewTitle.setWebViewClient(new WebViewClient() {
+                @Override
+                public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                    super.onPageStarted(view, url, favicon);
+                    if (progressBarWeb != null) {
+                        progressBarWeb.setVisibility(View.VISIBLE);
+                    }
+                    if (layoutWebError != null) {
+                        layoutWebError.setVisibility(View.GONE);
+                    }
+                    if (tvSubtitleWebUrl != null && url != null) {
+                        tvSubtitleWebUrl.setText(url);
                     }
                 }
-            }
 
-            @Override
-            public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-                super.onReceivedError(view, request, error);
-                if (request != null && request.isForMainFrame()) {
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    super.onPageFinished(view, url);
                     if (progressBarWeb != null) {
                         progressBarWeb.setVisibility(View.GONE);
                     }
-                    if (layoutWebError != null) {
-                        layoutWebError.setVisibility(View.VISIBLE);
+                    if (view.getTitle() != null && !view.getTitle().isEmpty() && tvTitleWebHeader != null) {
+                        if (titleName == null || titleName.isEmpty() || titleName.equals("Тайтл")) {
+                            tvTitleWebHeader.setText(view.getTitle());
+                        }
                     }
                 }
-            }
-        });
 
-        webViewTitle.setWebChromeClient(new WebChromeClient() {
-            @Override
-            public void onProgressChanged(WebView view, int newProgress) {
-                if (progressBarWeb != null) {
-                    if (newProgress < 100) {
-                        progressBarWeb.setVisibility(View.VISIBLE);
-                        progressBarWeb.setProgress(newProgress);
-                    } else {
-                        progressBarWeb.setVisibility(View.GONE);
+                @Override
+                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                    super.onReceivedError(view, request, error);
+                    if (request != null && request.isForMainFrame()) {
+                        if (progressBarWeb != null) {
+                            progressBarWeb.setVisibility(View.GONE);
+                        }
+                        if (layoutWebError != null) {
+                            layoutWebError.setVisibility(View.VISIBLE);
+                        }
                     }
                 }
-            }
-        });
+            });
+
+            webViewTitle.setWebChromeClient(new WebChromeClient() {
+                @Override
+                public void onProgressChanged(WebView view, int newProgress) {
+                    if (progressBarWeb != null) {
+                        if (newProgress < 100) {
+                            progressBarWeb.setVisibility(View.VISIBLE);
+                            progressBarWeb.setProgress(newProgress);
+                        } else {
+                            progressBarWeb.setVisibility(View.GONE);
+                        }
+                    }
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to setup WebView: " + e.getMessage(), e);
+        }
     }
 
     private void loadUrl() {
         if (webViewTitle != null && targetUrl != null && !targetUrl.isEmpty()) {
             Log.d(TAG, "Loading URL in BottomSheet WebView: " + targetUrl);
-            webViewTitle.loadUrl(targetUrl);
+            try {
+                webViewTitle.loadUrl(targetUrl);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to load URL: " + e.getMessage(), e);
+            }
         }
     }
 
     @Override
-    public void onDetachedFromWindow() {
+    public void dismiss() {
         if (webViewTitle != null) {
-            webViewTitle.stopLoading();
-            webViewTitle.destroy();
+            try {
+                webViewTitle.stopLoading();
+                if (webViewTitle.getParent() instanceof ViewGroup) {
+                    ((ViewGroup) webViewTitle.getParent()).removeView(webViewTitle);
+                }
+                webViewTitle.destroy();
+            } catch (Exception e) {
+                Log.w(TAG, "Error destroying webView: " + e.getMessage());
+            }
+            webViewTitle = null;
         }
-        super.onDetachedFromWindow();
+        super.dismiss();
     }
 }
