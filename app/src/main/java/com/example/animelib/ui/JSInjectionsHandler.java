@@ -97,6 +97,16 @@ public class JSInjectionsHandler {
     }
     
     
+    private static android.app.Activity getActivityFromContext(Context ctx) {
+        while (ctx instanceof android.content.ContextWrapper) {
+            if (ctx instanceof android.app.Activity) {
+                return (android.app.Activity) ctx;
+            }
+            ctx = ((android.content.ContextWrapper) ctx).getBaseContext();
+        }
+        return (ctx instanceof android.app.Activity) ? (android.app.Activity) ctx : null;
+    }
+
     /**
      * JavaScript интерфейс для обработки нажатий кнопок плеера
      */
@@ -104,16 +114,18 @@ public class JSInjectionsHandler {
         @OptIn(markerClass = UnstableApi.class)
         @JavascriptInterface
         public void onPlayerButtonClicked(String buttonHref) {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Getting auth token before starting VideoPlayerActivity for URL: " + buttonHref);
-                    // Получаем токен из localStorage перед запуском VideoPlayerActivity
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).getAuthAndStartVideoPlayer(buttonHref);
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).getAuthAndStartVideoPlayer(buttonHref);
+                    } else if (activity instanceof VideoPlayerActivity) {
+                        VideoPlayerActivity.startFromAnimePage(activity, buttonHref);
+                        activity.finish();
                     } else {
-                        // Fallback если это не MainActivity
-                        Log.w("PlayerHandler", "Context is not MainActivity, starting VideoPlayerActivity without token refresh");
-                        VideoPlayerActivity.startFromAnimePage((android.app.Activity) context, buttonHref);
+                        Log.w("PlayerHandler", "Context is not MainActivity or VideoPlayerActivity, starting VideoPlayerActivity");
+                        VideoPlayerActivity.startFromAnimePage(activity, buttonHref);
                     }
                 });
             } else {
@@ -123,11 +135,12 @@ public class JSInjectionsHandler {
         
         @JavascriptInterface
         public void onThemeButtonClicked() {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Theme button clicked, showing theme dialog");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).showThemeDialog();
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).showThemeDialog();
                     }
                 });
             } else {
@@ -137,11 +150,12 @@ public class JSInjectionsHandler {
         
         @JavascriptInterface
         public void showCustomSelectDialog(String dialogDataJson) {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Custom select dialog requested with data: " + dialogDataJson);
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).showCustomSelectDialog(dialogDataJson);
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).showCustomSelectDialog(dialogDataJson);
                     }
                 });
             } else {
@@ -151,11 +165,12 @@ public class JSInjectionsHandler {
         
         @JavascriptInterface
         public void updateSelectButton(String selectId, String selectedValue, String selectedText) {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Updating select button: " + selectId + " = " + selectedText);
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).updateSelectButton(selectId, selectedValue, selectedText);
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).updateSelectButton(selectId, selectedValue, selectedText);
                     }
                 });
             } else {
@@ -165,11 +180,12 @@ public class JSInjectionsHandler {
         
         @JavascriptInterface
         public void showDomainChangeSpinner() {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Showing domain change spinner");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).showDomainChangeSpinner();
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).showDomainChangeSpinner();
                     }
                 });
             } else {
@@ -179,11 +195,12 @@ public class JSInjectionsHandler {
         
         @JavascriptInterface
         public void hideDomainChangeSpinner() {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Hiding domain change spinner");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).hideDomainChangeSpinner();
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).hideDomainChangeSpinner();
                     }
                 });
             } else {
@@ -193,11 +210,12 @@ public class JSInjectionsHandler {
         
         @JavascriptInterface
         public void handleOnBackPressed() {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Back button pressed from WebView");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).onBackPressed();
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).onBackPressed();
                     }
                 });
             } else {
@@ -207,11 +225,12 @@ public class JSInjectionsHandler {
         
         @JavascriptInterface
         public void getAuthFromLocalStorage() {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Getting auth from localStorage");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).getAuthFromLocalStorage();
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).getAuthFromLocalStorage();
                     }
                 });
             } else {
@@ -221,11 +240,12 @@ public class JSInjectionsHandler {
 
         @JavascriptInterface
         public void clearAuthToken() {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Clearing auth token from WebView logout");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).clearAuthToken();
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).clearAuthToken();
                     }
                 });
             } else {
@@ -235,11 +255,12 @@ public class JSInjectionsHandler {
 
         @JavascriptInterface
         public void saveOAuthToken(String jsonString) {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "OAuth token response received from WebView");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).saveOAuthTokenFromJson(jsonString);
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).saveOAuthTokenFromJson(jsonString);
                     }
                 });
             } else {
@@ -249,11 +270,12 @@ public class JSInjectionsHandler {
 
         @JavascriptInterface
         public void saveAuthMeData(String jsonString) {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Auth me response received from WebView");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).saveAuthMeDataFromJson(jsonString);
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).saveAuthMeDataFromJson(jsonString);
                     }
                 });
             } else {
@@ -263,11 +285,12 @@ public class JSInjectionsHandler {
         
         @JavascriptInterface
         public void onSearchButtonClicked() {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Search button clicked from WebView");
-                    if (context instanceof com.example.animelib.MainActivity) {
-                        ((com.example.animelib.MainActivity) context).showSearchFragment();
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).showSearchFragment();
                     }
                 });
             } else {
@@ -277,10 +300,11 @@ public class JSInjectionsHandler {
 
         @JavascriptInterface
         public void onDownloadedButtonClicked() {
-            if (context instanceof android.app.Activity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
                     Log.d("PlayerHandler", "Downloaded button clicked from WebView");
-                    com.example.animelib.ui.DownloadsActivity.start((android.app.Activity) context);
+                    com.example.animelib.ui.DownloadsActivity.start(activity);
                 });
             } else {
                 Log.e(TAG, "Context is not an Activity, cannot open DownloadsActivity");
@@ -289,9 +313,10 @@ public class JSInjectionsHandler {
 
         @JavascriptInterface
         public void disallowInterceptTouch() {
-            if (context instanceof com.example.animelib.MainActivity) {
-                ((android.app.Activity) context).runOnUiThread(() -> {
-                    ((com.example.animelib.MainActivity) context).disallowInterceptTouch();
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity instanceof com.example.animelib.MainActivity) {
+                activity.runOnUiThread(() -> {
+                    ((com.example.animelib.MainActivity) activity).disallowInterceptTouch();
                 });
             }
         }

@@ -1,11 +1,16 @@
 package com.example.animelib.ui;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.ContextWrapper;
+import android.content.Intent;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
@@ -19,11 +24,12 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.example.animelib.MainActivity;
 import com.example.animelib.R;
+import com.example.animelib.VideoPlayerActivity;
 import com.example.animelib.util.FlexibleBottomSheetDialog;
 import com.example.animelib.util.FloatingBottomSheetUtils;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
@@ -41,11 +47,22 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
     private WebView webViewTitle;
     private View layoutWebError;
     private Button btnRetryWeb;
+    private JSInjectionsHandler jsInjectionsHandler;
 
     public TitleWebViewBottomSheet(@NonNull Context context, String titleName, String targetUrl) {
         super(context);
         this.titleName = titleName;
         this.targetUrl = targetUrl;
+    }
+
+    private Activity getActivityFromContext(Context ctx) {
+        while (ctx instanceof ContextWrapper) {
+            if (ctx instanceof Activity) {
+                return (Activity) ctx;
+            }
+            ctx = ((ContextWrapper) ctx).getBaseContext();
+        }
+        return (ctx instanceof Activity) ? (Activity) ctx : null;
     }
 
     @Override
@@ -146,30 +163,127 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
         if (webViewTitle == null) return;
 
         try {
+            jsInjectionsHandler = new JSInjectionsHandler(getContext());
+            jsInjectionsHandler.addJavaScriptInterface(webViewTitle);
+
+            webViewTitle.addJavascriptInterface(new Object() {
+                @android.webkit.JavascriptInterface
+                public void setCookie(String name, String value, String domain) {
+                    CookieManager.getInstance().setCookie(domain, name + "=" + value);
+                }
+
+                @android.webkit.JavascriptInterface
+                public String getCookie(String name, String domain) {
+                    String cookies = CookieManager.getInstance().getCookie(domain);
+                    if (cookies != null) {
+                        String[] cookieArray = cookies.split(";");
+                        for (String cookie : cookieArray) {
+                            String[] parts = cookie.trim().split("=");
+                            if (parts.length == 2 && parts[0].equals(name)) {
+                                return parts[1];
+                            }
+                        }
+                    }
+                    return null;
+                }
+            }, "CookieManager");
+
             WebSettings webSettings = webViewTitle.getSettings();
             webSettings.setJavaScriptEnabled(true);
             webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
             webSettings.setDomStorageEnabled(true);
+            webSettings.setDatabaseEnabled(true);
             webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
             webSettings.setLoadWithOverviewMode(true);
             webSettings.setUseWideViewPort(true);
-            webSettings.setBuiltInZoomControls(true);
+            webSettings.setBuiltInZoomControls(false);
             webSettings.setDisplayZoomControls(false);
+            webSettings.setSupportZoom(false);
             webSettings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             webSettings.setAllowFileAccess(true);
             webSettings.setAllowContentAccess(true);
             webSettings.setLoadsImagesAutomatically(true);
             webSettings.setMediaPlaybackRequiresUserGesture(false);
+            webSettings.setGeolocationEnabled(true);
+            try {
+                webSettings.setForceDark(WebSettings.FORCE_DARK_AUTO);
+            } catch (Exception ignored) {}
+
+            webViewTitle.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+
+            webViewTitle.setOnTouchListener((v, event) -> {
+                int action = event.getAction();
+                if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_MOVE) {
+                    if (v.getParent() != null) {
+                        v.getParent().requestDisallowInterceptTouchEvent(true);
+                    }
+                } else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+                    if (v.getParent() != null) {
+                        v.getParent().requestDisallowInterceptTouchEvent(false);
+                    }
+                }
+                return false;
+            });
 
             try {
                 CookieManager cookieManager = CookieManager.getInstance();
                 cookieManager.setAcceptCookie(true);
                 cookieManager.setAcceptThirdPartyCookies(webViewTitle, true);
+                cookieManager.flush();
             } catch (Exception e) {
                 Log.w(TAG, "CookieManager setup failed: " + e.getMessage());
             }
 
             webViewTitle.setWebViewClient(new WebViewClient() {
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                    if (request != null && request.getUrl() != null) {
+                        return handleUrlLoading(request.getUrl().toString());
+                    }
+                    return false;
+                }
+
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                    return handleUrlLoading(url);
+                }
+
+                private boolean handleUrlLoading(String url) {
+                    if (url == null) return false;
+
+                    if (url.startsWith("intent://") || url.startsWith("tel:") || url.startsWith("mailto:") || url.startsWith("sms:") || url.startsWith("market:")) {
+                        try {
+                            Intent intent;
+                            if (url.startsWith("intent://")) {
+                                intent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+                            } else {
+                                intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                            }
+                            getContext().startActivity(intent);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Failed to open external url: " + url, e);
+                        }
+                        return true;
+                    }
+
+                    if (url.contains("/watch") || url.contains("episode")) {
+                        Activity act = getActivityFromContext(getContext());
+                        if (act != null) {
+                            dismiss();
+                            if (act instanceof VideoPlayerActivity) {
+                                VideoPlayerActivity.startFromAnimePage(act, url);
+                                act.finish();
+                            } else if (act instanceof MainActivity) {
+                                ((MainActivity) act).getAuthAndStartVideoPlayer(url);
+                            } else {
+                                VideoPlayerActivity.startFromAnimePage(act, url);
+                            }
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+
                 @Override
                 public void onPageStarted(WebView view, String url, Bitmap favicon) {
                     super.onPageStarted(view, url, favicon);
@@ -179,6 +293,9 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                     if (layoutWebError != null) {
                         layoutWebError.setVisibility(View.GONE);
                     }
+                    if (jsInjectionsHandler != null) {
+                        jsInjectionsHandler.setupPlayerButtonListeners(view);
+                    }
                 }
 
                 @Override
@@ -186,6 +303,9 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                     super.onPageFinished(view, url);
                     if (progressBarWeb != null) {
                         progressBarWeb.setVisibility(View.GONE);
+                    }
+                    if (jsInjectionsHandler != null) {
+                        jsInjectionsHandler.reinjectDomListeners(view);
                     }
                 }
 
