@@ -121,6 +121,7 @@ import com.example.animelib.models.KodikResponse;
 import com.example.animelib.models.RelatedTitlesResponse;
 import com.example.animelib.services.DownloadService;
 import com.example.animelib.settings.QualityBottomSheet;
+import com.example.animelib.ui.TitleWebViewBottomSheet;
 import com.example.animelib.ui.VideoUrlHelper;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -2538,40 +2539,33 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
     
     /**
-     * Обработчик выбора связанного тайтла
-     * @param slugUrl URL выбранного аниме (только для model="anime")
+     * Обработчик выбора связанного тайтла (открывает WebView в BottomSheet)
+     * @param media Объект медиа выбранного тайтла
      */
-    private void onRelatedTitleSelected(String slugUrl) {
-        if (slugUrl == null || slugUrl.trim().isEmpty()) {
-            Log.w("VideoPlayer", "Related title slug URL is null or empty");
+    private void onRelatedTitleSelected(RelatedTitlesResponse.Media media) {
+        if (media == null) {
+            Log.w("VideoPlayer", "Related title media is null");
             return;
         }
-        
-        Log.d("VideoPlayer", "Related title selected with slug URL: " + slugUrl);
-        
-        // Hide related titles
-        if (relatedTitlesManager != null) {
+
+        String titleName = HorizontalRelatedTitlesAdapter.getDisplayTitle(media);
+        String webUrl = HorizontalRelatedTitlesAdapter.buildWebUrl(media);
+
+        Log.d("VideoPlayer", "Related title selected: " + titleName + " -> " + webUrl);
+
+        if (webUrl == null || webUrl.isEmpty()) {
+            CustomToast.showWarning(this, "Не удалось сформировать ссылку для тайтла");
+            return;
+        }
+
+        // Если открыта верхняя шторка "Связанное", скроем её
+        if (relatedTitlesManager != null && relatedTitlesManager.isRelatedTitlesVisible()) {
             relatedTitlesManager.hideRelatedTitles();
         }
-        
-        // Stop current player
-        if (player != null) {
-            player.stop();
-            player.clearMediaItems();
-        }
-        
-        // Reset state
-        currentVideoUrl = null;
-        currentAnimeId = null;
-        
-        // Show loading
-        showLoading("Загрузка аниме...");
-        
-        // Load new anime
-        animeUrl = slugUrl;
-        loadAnimeFromUrl(slugUrl);
-        
-        Log.d("VideoPlayer", "Loading new anime from slug URL: " + slugUrl);
+
+        // Открываем новый BottomSheet с WebView для тайтла
+        TitleWebViewBottomSheet bottomSheet = new TitleWebViewBottomSheet(this, titleName, webUrl);
+        bottomSheet.show();
     }
 
     /**

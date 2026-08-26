@@ -28,9 +28,9 @@ public class HorizontalRelatedTitlesAdapter extends RecyclerView.Adapter<Horizon
     public interface OnRelatedTitleSelectedListener {
         /**
          * Вызывается при клике на связанный тайтл
-         * @param slugUrl URL тайтла для навигации
+         * @param media Объект медиа для навигации
          */
-        void onRelatedTitleSelected(String slugUrl);
+        void onRelatedTitleSelected(RelatedTitlesResponse.Media media);
     }
 
     public HorizontalRelatedTitlesAdapter(List<RelatedTitlesResponse.RelatedTitle> relatedTitles,
@@ -67,34 +67,21 @@ public class HorizontalRelatedTitlesAdapter extends RecyclerView.Adapter<Horizon
         // Загружаем обложку
         loadCoverImage(holder.coverImage, media);
 
-        // Проверяем является ли это аниме
-        boolean isAnime = "anime".equalsIgnoreCase(media.getModel());
-        String slugUrl = media.getSlugUrl();
-        
         android.util.Log.d("HorizontalRelatedAdapter", "Binding item [" + position + "]: " +
                 "title=" + title + 
                 ", model=" + media.getModel() + 
-                ", isAnime=" + isAnime +
-                ", slugUrl=" + slugUrl);
+                ", slugUrl=" + media.getSlugUrl());
         
-        // Устанавливаем обработчик клика и внешний вид в зависимости от типа
-        if (isAnime && slugUrl != null && !slugUrl.trim().isEmpty()) {
-            // Аниме - активный элемент
-            holder.itemView.setAlpha(1.0f);
-            holder.itemView.setEnabled(true);
-            holder.itemView.setOnClickListener(v -> {
-                android.util.Log.d("HorizontalRelatedAdapter", "Related anime clicked: " + title + " -> " + slugUrl);
-                if (listener != null) {
-                    listener.onRelatedTitleSelected(slugUrl);
-                }
-            });
-        } else {
-            // Не аниме (манга и т.д.) - неактивный элемент
-            android.util.Log.d("HorizontalRelatedAdapter", "Non-anime item (inactive): " + title + ", model=" + media.getModel());
-            holder.itemView.setAlpha(0.5f);
-            holder.itemView.setEnabled(false);
-            holder.itemView.setOnClickListener(null);
-        }
+        // Разблокированы все карточки (аниме, манга, ранобэ и т.д.)
+        holder.itemView.setAlpha(1.0f);
+        holder.itemView.setEnabled(true);
+        holder.itemView.setOnClickListener(v -> {
+            android.util.Log.d("HorizontalRelatedAdapter", "Related title clicked: " + title +
+                    " (model=" + media.getModel() + ", slugUrl=" + media.getSlugUrl() + ")");
+            if (listener != null) {
+                listener.onRelatedTitleSelected(media);
+            }
+        });
     }
 
     @Override
@@ -133,9 +120,39 @@ public class HorizontalRelatedTitlesAdapter extends RecyclerView.Adapter<Horizon
     }
 
     /**
+     * Формирует полный веб-URL для тайтла (аниме, манга, ранобэ и т.д.)
+     */
+    public static String buildWebUrl(RelatedTitlesResponse.Media media) {
+        if (media == null) return null;
+        String slugUrl = media.getSlugUrl();
+        if (slugUrl == null || slugUrl.trim().isEmpty()) {
+            slugUrl = media.getSlug();
+        }
+        if (slugUrl == null || slugUrl.trim().isEmpty()) {
+            return null;
+        }
+        slugUrl = slugUrl.trim();
+        if (slugUrl.startsWith("http://") || slugUrl.startsWith("https://")) {
+            return slugUrl;
+        }
+
+        String path = slugUrl;
+        if (!path.startsWith("/")) {
+            path = "/" + path;
+        }
+        if (!path.startsWith("/ru/")) {
+            String model = media.getModel() != null && !media.getModel().trim().isEmpty() 
+                    ? media.getModel().trim() : "anime";
+            path = "/ru/" + model + path;
+        }
+        return "https://v5.animelib.org" + path;
+    }
+
+    /**
      * Получает отображаемое название тайтла
      */
-    private String getDisplayTitle(RelatedTitlesResponse.Media media) {
+    public static String getDisplayTitle(RelatedTitlesResponse.Media media) {
+        if (media == null) return "Без названия";
         if (media.getRusName() != null && !media.getRusName().trim().isEmpty()) {
             return media.getRusName();
         }
