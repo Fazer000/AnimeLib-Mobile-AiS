@@ -48,6 +48,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
     private View layoutWebError;
     private Button btnRetryWeb;
     private JSInjectionsHandler jsInjectionsHandler;
+    private boolean isNavigatingToPlayer = false;
 
     public TitleWebViewBottomSheet(@NonNull Context context, String titleName, String targetUrl) {
         super(context);
@@ -63,6 +64,82 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
             ctx = ((ContextWrapper) ctx).getBaseContext();
         }
         return (ctx instanceof Activity) ? (Activity) ctx : null;
+    }
+
+    private String resolveAnimeUrl(String href) {
+        if (href == null || href.isEmpty()) {
+            return targetUrl != null ? targetUrl : "";
+        }
+        if (href.contains("--") || href.contains("/anime/")) {
+            if (href.startsWith("http://") || href.startsWith("https://")) {
+                return href;
+            } else if (href.startsWith("/")) {
+                return "https://v5.animelib.org" + href;
+            } else {
+                return "https://v5.animelib.org/" + href;
+            }
+        }
+        if (targetUrl != null && (targetUrl.contains("--") || targetUrl.contains("/anime/"))) {
+            String baseTarget = targetUrl;
+            if (baseTarget.contains("?")) {
+                baseTarget = baseTarget.substring(0, baseTarget.indexOf("?"));
+            }
+            if (!baseTarget.endsWith("/watch")) {
+                if (baseTarget.endsWith("/")) {
+                    baseTarget += "watch";
+                } else {
+                    baseTarget += "/watch";
+                }
+            }
+            if (href.contains("?")) {
+                String query = href.substring(href.indexOf("?"));
+                return baseTarget + query;
+            }
+            return baseTarget;
+        }
+
+        if (href.startsWith("http://") || href.startsWith("https://")) {
+            return href;
+        } else if (href.startsWith("/")) {
+            return "https://v5.animelib.org" + href;
+        }
+        return href;
+    }
+
+    private synchronized void openPlayerFromUrl(String rawUrl) {
+        Activity act = getActivityFromContext(getContext());
+        if (act == null || act.isFinishing() || act.isDestroyed()) {
+            Log.w(TAG, "Activity is null or finishing, cannot start player");
+            return;
+        }
+
+        act.runOnUiThread(() -> {
+            synchronized (TitleWebViewBottomSheet.this) {
+                if (isNavigatingToPlayer) {
+                    Log.d(TAG, "Already navigating to player, ignoring duplicate request: " + rawUrl);
+                    return;
+                }
+                isNavigatingToPlayer = true;
+            }
+
+            String finalUrl = resolveAnimeUrl(rawUrl);
+            Log.d(TAG, "Opening VideoPlayerActivity with resolved URL: " + finalUrl);
+
+            try {
+                dismiss();
+            } catch (Exception e) {
+                Log.w(TAG, "Error dismissing BottomSheet: " + e.getMessage());
+            }
+
+            if (act instanceof MainActivity) {
+                ((MainActivity) act).getAuthAndStartVideoPlayer(finalUrl);
+            } else if (act instanceof VideoPlayerActivity) {
+                VideoPlayerActivity.startFromAnimePage(act, finalUrl);
+                act.finish();
+            } else {
+                VideoPlayerActivity.startFromAnimePage(act, finalUrl);
+            }
+        });
     }
 
     @Override
@@ -164,6 +241,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
 
         try {
             jsInjectionsHandler = new JSInjectionsHandler(getContext());
+            jsInjectionsHandler.setOnPlayerButtonClickListener(this::openPlayerFromUrl);
             jsInjectionsHandler.addJavaScriptInterface(webViewTitle);
 
             webViewTitle.addJavascriptInterface(new Object() {
@@ -267,19 +345,8 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                     }
 
                     if (url.contains("/watch") || url.contains("episode")) {
-                        Activity act = getActivityFromContext(getContext());
-                        if (act != null) {
-                            dismiss();
-                            if (act instanceof VideoPlayerActivity) {
-                                VideoPlayerActivity.startFromAnimePage(act, url);
-                                act.finish();
-                            } else if (act instanceof MainActivity) {
-                                ((MainActivity) act).getAuthAndStartVideoPlayer(url);
-                            } else {
-                                VideoPlayerActivity.startFromAnimePage(act, url);
-                            }
-                            return true;
-                        }
+                        openPlayerFromUrl(url);
+                        return true;
                     }
                     return false;
                 }
@@ -355,16 +422,23 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
     @Override
     public void dismiss() {
         if (webViewTitle != null) {
-            try {
-                webViewTitle.stopLoading();
-                if (webViewTitle.getParent() instanceof ViewGroup) {
-                    ((ViewGroup) webViewTitle.getParent()).removeView(webViewTitle);
-                }
-                webViewTitle.destroy();
-            } catch (Exception e) {
-                Log.w(TAG, "Error destroying webView: " + e.getMessage());
-            }
+            final WebView wv = webViewTitle;
             webViewTitle = null;
+            try {
+                wv.stopLoading();
+                if (wv.getParent() instanceof ViewGroup) {
+                    ((ViewGroup) wv.getParent()).removeView(wv);
+                }
+                wv.post(() -> {
+                    try {
+                        wv.destroy();
+                    } catch (Exception e) {
+                        Log.w(TAG, "Error destroying webView: " + e.getMessage());
+                    }
+                });
+            } catch (Exception e) {
+                Log.w(TAG, "Error detaching webView: " + e.getMessage());
+            }
         }
         try {
             super.dismiss();

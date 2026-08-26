@@ -23,6 +23,16 @@ public class JSInjectionsHandler {
     private static final String JS_INTERFACE_NAME = "AndroidInterface";
     
     private final Context context;
+
+    public interface OnPlayerButtonClickListener {
+        void onPlayerButtonClicked(String buttonHref);
+    }
+
+    private OnPlayerButtonClickListener onPlayerButtonClickListener;
+
+    public void setOnPlayerButtonClickListener(OnPlayerButtonClickListener listener) {
+        this.onPlayerButtonClickListener = listener;
+    }
     
     public JSInjectionsHandler(Context context) {
         this.context = context;
@@ -114,6 +124,10 @@ public class JSInjectionsHandler {
         @OptIn(markerClass = UnstableApi.class)
         @JavascriptInterface
         public void onPlayerButtonClicked(String buttonHref) {
+            if (onPlayerButtonClickListener != null) {
+                onPlayerButtonClickListener.onPlayerButtonClicked(buttonHref);
+                return;
+            }
             android.app.Activity activity = getActivityFromContext(context);
             if (activity != null) {
                 activity.runOnUiThread(() -> {
