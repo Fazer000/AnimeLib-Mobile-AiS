@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.animelib.util.CustomToast;
+import com.example.animelib.util.CookieSyncManager;
 import com.example.animelib.util.UpdateManager;
 import com.example.animelib.models.UpdateInfo;
 
@@ -607,6 +608,9 @@ public class MainActivity extends AppCompatActivity {
         // Включаем cookies для всех доменов
         CookieManager.setAcceptFileSchemeCookies(true);
 
+        // Синхронизируем и дублируем куки авторизации на все домены сети Lib (MangaLib, RanobeLib, etc.)
+        CookieSyncManager.syncAllCookies();
+
         // Add JavaScript interface for video detection
         JSInjectionsHandler.addJavaScriptInterface(webView);
 
@@ -615,6 +619,7 @@ public class MainActivity extends AppCompatActivity {
             @android.webkit.JavascriptInterface
             public void setCookie(String name, String value, String domain) {
                 CookieManager.getInstance().setCookie(domain, name + "=" + value);
+                CookieSyncManager.copyCookieStringToAllDomains(name + "=" + value);
             }
 
             @android.webkit.JavascriptInterface
@@ -822,6 +827,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("WebView", "Current domain updated to: " + currentDomain);
                 swipeRefreshLayout.setRefreshing(false);
 
+                // Синхронизируем куки с текущей страницы на остальные домены Lib
+                CookieSyncManager.syncFromUrl(url);
+
                 // Always setup listeners - let JavaScript determine if it's needed
                 JSInjectionsHandler.setupPlayerButtonListeners(view);
             }
@@ -835,6 +843,7 @@ public class MainActivity extends AppCompatActivity {
                 hideDomainChangeSpinner();
 
                 JSInjectionsHandler.reinjectDomListeners(view);
+                CookieSyncManager.syncFromUrl(url);
 
                 if (isFirstLoad) {
                     isFirstLoad = false;
@@ -1430,6 +1439,7 @@ public class MainActivity extends AppCompatActivity {
                     databaseManager.saveToken(newToken);
                     Log.d("MainActivity", "Saved new OAuth token. userId: " + extractedId);
                 }
+                CookieSyncManager.syncAllCookies();
 
             } catch (Exception e) {
                 Log.e("MainActivity", "Error saving OAuth token from JSON", e);
@@ -1488,6 +1498,7 @@ public class MainActivity extends AppCompatActivity {
                     databaseManager.saveToken(newToken);
                     Log.d("MainActivity", "Saved new token entity with user ID from auth/me: " + userIdStr + ", username: " + username);
                 }
+                CookieSyncManager.syncAllCookies();
 
             } catch (Exception e) {
                 Log.e("MainActivity", "Error saving Auth me data from JSON", e);

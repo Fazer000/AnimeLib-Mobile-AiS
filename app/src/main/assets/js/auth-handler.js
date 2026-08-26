@@ -116,7 +116,7 @@
         console.log('Logout click listener attached');
     }
 
-    // 3. Дополнительная синхронизация из localStorage при наличии
+    // 3. Дополнительная синхронизация из localStorage и document.cookie при наличии
     function syncAuthToken() {
         try {
             if (typeof localStorage !== 'undefined') {
@@ -129,6 +129,24 @@
             }
         } catch (error) {
             console.error('Error checking localStorage:', error);
+        }
+
+        try {
+            if (document.cookie && window.CookieManager && typeof window.CookieManager.setCookie === 'function') {
+                const cookies = document.cookie.split(';');
+                cookies.forEach(c => {
+                    const parts = c.trim().split('=');
+                    if (parts.length >= 2) {
+                        const name = parts[0].trim();
+                        const val = parts.slice(1).join('=').trim();
+                        if (name) {
+                            window.CookieManager.setCookie(name, val, window.location.hostname);
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error('Error syncing document.cookie:', e);
         }
     }
     syncAuthToken();

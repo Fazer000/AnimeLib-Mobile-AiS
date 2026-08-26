@@ -32,6 +32,7 @@ import java.util.Map;
 
 import com.example.animelib.MainActivity;
 import com.example.animelib.R;
+import com.example.animelib.util.CookieSyncManager;
 import com.example.animelib.VideoPlayerActivity;
 import com.example.animelib.util.FlexibleBottomSheetDialog;
 import com.example.animelib.util.FloatingBottomSheetUtils;
@@ -205,10 +206,14 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
             jsInjectionsHandler.setOnPlayerButtonClickListener(this::openPlayerFromUrl);
             jsInjectionsHandler.addJavaScriptInterface(webViewTitle);
 
+            // Синхронизируем куки сети Lib перед загрузкой BottomSheet
+            CookieSyncManager.syncAllCookies();
+
             webViewTitle.addJavascriptInterface(new Object() {
                 @android.webkit.JavascriptInterface
                 public void setCookie(String name, String value, String domain) {
                     CookieManager.getInstance().setCookie(domain, name + "=" + value);
+                    CookieSyncManager.copyCookieStringToAllDomains(name + "=" + value);
                 }
 
                 @android.webkit.JavascriptInterface
@@ -316,6 +321,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                 @Override
                 public void onPageStarted(WebView view, String url, Bitmap favicon) {
                     super.onPageStarted(view, url, favicon);
+                    CookieSyncManager.syncFromUrl(url);
                     if (progressBarWeb != null) {
                         progressBarWeb.setVisibility(View.VISIBLE);
                     }
@@ -331,6 +337,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                 @Override
                 public void onPageFinished(WebView view, String url) {
                     super.onPageFinished(view, url);
+                    CookieSyncManager.syncFromUrl(url);
                     if (progressBarWeb != null) {
                         progressBarWeb.setVisibility(View.GONE);
                     }
@@ -386,6 +393,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
         if (webViewTitle != null && targetUrl != null && !targetUrl.isEmpty()) {
             Log.d(TAG, "Loading URL in BottomSheet WebView: " + targetUrl);
             try {
+                CookieSyncManager.syncFromUrl(targetUrl);
                 webViewTitle.loadUrl(targetUrl, getRequestHeaders());
             } catch (Exception e) {
                 Log.e(TAG, "Failed to load URL: " + e.getMessage(), e);
