@@ -7,95 +7,440 @@
     android:background="?attr/statusBarColor"
     android:orientation="vertical">
 
+    <!-- Header Logo Section -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         android:layout_weight="1"
-        android:gravity="center">
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="24dp">
+
         <ImageView
-            android:layout_width="110dp"
-            android:layout_height="110dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             android:layout_gravity="center"
+            android:contentDescription="@string/app_name"
             android:src="?attr/logoDrawable" />
     </LinearLayout>
 
-
-
-    <androidx.cardview.widget.CardView
+    <!-- Selection Container Card -->
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        app:cardCornerRadius="20dp"
+        android:layout_margin="16dp"
+        app:cardCornerRadius="24dp"
         app:cardBackgroundColor="?attr/primaryColor"
-        app:cardElevation="20dp"
-        android:layout_gravity="bottom">
+        app:cardElevation="10dp"
+        app:strokeWidth="0dp">
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:clipToPadding="false"
             android:padding="24dp">
 
-            <!-- Описание -->
+            <!-- Title & Subtitle -->
             <com.google.android.material.textview.MaterialTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Настройка сайта"
+                android:text="@string/url_input_title"
                 android:textSize="20sp"
                 android:textColor="?attr/primaryTextColor"
-                android:textStyle="bold"
-                android:layout_marginBottom="20dp"
-                android:lineSpacingExtra="4dp" />
+                android:fontFamily="@font/open_sans_bold"
+                android:textStyle="bold" />
 
-            <androidx.cardview.widget.CardView
+            <com.google.android.material.textview.MaterialTextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="20dp"
+                android:text="@string/url_input_subtitle"
+                android:textSize="13sp"
+                android:textColor="?attr/accentTextColor"
+                android:lineSpacingExtra="2dp" />
+
+            <!-- Option 1: Ссылка Для СНГ -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardCis"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="14dp"
-                app:cardElevation="3dp"
-                app:cardCornerRadius="12dp">
-                <EditText
-                    android:id="@+id/urlEditText"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="?attr/cardBackgroundColor"
+                app:strokeColor="@color/purple_primary"
+                app:strokeWidth="0.5dp">
+
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:background="?attr/statusBarColor"
-                    android:drawableStart="@drawable/ic_link"
-                    android:textSize="16sp"
-                    android:drawablePadding="5dp"
-                    android:drawableTint="?attr/primaryTextColor"
-                    android:hint="Ссылка"
-                    android:padding="14dp"
-                    android:imeOptions="flagNoExtractUi|flagNoFullscreen" />
-            </androidx.cardview.widget.CardView>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
 
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
 
-<!--            <com.google.android.material.button.MaterialButton-->
-<!--                android:id="@+id/saveButton"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="0dp"-->
-<!--                android:layout_gravity="bottom"-->
-<!--                android:layout_weight="1"-->
-<!--                android:text="Сохранить"-->
-<!--                android:background="@drawable/outlined_button_background"-->
-<!--                app:backgroundTint="?attr/secondaryColor"-->
-<!--                android:textColor="?attr/secondaryTextColor"-->
-<!--                app:rippleColor="@color/dt_line_color"-->
-<!--                android:textSize="16sp"-->
-<!--                app:icon="@drawable/ic_check"-->
-<!--                app:iconGravity="textStart"-->
-<!--                app:iconPadding="8dp"-->
-<!--                style="@style/Widget.Material3.Button" />-->
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
 
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/url_input_cis_title"
+                                android:textSize="16sp"
+                                android:fontFamily="@font/open_sans_semibold"
+                                android:textColor="?attr/primaryTextColor"
+                                android:textStyle="bold" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/outlined_button_background"
+                                android:backgroundTint="@color/purple_alpha_25"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="2dp"
+                                android:text="@string/url_input_cis_url"
+                                android:textColor="?attr/secondaryColor"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/open_sans_semibold" />
+                        </LinearLayout>
+
+                        <!-- Subtitle List for CIS -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingVertical="2dp">
+
+                                <View
+                                    android:layout_width="5dp"
+                                    android:layout_height="5dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_bullet_dot" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="AnimeLib: "
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans_semibold"
+                                    android:textColor="?attr/primaryTextColor" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="v5.animelib.org"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans"
+                                    android:textColor="?attr/accentTextColor" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingVertical="2dp">
+
+                                <View
+                                    android:layout_width="5dp"
+                                    android:layout_height="5dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_bullet_dot" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="MangaLib: "
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans_semibold"
+                                    android:textColor="?attr/primaryTextColor" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="mangalib.me"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans"
+                                    android:textColor="?attr/accentTextColor" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingVertical="2dp">
+
+                                <View
+                                    android:layout_width="5dp"
+                                    android:layout_height="5dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_bullet_dot" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="RanobeLib: "
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans_semibold"
+                                    android:textColor="?attr/primaryTextColor" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="ranobelib.me"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans"
+                                    android:textColor="?attr/accentTextColor" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Selected Pill Indicator -->
+                    <FrameLayout
+                        android:id="@+id/selectedPillCis"
+                        android:layout_width="38dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_selected_pill"
+                        android:visibility="visible">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Selected"/>
+                    </FrameLayout>
+
+                    <!-- Unselected Circle Indicator -->
+                    <View
+                        android:id="@+id/unselectedIndicatorCis"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_unselected_circle"
+                        android:visibility="gone"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Option 2: Остальные страны -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/cardOther"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="?attr/cardBackgroundColor"
+                app:strokeColor="?attr/borderColor"
+                app:strokeWidth="0.5dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/url_input_other_title"
+                                android:textSize="16sp"
+                                android:fontFamily="@font/open_sans_semibold"
+                                android:textColor="?attr/primaryTextColor"
+                                android:textStyle="bold" />
+
+                            <com.google.android.material.textview.MaterialTextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:background="@drawable/outlined_button_background"
+                                android:backgroundTint="@color/purple_alpha_25"
+                                android:paddingHorizontal="8dp"
+                                android:paddingVertical="2dp"
+                                android:text="@string/url_input_other_url"
+                                android:textColor="?attr/secondaryColor"
+                                android:textSize="11sp"
+                                android:fontFamily="@font/open_sans_semibold" />
+                        </LinearLayout>
+
+                        <!-- Subtitle List for Other Countries -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:orientation="vertical">
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingVertical="2dp">
+
+                                <View
+                                    android:layout_width="5dp"
+                                    android:layout_height="5dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_bullet_dot" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="AnimeLib: "
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans_semibold"
+                                    android:textColor="?attr/primaryTextColor" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="animelib.org"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans"
+                                    android:textColor="?attr/accentTextColor" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingVertical="2dp">
+
+                                <View
+                                    android:layout_width="5dp"
+                                    android:layout_height="5dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_bullet_dot" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="MangaLib: "
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans_semibold"
+                                    android:textColor="?attr/primaryTextColor" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="mangalib.org"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans"
+                                    android:textColor="?attr/accentTextColor" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:paddingVertical="2dp">
+
+                                <View
+                                    android:layout_width="5dp"
+                                    android:layout_height="5dp"
+                                    android:layout_marginEnd="8dp"
+                                    android:background="@drawable/bg_bullet_dot" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="RanobeLib: "
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans_semibold"
+                                    android:textColor="?attr/primaryTextColor" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="ranobelib.org"
+                                    android:textSize="12.5sp"
+                                    android:fontFamily="@font/open_sans"
+                                    android:textColor="?attr/accentTextColor" />
+                            </LinearLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Selected Pill Indicator -->
+                    <FrameLayout
+                        android:id="@+id/selectedPillOther"
+                        android:layout_width="38dp"
+                        android:layout_height="26dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_selected_pill"
+                        android:visibility="gone">
+
+                        <ImageView
+                            android:layout_width="16dp"
+                            android:layout_height="16dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_check"
+                            app:tint="#FFFFFF"
+                            android:contentDescription="Selected"/>
+                    </FrameLayout>
+
+                    <!-- Unselected Circle Indicator -->
+                    <View
+                        android:id="@+id/unselectedIndicatorOther"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="12dp"
+                        android:background="@drawable/bg_m3_unselected_circle"
+                        android:visibility="visible"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Save Button -->
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/saveButton"
-                style="@style/Widget.AnimeLIB.Button.Outlined"
+                style="@style/Widget.AnimeLIB.Button"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/button_height_standard"
                 android:text="@string/btn_save"
-                android:textColor="?attr/secondaryColor"
+                android:textColor="@color/white_color"
+                app:backgroundTint="?attr/secondaryColor"
                 app:icon="@drawable/ic_check"
-                app:iconTint="?attr/secondaryColor"
-                app:iconGravity="textStart" />
+                app:iconGravity="textStart"
+                app:iconTint="@color/white_color" />
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 </LinearLayout>

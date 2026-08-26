@@ -180,6 +180,16 @@ public class VideoUrlHelper {
         return null;
     }
 
+    private static String getBaseDomainFromContext(String currentUrl) {
+        if (currentUrl != null && (currentUrl.startsWith("http://") || currentUrl.startsWith("https://"))) {
+            try {
+                java.net.URI uri = new java.net.URI(currentUrl);
+                return uri.getScheme() + "://" + uri.getHost();
+            } catch (Exception ignored) {}
+        }
+        return "https://v5.animelib.org";
+    }
+
     /**
      * Resolves an anime URL from a clicked link/href and current page context.
      * Guarantees that the resulting URL contains the anime slug/ID if available in currentUrl.
@@ -190,6 +200,7 @@ public class VideoUrlHelper {
         }
 
         String cleanHref = href.trim();
+        String fallbackDomain = getBaseDomainFromContext(currentUrl);
 
         // 1. If href itself contains an anime identifier (e.g. contains "--" or "/anime/")
         String hrefIdentifier = extractAnimeIdentifier(cleanHref);
@@ -197,9 +208,9 @@ public class VideoUrlHelper {
             if (cleanHref.startsWith("http://") || cleanHref.startsWith("https://")) {
                 return cleanHref;
             } else if (cleanHref.startsWith("/")) {
-                return "https://v5.animelib.org" + cleanHref;
+                return fallbackDomain + cleanHref;
             } else {
-                return "https://v5.animelib.org/" + cleanHref;
+                return fallbackDomain + "/" + cleanHref;
             }
         }
 
@@ -226,9 +237,9 @@ public class VideoUrlHelper {
             if (cleanCurrent.startsWith("http://") || cleanCurrent.startsWith("https://")) {
                 baseAnimeUrl = cleanCurrent;
             } else if (cleanCurrent.startsWith("/")) {
-                baseAnimeUrl = "https://v5.animelib.org" + cleanCurrent;
+                baseAnimeUrl = fallbackDomain + cleanCurrent;
             } else {
-                baseAnimeUrl = "https://v5.animelib.org/" + cleanCurrent;
+                baseAnimeUrl = fallbackDomain + "/" + cleanCurrent;
             }
 
             String targetWatchUrl = baseAnimeUrl.endsWith("/watch") ? baseAnimeUrl : baseAnimeUrl + "/watch";
@@ -243,9 +254,9 @@ public class VideoUrlHelper {
         if (cleanHref.startsWith("http://") || cleanHref.startsWith("https://")) {
             return cleanHref;
         } else if (cleanHref.startsWith("/")) {
-            return "https://v5.animelib.org" + cleanHref;
+            return fallbackDomain + cleanHref;
         } else {
-            return "https://v5.animelib.org/" + cleanHref;
+            return fallbackDomain + "/" + cleanHref;
         }
     }
 

@@ -157,24 +157,28 @@ public class HorizontalRelatedTitlesAdapter extends RecyclerView.Adapter<Horizon
             }
         }
 
+        String mainSiteUrl = "https://v5.animelib.org";
+        if (context != null) {
+            try {
+                com.example.animelib.data.DatabaseManager db = new com.example.animelib.data.DatabaseManager(context);
+                String dbUrl = db.getSiteUrl();
+                if (dbUrl != null && !dbUrl.trim().isEmpty()) {
+                    mainSiteUrl = dbUrl;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("RelatedTitlesAdapter", "Failed to get siteUrl from DB", e);
+            }
+        }
+
+        boolean isOtherCountries = mainSiteUrl.contains("animelib.org") && !mainSiteUrl.contains("v5.animelib.org");
+
         String baseUrl;
         if (isManga) {
-            baseUrl = "https://mangalib.me";
+            baseUrl = isOtherCountries ? "https://mangalib.org" : "https://mangalib.me";
         } else if (isRanobe) {
-            baseUrl = "https://ranobelib.me";
+            baseUrl = isOtherCountries ? "https://ranobelib.org" : "https://ranobelib.me";
         } else {
-            baseUrl = "https://v5.animelib.org";
-            if (context != null) {
-                try {
-                    com.example.animelib.data.DatabaseManager db = new com.example.animelib.data.DatabaseManager(context);
-                    String dbUrl = db.getSiteUrl();
-                    if (dbUrl != null && !dbUrl.trim().isEmpty()) {
-                        baseUrl = dbUrl;
-                    }
-                } catch (Exception e) {
-                    android.util.Log.e("RelatedTitlesAdapter", "Failed to get siteUrl from DB", e);
-                }
-            }
+            baseUrl = mainSiteUrl;
         }
         return baseUrl + path;
     }

@@ -1,33 +1,38 @@
 package com.example.animelib;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.Toast;
-
-import com.example.animelib.util.CustomToast;
+import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
-
-import com.example.animelib.data.DatabaseManager;
-import com.example.animelib.util.ThemeUtils;
-import com.example.animelib.viewmodel.AppSettingsViewModel;
-
 import androidx.lifecycle.ViewModelProvider;
 
+import com.example.animelib.data.DatabaseManager;
+import com.example.animelib.util.CustomToast;
+import com.example.animelib.util.ThemeUtils;
+import com.example.animelib.viewmodel.AppSettingsViewModel;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+
 public class UrlInputActivity extends AppCompatActivity {
-    private EditText urlEditText;
+
+    public static final String URL_CIS = "https://v5.animelib.org";
+    public static final String URL_OTHER = "https://animelib.org";
+
+    private MaterialCardView cardCis;
+    private MaterialCardView cardOther;
+    private View selectedPillCis;
+    private View unselectedIndicatorCis;
+    private View selectedPillOther;
+    private View unselectedIndicatorOther;
     private MaterialButton saveButton;
+
     private DatabaseManager databaseManager;
     private AppSettingsViewModel viewModel;
+    private String selectedUrl = URL_CIS;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,9 +45,7 @@ public class UrlInputActivity extends AppCompatActivity {
         databaseManager = new DatabaseManager(this);
         viewModel = new ViewModelProvider(this).get(AppSettingsViewModel.class);
 
-        // Load and apply theme
         loadAndApplyTheme();
-
         initializeViews();
         setupListeners();
     }
@@ -67,122 +70,109 @@ public class UrlInputActivity extends AppCompatActivity {
     }
 
     private void initializeViews() {
-        urlEditText = findViewById(R.id.urlEditText);
+        cardCis = findViewById(R.id.cardCis);
+        cardOther = findViewById(R.id.cardOther);
+        selectedPillCis = findViewById(R.id.selectedPillCis);
+        unselectedIndicatorCis = findViewById(R.id.unselectedIndicatorCis);
+        selectedPillOther = findViewById(R.id.selectedPillOther);
+        unselectedIndicatorOther = findViewById(R.id.unselectedIndicatorOther);
         saveButton = findViewById(R.id.saveButton);
 
         new Thread(() -> {
             String currentUrl = databaseManager.getSiteUrl();
-            if (currentUrl == null || currentUrl.trim().isEmpty()) {
-                currentUrl = "https://v5.animelib.org";
+            if (currentUrl != null && currentUrl.contains("animelib.org") && !currentUrl.contains("v5.animelib.org")) {
+                selectedUrl = URL_OTHER;
+            } else {
+                selectedUrl = URL_CIS;
             }
-            final String finalUrl = currentUrl;
-            runOnUiThread(() -> {
-                urlEditText.setText(finalUrl);
-                if (finalUrl.length() > 0) {
-                    urlEditText.setSelection(finalUrl.length());
-                }
-            });
+
+            runOnUiThread(this::updateSelectionUi);
         }).start();
 
-        // Кнопка активна по умолчанию
         saveButton.setEnabled(true);
-        saveButton.setAlpha(1.0f);
     }
 
     private void setupListeners() {
-        // Слушатель изменений текста
-        urlEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+        if (cardCis != null) {
+            cardCis.setOnClickListener(v -> {
+                selectedUrl = URL_CIS;
+                updateSelectionUi();
+            });
+        }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
+        if (cardOther != null) {
+            cardOther.setOnClickListener(v -> {
+                selectedUrl = URL_OTHER;
+                updateSelectionUi();
+            });
+        }
 
-            @Override
-            public void afterTextChanged(Editable s) {
-                String text = s.toString().trim();
-                boolean isValid = isValidUrl(text);
-                saveButton.setEnabled(isValid);
-
-                // Обновляем цвет кнопки
-                if (isValid) {
-                    saveButton.setAlpha(1.0f);
-                } else {
-                    saveButton.setAlpha(0.5f);
-                }
-            }
-        });
-
-        // Слушатель нажатия кнопки сохранения
-        saveButton.setOnClickListener(v -> saveUrl());
+        if (saveButton != null) {
+            saveButton.setOnClickListener(v -> saveUrl());
+        }
     }
 
-    private boolean isValidUrl(String url) {
-        if (url == null || url.trim().isEmpty()) {
-            return false;
+    private void updateSelectionUi() {
+        int secondaryColor = getThemeColor(R.attr.secondaryColor);
+        int borderColor = getThemeColor(R.attr.borderColor);
+
+        boolean isCis = URL_CIS.equals(selectedUrl);
+        int strokeWidthPx = Math.max(1, Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 0.5f, getResources().getDisplayMetrics())));
+
+        if (cardCis != null && cardOther != null) {
+            if (isCis) {
+                cardCis.setStrokeColor(secondaryColor);
+                cardCis.setStrokeWidth(strokeWidthPx);
+                if (selectedPillCis != null) selectedPillCis.setVisibility(View.VISIBLE);
+                if (unselectedIndicatorCis != null) unselectedIndicatorCis.setVisibility(View.GONE);
+
+                cardOther.setStrokeColor(borderColor);
+                cardOther.setStrokeWidth(strokeWidthPx);
+                if (selectedPillOther != null) selectedPillOther.setVisibility(View.GONE);
+                if (unselectedIndicatorOther != null) unselectedIndicatorOther.setVisibility(View.VISIBLE);
+            } else {
+                cardOther.setStrokeColor(secondaryColor);
+                cardOther.setStrokeWidth(strokeWidthPx);
+                if (selectedPillOther != null) selectedPillOther.setVisibility(View.VISIBLE);
+                if (unselectedIndicatorOther != null) unselectedIndicatorOther.setVisibility(View.GONE);
+
+                cardCis.setStrokeColor(borderColor);
+                cardCis.setStrokeWidth(strokeWidthPx);
+                if (selectedPillCis != null) selectedPillCis.setVisibility(View.GONE);
+                if (unselectedIndicatorCis != null) unselectedIndicatorCis.setVisibility(View.VISIBLE);
+            }
         }
+    }
 
-        String trimmedUrl = url.trim();
-
-        // Проверяем базовые требования
-        if (trimmedUrl.length() < 3) {
-            return false;
-        }
-
-        // Проверяем наличие точки (домен)
-        if (!trimmedUrl.contains(".")) {
-            return false;
-        }
-
-        // Проверяем что не содержит пробелы
-        if (trimmedUrl.contains(" ")) {
-            return false;
-        }
-
-        return true;
+    private int getThemeColor(int attrResId) {
+        TypedValue typedValue = new TypedValue();
+        getTheme().resolveAttribute(attrResId, typedValue, true);
+        return typedValue.data;
     }
 
     private void saveUrl() {
-        String url = urlEditText.getText().toString().trim();
-
-        if (!isValidUrl(url)) {
-            CustomToast.showWarning(this, "Пожалуйста, введите корректный URL");
-            return;
-        }
-
         try {
-            // Добавляем протокол если его нет
-            if (!url.startsWith("http://") && !url.startsWith("https://")) {
-                url = "https://" + url;
-            }
+            viewModel.saveSettings(selectedUrl);
+            databaseManager.saveSiteUrl(selectedUrl);
 
-            // Сохраняем URL через ViewModel
-            viewModel.saveSettings(url);
+            Log.d("UrlInputActivity", "Region domain saved: " + selectedUrl);
 
-            Log.d("UrlInputActivity", "URL saved: " + url);
-
-            // Возвращаем результат в MainActivity
             Intent resultIntent = new Intent();
-            resultIntent.putExtra("site_url", url);
+            resultIntent.putExtra("site_url", selectedUrl);
             setResult(RESULT_OK, resultIntent);
 
-            CustomToast.showSuccess(this, "URL сохранен: " + url);
-
-            // Закрываем активность
+            CustomToast.showSuccess(this, "Сервер сохранен: " + (selectedUrl.contains("v5") ? "СНГ" : "Остальные страны"));
             finish();
 
         } catch (Exception e) {
-            Log.e("UrlInputActivity", "Failed to save URL", e);
-            CustomToast.showWarning(this, "Ошибка при сохранении URL");
+            Log.e("UrlInputActivity", "Failed to save region domain", e);
+            CustomToast.showWarning(this, "Ошибка при сохранении сервера");
         }
     }
 
-
     @Override
     public void onBackPressed() {
-        // Просто закрываем активность без сохранения
         super.onBackPressed();
     }
 }
+

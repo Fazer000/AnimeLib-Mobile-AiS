@@ -51,6 +51,25 @@ public class DatabaseManager {
         }
         return "https://" + context.getString(R.string.site_url);
     }
+
+    /**
+     * Сохраняет URL сайта в базу данных
+     */
+    public void saveSiteUrl(String siteUrl) {
+        executor.execute(() -> {
+            try {
+                AppSettings settings = db.appSettingsDao().getSettingsSync();
+                if (settings == null) {
+                    settings = new AppSettings();
+                }
+                settings.setSiteUrl(siteUrl);
+                db.appSettingsDao().upsert(settings);
+                Log.d(TAG, "Saved site URL: " + siteUrl);
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to save site URL", e);
+            }
+        });
+    }
     
     /**
      * Сохраняет настройку 4K

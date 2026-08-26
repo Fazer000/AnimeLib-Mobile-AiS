@@ -106,6 +106,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvCurrentUrlBanner;
     private View btnChangeUrlBanner;
     private View btnCloseUrlBanner;
+    private View btnBannerSelectCis;
+    private View btnBannerSelectOther;
     private final android.os.Handler urlBannerHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Runnable urlBannerRunnable;
     private boolean isUrlBannerShownThisSession = false;
@@ -330,6 +332,8 @@ public class MainActivity extends AppCompatActivity {
         tvCurrentUrlBanner = findViewById(R.id.tvCurrentUrlBanner);
         btnChangeUrlBanner = findViewById(R.id.btnChangeUrlBanner);
         btnCloseUrlBanner = findViewById(R.id.btnCloseUrlBanner);
+        btnBannerSelectCis = findViewById(R.id.btnBannerSelectCis);
+        btnBannerSelectOther = findViewById(R.id.btnBannerSelectOther);
 
         if (btnChangeUrlBanner != null) {
             btnChangeUrlBanner.setOnClickListener(v -> {
@@ -341,14 +345,58 @@ public class MainActivity extends AppCompatActivity {
         if (btnCloseUrlBanner != null) {
             btnCloseUrlBanner.setOnClickListener(v -> hideUrlTopBannerAnimated());
         }
+
+        if (btnBannerSelectCis != null) {
+            btnBannerSelectCis.setOnClickListener(v -> selectDomainFromBanner("https://v5.animelib.org"));
+        }
+
+        if (btnBannerSelectOther != null) {
+            btnBannerSelectOther.setOnClickListener(v -> selectDomainFromBanner("https://animelib.org"));
+        }
+    }
+
+    private void selectDomainFromBanner(String targetUrl) {
+        try {
+            if (viewModel != null) viewModel.saveSettings(targetUrl);
+            if (databaseManager != null) databaseManager.saveSiteUrl(targetUrl);
+        } catch (Exception e) {
+            Log.e("MainActivity", "Failed to save domain from banner", e);
+        }
+
+        updateBannerSelectionUI(targetUrl);
+        if (tvCurrentUrlBanner != null) {
+            tvCurrentUrlBanner.setText("Текущий адрес: " + targetUrl);
+        }
+        loadUrl(targetUrl);
+
+        urlBannerHandler.postDelayed(this::hideUrlTopBannerAnimated, 1200);
+    }
+
+    private void updateBannerSelectionUI(String currentUrl) {
+        if (urlTopBanner == null) return;
+        boolean isCis = currentUrl != null && currentUrl.contains("v5.animelib.org");
+
+        View bannerPillCis = urlTopBanner.findViewById(R.id.bannerPillCis);
+        View bannerIndicatorOther = urlTopBanner.findViewById(R.id.bannerIndicatorOther);
+
+        if (btnBannerSelectCis != null) {
+            btnBannerSelectCis.setBackgroundResource(isCis ? R.drawable.card_resize_selected : R.drawable.card_resize_unselected);
+            if (bannerPillCis != null) bannerPillCis.setVisibility(isCis ? View.VISIBLE : View.GONE);
+        }
+
+        if (btnBannerSelectOther != null) {
+            btnBannerSelectOther.setBackgroundResource(!isCis ? R.drawable.card_resize_selected : R.drawable.card_resize_unselected);
+            if (bannerIndicatorOther != null) bannerIndicatorOther.setVisibility(!isCis ? View.GONE : View.VISIBLE);
+        }
     }
 
     private void showUrlTopBannerAnimated(String url) {
         if (urlTopBanner == null) return;
 
         if (tvCurrentUrlBanner != null && url != null && !url.trim().isEmpty()) {
-            tvCurrentUrlBanner.setText(url);
+            tvCurrentUrlBanner.setText("Текущий адрес: " + url);
         }
+        updateBannerSelectionUI(url);
 
         if (urlBannerRunnable != null) {
             urlBannerHandler.removeCallbacks(urlBannerRunnable);
@@ -360,7 +408,7 @@ public class MainActivity extends AppCompatActivity {
         urlTopBanner.post(() -> {
             int height = urlTopBanner.getHeight();
             if (height <= 0) {
-                height = (int) (70 * getResources().getDisplayMetrics().density);
+                height = (int) (120 * getResources().getDisplayMetrics().density);
             }
             urlTopBanner.setTranslationY(-height - 100f);
             urlTopBanner.animate()
@@ -372,7 +420,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         urlBannerRunnable = this::hideUrlTopBannerAnimated;
-        urlBannerHandler.postDelayed(urlBannerRunnable, 5000);
+        urlBannerHandler.postDelayed(urlBannerRunnable, 7000);
     }
 
     private void hideUrlTopBannerAnimated() {
