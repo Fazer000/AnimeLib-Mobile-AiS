@@ -6,94 +6,54 @@
     android:orientation="vertical"
     android:background="@android:color/transparent">
 
-    <!-- Bottom sheet handle -->
-    <View
-        android:layout_width="36dp"
-        android:layout_height="4dp"
-        android:layout_gravity="center_horizontal"
-        android:background="@drawable/bottom_sheet_handle"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp" />
-
-    <!-- Header -->
-    <LinearLayout
+    <!-- Top Bar with Handle & Action Buttons -->
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:background="@drawable/bg_bottom_sheet_header"
+        android:paddingHorizontal="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp">
 
-        <FrameLayout
+        <!-- Bottom sheet handle -->
+        <View
             android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:background="@drawable/bg_rules_icon_circle"
-            android:layout_marginEnd="10dp">
+            android:layout_height="4dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bottom_sheet_handle" />
+
+        <!-- Top right controls -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center_vertical"
+            android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_link"
-                app:tint="?attr/secondaryColor"
-                android:contentDescription="Title" />
-        </FrameLayout>
+                android:id="@+id/btnRefreshWeb"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:padding="8dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_refresh"
+                app:tint="@color/primary_text_color"
+                android:contentDescription="Refresh"
+                android:clickable="true"
+                android:focusable="true" />
 
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:paddingEnd="8dp">
-
-            <TextView
-                android:id="@+id/tvTitleWebHeader"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Тайтл"
-                android:textColor="@color/primary_text_color"
-                android:textSize="16sp"
-                android:fontFamily="@font/open_sans_bold"
-                android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end" />
-
-            <TextView
-                android:id="@+id/tvSubtitleWebUrl"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="v5.animelib.org"
-                android:textColor="@color/gray_color"
-                android:textSize="12sp"
-                android:fontFamily="@font/open_sans"
-                android:maxLines="1"
-                android:ellipsize="end" />
+            <ImageView
+                android:id="@+id/btnCloseWeb"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:padding="8dp"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_close"
+                app:tint="@color/primary_text_color"
+                android:contentDescription="Close"
+                android:clickable="true"
+                android:focusable="true" />
         </LinearLayout>
-
-        <ImageView
-            android:id="@+id/btnRefreshWeb"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:padding="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_refresh"
-            app:tint="@color/primary_text_color"
-            android:contentDescription="Refresh"
-            android:clickable="true"
-            android:focusable="true" />
-
-        <ImageView
-            android:id="@+id/btnCloseWeb"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:padding="8dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_close"
-            app:tint="@color/primary_text_color"
-            android:contentDescription="Close"
-            android:clickable="true"
-            android:focusable="true" />
-    </LinearLayout>
+    </FrameLayout>
 
     <!-- Progress Indicator -->
     <ProgressBar
@@ -108,7 +68,7 @@
     <FrameLayout
         android:id="@+id/webViewContainer"
         android:layout_width="match_parent"
-        android:layout_height="500dp">
+        android:layout_height="400dp">
 
         <WebView
             android:id="@+id/webViewTitle"
@@ -122,7 +82,7 @@
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center"
-            android:background="?attr/statusBarColor"
+            android:background="@color/toolbar_header_bg"
             android:padding="24dp"
             android:visibility="gone">
 

@@ -2543,13 +2543,14 @@ public class VideoPlayerActivity extends AppCompatActivity {
      * @param media Объект медиа выбранного тайтла
      */
     private void onRelatedTitleSelected(RelatedTitlesResponse.Media media) {
+        if (isFinishing() || isDestroyed()) return;
         if (media == null) {
             Log.w("VideoPlayer", "Related title media is null");
             return;
         }
 
         String titleName = HorizontalRelatedTitlesAdapter.getDisplayTitle(media);
-        String webUrl = HorizontalRelatedTitlesAdapter.buildWebUrl(media);
+        String webUrl = HorizontalRelatedTitlesAdapter.buildWebUrl(media, this);
 
         Log.d("VideoPlayer", "Related title selected: " + titleName + " -> " + webUrl);
 
@@ -2558,14 +2559,19 @@ public class VideoPlayerActivity extends AppCompatActivity {
             return;
         }
 
-        // Если открыта верхняя шторка "Связанное", скроем её
-        if (relatedTitlesManager != null && relatedTitlesManager.isRelatedTitlesVisible()) {
-            relatedTitlesManager.hideRelatedTitles();
-        }
+        try {
+            // Если открыта верхняя шторка "Связанное", скроем её
+            if (relatedTitlesManager != null && relatedTitlesManager.isRelatedTitlesVisible()) {
+                relatedTitlesManager.hideRelatedTitles();
+            }
 
-        // Открываем новый BottomSheet с WebView для тайтла
-        TitleWebViewBottomSheet bottomSheet = new TitleWebViewBottomSheet(this, titleName, webUrl);
-        bottomSheet.show();
+            // Открываем новый BottomSheet с WebView для тайтла
+            TitleWebViewBottomSheet bottomSheet = new TitleWebViewBottomSheet(this, titleName, webUrl);
+            bottomSheet.show();
+        } catch (Throwable t) {
+            Log.e("VideoPlayer", "Error showing TitleWebViewBottomSheet: " + t.getMessage(), t);
+            CustomToast.showWarning(this, "Не удалось открыть страницу тайтла");
+        }
     }
 
     /**

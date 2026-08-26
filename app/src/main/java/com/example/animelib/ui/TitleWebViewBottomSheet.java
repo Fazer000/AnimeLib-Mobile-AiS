@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import com.example.animelib.R;
 import com.example.animelib.util.FlexibleBottomSheetDialog;
 import com.example.animelib.util.FloatingBottomSheetUtils;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
 
@@ -34,8 +35,6 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
     private final String titleName;
     private final String targetUrl;
 
-    private TextView tvTitleWebHeader;
-    private TextView tvSubtitleWebUrl;
     private ImageView btnRefreshWeb;
     private ImageView btnCloseWeb;
     private ProgressBar progressBarWeb;
@@ -44,7 +43,7 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
     private Button btnRetryWeb;
 
     public TitleWebViewBottomSheet(@NonNull Context context, String titleName, String targetUrl) {
-        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        super(context);
         this.titleName = titleName;
         this.targetUrl = targetUrl;
     }
@@ -74,25 +73,28 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
         initViews(view);
         setupWebView();
         loadUrl();
+        setupBehavior();
+    }
+
+    private void setupBehavior() {
+        BottomSheetBehavior<FrameLayout> behavior = getBehavior();
+        if (behavior != null) {
+            behavior.setFitToContents(true);
+            behavior.setSkipCollapsed(true);
+            behavior.setHideable(true);
+            int screenHeight = getContext().getResources().getDisplayMetrics().heightPixels;
+            behavior.setPeekHeight(screenHeight * 2);
+            behavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+        }
     }
 
     private void initViews(View root) {
-        tvTitleWebHeader = root.findViewById(R.id.tvTitleWebHeader);
-        tvSubtitleWebUrl = root.findViewById(R.id.tvSubtitleWebUrl);
         btnRefreshWeb = root.findViewById(R.id.btnRefreshWeb);
         btnCloseWeb = root.findViewById(R.id.btnCloseWeb);
         progressBarWeb = root.findViewById(R.id.progressBarWeb);
         webViewTitle = root.findViewById(R.id.webViewTitle);
         layoutWebError = root.findViewById(R.id.layoutWebError);
         btnRetryWeb = root.findViewById(R.id.btnRetryWeb);
-
-        if (tvTitleWebHeader != null && titleName != null) {
-            tvTitleWebHeader.setText(titleName);
-        }
-
-        if (tvSubtitleWebUrl != null && targetUrl != null) {
-            tvSubtitleWebUrl.setText(targetUrl);
-        }
 
         if (btnCloseWeb != null) {
             btnCloseWeb.setOnClickListener(v -> dismiss());
@@ -101,7 +103,11 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
         if (btnRefreshWeb != null) {
             btnRefreshWeb.setOnClickListener(v -> {
                 if (webViewTitle != null) {
-                    webViewTitle.reload();
+                    try {
+                        webViewTitle.reload();
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error reloading webView: " + e.getMessage());
+                    }
                 }
             });
         }
@@ -112,16 +118,24 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                     layoutWebError.setVisibility(View.GONE);
                 }
                 if (webViewTitle != null) {
-                    webViewTitle.reload();
+                    try {
+                        webViewTitle.reload();
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error retrying webView: " + e.getMessage());
+                    }
                 }
             });
         }
 
         setOnKeyListener((dialog, keyCode, event) -> {
             if (keyCode == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP) {
-                if (webViewTitle != null && webViewTitle.canGoBack()) {
-                    webViewTitle.goBack();
-                    return true;
+                if (webViewTitle != null) {
+                    try {
+                        if (webViewTitle.canGoBack()) {
+                            webViewTitle.goBack();
+                            return true;
+                        }
+                    } catch (Exception ignored) {}
                 }
             }
             return false;
@@ -165,9 +179,6 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                     if (layoutWebError != null) {
                         layoutWebError.setVisibility(View.GONE);
                     }
-                    if (tvSubtitleWebUrl != null && url != null) {
-                        tvSubtitleWebUrl.setText(url);
-                    }
                 }
 
                 @Override
@@ -175,11 +186,6 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
                     super.onPageFinished(view, url);
                     if (progressBarWeb != null) {
                         progressBarWeb.setVisibility(View.GONE);
-                    }
-                    if (view.getTitle() != null && !view.getTitle().isEmpty() && tvTitleWebHeader != null) {
-                        if (titleName == null || titleName.isEmpty() || titleName.equals("Тайтл")) {
-                            tvTitleWebHeader.setText(view.getTitle());
-                        }
                     }
                 }
 
@@ -240,6 +246,10 @@ public class TitleWebViewBottomSheet extends FlexibleBottomSheetDialog {
             }
             webViewTitle = null;
         }
-        super.dismiss();
+        try {
+            super.dismiss();
+        } catch (Exception t) {
+            Log.w(TAG, "Error dismissing dialog: " + t.getMessage());
+        }
     }
 }

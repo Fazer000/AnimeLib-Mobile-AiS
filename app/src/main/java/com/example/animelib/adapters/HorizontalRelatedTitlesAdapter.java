@@ -122,7 +122,7 @@ public class HorizontalRelatedTitlesAdapter extends RecyclerView.Adapter<Horizon
     /**
      * Формирует полный веб-URL для тайтла (аниме, манга, ранобэ и т.д.)
      */
-    public static String buildWebUrl(RelatedTitlesResponse.Media media) {
+    public static String buildWebUrl(RelatedTitlesResponse.Media media, android.content.Context context) {
         if (media == null) return null;
         String slugUrl = media.getSlugUrl();
         if (slugUrl == null || slugUrl.trim().isEmpty()) {
@@ -145,7 +145,24 @@ public class HorizontalRelatedTitlesAdapter extends RecyclerView.Adapter<Horizon
                     ? media.getModel().trim() : "anime";
             path = "/ru/" + model + path;
         }
-        return "https://v5.animelib.org" + path;
+
+        String baseUrl = "https://v5.animelib.org";
+        if (context != null) {
+            try {
+                com.example.animelib.data.DatabaseManager db = new com.example.animelib.data.DatabaseManager(context);
+                String dbUrl = db.getSiteUrl();
+                if (dbUrl != null && !dbUrl.trim().isEmpty()) {
+                    baseUrl = dbUrl;
+                }
+            } catch (Exception e) {
+                android.util.Log.e("RelatedTitlesAdapter", "Failed to get siteUrl from DB", e);
+            }
+        }
+        return baseUrl + path;
+    }
+
+    public static String buildWebUrl(RelatedTitlesResponse.Media media) {
+        return buildWebUrl(media, null);
     }
 
     /**
