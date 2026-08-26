@@ -360,6 +360,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private final java.util.Map<String, com.example.animelib.data.entity.DownloadedEpisodeEntity> offlineEpisodesMap = new java.util.HashMap<>();
     private KodikResponse currentKodikResponse;
     private String currentAnimeId;
+    private AnimeInfoResponse currentAnimeInfo;
     private long bookmarkTimecode = 0; // Таймкод из закладки в миллисекундах
     private long savedPlayerPosition = 0; // Сохраненная позиция при смене плеера
     private boolean autoBookmarkSaved = false; // Флаг для предотвращения дублирования автосохранения
@@ -3599,6 +3600,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             Log.e("VideoPlayer", "displayAnimeInfo: animeInfo or data is null");
             return;
         }
+        this.currentAnimeInfo = animeInfo;
         
         AnimeInfoResponse.Data data = animeInfo.getData();
         Log.d("VideoPlayer", "Displaying anime info: " + data.getRus_name());
@@ -5667,11 +5669,111 @@ public class VideoPlayerActivity extends AppCompatActivity {
         }
     }
     
+    private void saveLatestViewOnExit() {
+        try {
+            EpisodesListResponse.EpisodeItem currentEpisode = episodesManager != null ? episodesManager.getCurrentEpisode() : null;
+            if (currentEpisode == null) return;
+
+            long currentPosition = player != null ? player.getCurrentPosition() : 0;
+            long duration = player != null && player.getDuration() > 0 ? player.getDuration() : 0;
+            if (currentPosition < 1000) return;
+
+            EpisodeResponse.PlayerData currentPlayer = playersManager != null ? playersManager.getCurrentPlayerData() : null;
+
+            com.google.gson.JsonObject viewObj = new com.google.gson.JsonObject();
+
+            // 1. media
+            com.google.gson.JsonObject mediaObj = new com.google.gson.JsonObject();
+            if (currentAnimeInfo != null && currentAnimeInfo.getData() != null) {
+                AnimeInfoResponse.Data data = currentAnimeInfo.getData();
+                mediaObj.addProperty("id", data.getId());
+                mediaObj.addProperty("name", data.getName() != null ? data.getName() : (data.getRus_name() != null ? data.getRus_name() : "Anime"));
+                mediaObj.addProperty("rus_name", data.getRus_name() != null ? data.getRus_name() : "");
+                mediaObj.addProperty("eng_name", data.getEng_name() != null ? data.getEng_name() : "");
+
+                String slugUrl = data.getSlug_url() != null ? data.getSlug_url() : "";
+                mediaObj.addProperty("slug_url", slugUrl);
+
+                String slug = slugUrl;
+                if (slugUrl.contains("--")) {
+                    String[] parts = slugUrl.split("--");
+                    if (parts.length > 1) slug = parts[1];
+                }
+                mediaObj.addProperty("slug", slug);
+
+                com.google.gson.JsonObject coverObj = new com.google.gson.JsonObject();
+                if (data.getCover() != null) {
+                    coverObj.addProperty("filename", data.getCover().getFilename() != null ? data.getCover().getFilename() : "");
+                    coverObj.addProperty("thumbnail", data.getCover().getThumbnail() != null ? data.getCover().getThumbnail() : "");
+                    coverObj.addProperty("default", data.getCover().getDefaultUrl() != null ? data.getCover().getDefaultUrl() : "");
+                    coverObj.addProperty("md", data.getCover().getMd() != null ? data.getCover().getMd() : "");
+                }
+                mediaObj.add("cover", coverObj);
+                mediaObj.addProperty("site", 5);
+                mediaObj.addProperty("model", "anime");
+            } else {
+                int animeIdInt = 0;
+                if (currentAnimeId != null) {
+                    try { animeIdInt = Integer.parseInt(currentAnimeId); } catch (Exception ignored) {}
+                }
+                String titleStr = getIntent() != null && getIntent().getStringExtra("EXTRA_ANIME_TITLE") != null ?
+                        getIntent().getStringExtra("EXTRA_ANIME_TITLE") : "Anime";
+                String animeUrlStr = getIntent() != null ? getIntent().getStringExtra("anime_url") : null;
+                String slugStr = animeUrlStr != null ? ApiService.extractMediaSlugFromUrl(animeUrlStr) : "anime";
+
+                mediaObj.addProperty("id", animeIdInt);
+                mediaObj.addProperty("name", titleStr);
+                mediaObj.addProperty("rus_name", titleStr);
+                mediaObj.addProperty("eng_name", titleStr);
+                mediaObj.addProperty("slug", slugStr != null ? slugStr : "anime");
+                mediaObj.addProperty("slug_url", slugStr != null ? slugStr : "anime");
+                com.google.gson.JsonObject coverObj = new com.google.gson.JsonObject();
+                mediaObj.add("cover", coverObj);
+                mediaObj.addProperty("site", 5);
+                mediaObj.addProperty("model", "anime");
+            }
+            viewObj.add("media", mediaObj);
+
+            // 2. item
+            com.google.gson.JsonObject itemObj = new com.google.gson.JsonObject();
+            itemObj.addProperty("id", currentEpisode.getId());
+            itemObj.addProperty("number", currentEpisode.getNumber() != null ? currentEpisode.getNumber() : "1");
+            viewObj.add("item", itemObj);
+
+            // 3. progress
+            com.google.gson.JsonObject progressObj = new com.google.gson.JsonObject();
+            progressObj.addProperty("current", ApiService.formatTimecode(currentPosition));
+            progressObj.addProperty("total", ApiService.formatTimecode(duration));
+            double percent = duration > 0 ? (double) Math.round((currentPosition * 100.0 / duration) * 100.0) / 100.0 : 0.0;
+            progressObj.addProperty("percent", percent);
+            viewObj.add("progress", progressObj);
+
+            // 4. meta
+            com.google.gson.JsonObject metaObj = new com.google.gson.JsonObject();
+            int teamId = (currentPlayer != null && currentPlayer.getTeam() != null) ? currentPlayer.getTeam().getId() : 0;
+            int transType = (currentPlayer != null && currentPlayer.getTranslationType() != null) ? currentPlayer.getTranslationType().getId() : 1;
+            String playerStr = (currentPlayer != null && currentPlayer.getPlayer() != null) ? currentPlayer.getPlayer() : "Animelib";
+
+            metaObj.addProperty("team", teamId);
+            metaObj.addProperty("translation_type", transType);
+            metaObj.addProperty("player", playerStr);
+            metaObj.addProperty("episode", currentEpisode.getId());
+            viewObj.add("meta", metaObj);
+
+            com.example.animelib.util.LatestViewsManager.saveLatestView(getApplicationContext(), viewObj);
+            Log.d("VideoPlayer", "Saved latest-view on exit for media: " + mediaObj.get("name").getAsString());
+
+        } catch (Exception e) {
+            Log.e("VideoPlayer", "Error saving latest view on exit", e);
+        }
+    }
+
     /**
      * Автоматически сохраняет закладку с текущим таймкодом
      */
     private void autoSaveBookmark() {
         Log.d("VideoPlayer", "Auto-saving bookmark on exit");
+        saveLatestViewOnExit();
         
         EpisodesListResponse.EpisodeItem currentEpisode = episodesManager != null ? episodesManager.getCurrentEpisode() : null;
         if (currentEpisode == null) {

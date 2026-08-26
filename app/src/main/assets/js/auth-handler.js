@@ -127,6 +127,10 @@
                     if (window.AndroidInterface && typeof window.AndroidInterface.saveAuthLocalStorage === 'function') {
                         window.AndroidInterface.saveAuthLocalStorage(val);
                     }
+                } else if (key === 'latest-views' && val && val !== 'null' && val !== 'undefined') {
+                    if (window.AndroidInterface && typeof window.AndroidInterface.saveLatestViews === 'function') {
+                        window.AndroidInterface.saveLatestViews(val);
+                    }
                 }
             };
         } catch (e) {
@@ -150,6 +154,48 @@
                     if (savedAuth && savedAuth !== 'null' && savedAuth !== 'undefined') {
                         localStorage.setItem('auth', savedAuth);
                         console.log('[auth-handler] Restored auth from Android DB to localStorage for ' + window.location.hostname);
+                    }
+                }
+
+                if (window.AndroidInterface && typeof window.AndroidInterface.getLatestViewsJson === 'function') {
+                    const savedLatest = window.AndroidInterface.getLatestViewsJson();
+                    if (savedLatest && savedLatest !== '[]' && savedLatest !== 'null') {
+                        try {
+                            var newViews = JSON.parse(savedLatest);
+                            var existingStr = localStorage.getItem('latest-views');
+                            var list = [];
+                            if (existingStr) {
+                                try { list = JSON.parse(existingStr); } catch(e) {}
+                            }
+                            if (!Array.isArray(list)) list = [];
+                            var updated = false;
+                            newViews.forEach(function(newItem) {
+                                if (!newItem || !newItem.media) return;
+                                var idx = -1;
+                                for (var i = 0; i < list.length; i++) {
+                                    if (list[i] && list[i].media) {
+                                        if ((newItem.media.id && list[i].media.id === newItem.media.id) ||
+                                            (newItem.media.slug_url && list[i].media.slug_url === newItem.media.slug_url)) {
+                                            idx = i;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (idx !== -1) {
+                                    list[idx] = newItem;
+                                    updated = true;
+                                } else {
+                                    list.unshift(newItem);
+                                    updated = true;
+                                }
+                            });
+                            if (updated) {
+                                localStorage.setItem('latest-views', JSON.stringify(list));
+                                console.log('[auth-handler] Restored/updated latest-views in localStorage');
+                            }
+                        } catch(e) {
+                            console.error('[auth-handler] Error syncing latest-views:', e);
+                        }
                     }
                 }
             }

@@ -251,6 +251,16 @@ public class JSInjectionsHandler {
         }
 
         @JavascriptInterface
+        public void saveLatestViews(String latestViewsJson) {
+            com.example.animelib.util.LatestViewsManager.updateFromJS(context, latestViewsJson);
+        }
+
+        @JavascriptInterface
+        public String getLatestViewsJson() {
+            return com.example.animelib.util.LatestViewsManager.getLatestViewsJson(context);
+        }
+
+        @JavascriptInterface
         public void getAuthFromLocalStorage() {
             android.app.Activity activity = getActivityFromContext(context);
             if (activity != null) {

@@ -259,6 +259,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadAndApplyTheme();
+        if (webView != null) {
+            com.example.animelib.util.LatestViewsManager.injectLatestViewsToWebView(webView);
+        }
     }
 
     private void updateSystemBarColors() {
@@ -846,6 +849,7 @@ public class MainActivity extends AppCompatActivity {
                 JSInjectionsHandler.reinjectDomListeners(view);
                 CookieSyncManager.syncFromUrl(url);
                 CookieSyncManager.injectAuthLocalStorage(view);
+                com.example.animelib.util.LatestViewsManager.injectLatestViewsToWebView(view);
 
                 if (isFirstLoad) {
                     isFirstLoad = false;
