@@ -136,26 +136,44 @@ public class HorizontalRelatedTitlesAdapter extends RecyclerView.Adapter<Horizon
             return slugUrl;
         }
 
+        String model = media.getModel() != null && !media.getModel().trim().isEmpty() 
+                ? media.getModel().trim().toLowerCase() : "";
+        int site = media.getSite();
+
         String path = slugUrl;
         if (!path.startsWith("/")) {
             path = "/" + path;
         }
+
+        boolean isManga = "manga".equals(model) || model.contains("manga") || site == 1 || path.contains("/manga/");
+        boolean isRanobe = "ranobe".equals(model) || "novel".equals(model) || model.contains("ranobe") || site == 2 || path.contains("/ranobe/");
+
         if (!path.startsWith("/ru/")) {
-            String model = media.getModel() != null && !media.getModel().trim().isEmpty() 
-                    ? media.getModel().trim() : "anime";
-            path = "/ru/" + model + path;
+            if (path.startsWith("/manga/") || path.startsWith("/ranobe/") || path.startsWith("/anime/")) {
+                path = "/ru" + path;
+            } else {
+                String targetModel = isManga ? "manga" : (isRanobe ? "ranobe" : (!model.isEmpty() ? model : "anime"));
+                path = "/ru/" + targetModel + path;
+            }
         }
 
-        String baseUrl = "https://v5.animelib.org";
-        if (context != null) {
-            try {
-                com.example.animelib.data.DatabaseManager db = new com.example.animelib.data.DatabaseManager(context);
-                String dbUrl = db.getSiteUrl();
-                if (dbUrl != null && !dbUrl.trim().isEmpty()) {
-                    baseUrl = dbUrl;
+        String baseUrl;
+        if (isManga) {
+            baseUrl = "https://mangalib.me";
+        } else if (isRanobe) {
+            baseUrl = "https://ranobelib.me";
+        } else {
+            baseUrl = "https://v5.animelib.org";
+            if (context != null) {
+                try {
+                    com.example.animelib.data.DatabaseManager db = new com.example.animelib.data.DatabaseManager(context);
+                    String dbUrl = db.getSiteUrl();
+                    if (dbUrl != null && !dbUrl.trim().isEmpty()) {
+                        baseUrl = dbUrl;
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("RelatedTitlesAdapter", "Failed to get siteUrl from DB", e);
                 }
-            } catch (Exception e) {
-                android.util.Log.e("RelatedTitlesAdapter", "Failed to get siteUrl from DB", e);
             }
         }
         return baseUrl + path;
