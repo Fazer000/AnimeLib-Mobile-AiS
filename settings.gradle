@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "AnimeLIB"
+rootProject.name = "AnimeLib"
 include ':app'

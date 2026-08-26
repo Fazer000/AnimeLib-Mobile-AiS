@@ -1,6 +1,6 @@
 {
-  "name": "AnimeLIB",
-  "description": "AnimeLIB mobile application for searching, streaming, and managing anime titles.",
+  "name": "AnimeLib",
+  "description": "AnimeLib mobile application for searching, streaming, and managing anime titles.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
