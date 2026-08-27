@@ -112,6 +112,11 @@ public class LatestViewsManager {
      */
     public static void injectLatestViewsToWebView(WebView webView) {
         if (webView == null) return;
+        String currentUrl = webView.getUrl();
+        if (currentUrl != null && !currentUrl.isEmpty() && !currentUrl.toLowerCase().contains("animelib")) {
+            Log.d(TAG, "Skipping latest-views injection for non-animelib domain page: " + currentUrl);
+            return;
+        }
         Context context = webView.getContext();
         final String latestViewsJson = getLatestViewsJson(context);
 

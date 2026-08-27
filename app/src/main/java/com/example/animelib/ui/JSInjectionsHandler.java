@@ -131,6 +131,10 @@ public class JSInjectionsHandler {
         @OptIn(markerClass = UnstableApi.class)
         @JavascriptInterface
         public void onPlayerButtonClicked(String buttonHref) {
+            if (buttonHref != null && buttonHref.startsWith("http") && !buttonHref.toLowerCase().contains("animelib")) {
+                Log.d(TAG, "Ignoring player button click for non-animelib domain: " + buttonHref);
+                return;
+            }
             if (onPlayerButtonClickListener != null) {
                 onPlayerButtonClickListener.onPlayerButtonClicked(buttonHref);
                 return;

@@ -2,6 +2,13 @@
 try {
   console.log('[AnimeLIB] Starting player button listener');
 
+  function isAnimelibDomain(href) {
+    var host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+    if (host.indexOf('animelib') !== -1) return true;
+    if (href && typeof href === 'string' && href.toLowerCase().indexOf('animelib') !== -1) return true;
+    return false;
+  }
+
   if (window.animelibPlayerSetup) {
     console.log('[AnimeLIB] Player listener already setup');
   } else {
@@ -17,6 +24,10 @@ try {
           console.log('[AnimeLIB] Player link found: ' + href);
 
           if (href.includes('/watch') || href.includes('episode')) {
+            if (!isAnimelibDomain(href)) {
+              console.log('[AnimeLIB] Skipping player button click interception for non-animelib domain');
+              return;
+            }
             console.log('[AnimeLIB] Player button clicked: ' + href);
             e.preventDefault();
             e.stopPropagation();

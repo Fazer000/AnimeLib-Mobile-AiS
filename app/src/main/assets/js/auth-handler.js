@@ -128,8 +128,11 @@
                         window.AndroidInterface.saveAuthLocalStorage(val);
                     }
                 } else if (key === 'latest-views' && val && val !== 'null' && val !== 'undefined') {
-                    if (window.AndroidInterface && typeof window.AndroidInterface.saveLatestViews === 'function') {
-                        window.AndroidInterface.saveLatestViews(val);
+                    const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+                    if (host.indexOf('animelib') !== -1) {
+                        if (window.AndroidInterface && typeof window.AndroidInterface.saveLatestViews === 'function') {
+                            window.AndroidInterface.saveLatestViews(val);
+                        }
                     }
                 }
             };
@@ -157,7 +160,8 @@
                     }
                 }
 
-                if (window.AndroidInterface && typeof window.AndroidInterface.getLatestViewsJson === 'function') {
+                const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+                if (host.indexOf('animelib') !== -1 && window.AndroidInterface && typeof window.AndroidInterface.getLatestViewsJson === 'function') {
                     const savedLatest = window.AndroidInterface.getLatestViewsJson();
                     if (savedLatest && savedLatest !== '[]' && savedLatest !== 'null') {
                         try {

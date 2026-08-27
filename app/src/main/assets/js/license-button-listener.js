@@ -16,6 +16,12 @@ class LicenseButtonHandler {
             return;
         }
 
+        const host = (window.location && window.location.hostname) ? window.location.hostname.toLowerCase() : '';
+        if (host.indexOf('animelib') === -1) {
+            console.log('[LicenseButtonHandler] Skipping setup for non-animelib domain: ' + host);
+            return;
+        }
+
         this.isSetup = true;
         this.setupClickListener();
         this.setupTextReplacement();
