@@ -62,7 +62,6 @@ public class JSInjectionsHandler {
         loadAndExecuteJS(webView, "js/search-button-listener.js", "Search button listener");
         loadAndExecuteJS(webView, "js/downloaded-button-listener.js", "Downloaded button listener");
         loadAndExecuteJS(webView, "js/carousel-fix.js", "Carousel scroll fix");
-//        loadAndExecuteJS(webView, "js/back-button-handler.js", "Back button handler");
         loadAndExecuteJS(webView, "js/debug-info.js", "Debug info");
         loadAndExecuteJS(webView, "js/button-checker.js", "Button checker");
 
