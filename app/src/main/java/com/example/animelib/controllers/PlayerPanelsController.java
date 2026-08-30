@@ -301,9 +301,9 @@ public class PlayerPanelsController {
         }
 
         // Landscape mode
-        boolean isMenuOpen = menuPanelContainer != null && menuPanelContainer.isOpen() && menuPanelContainer.getVisibility() == View.VISIBLE;
-        boolean isCommentsOpen = commentsPanelContainer != null && commentsPanelContainer.isOpen() && commentsPanelContainer.getVisibility() == View.VISIBLE;
-        if (!isMenuOpen && !isCommentsOpen) {
+        boolean isMenuVisible = menuPanelContainer != null && menuPanelContainer.getVisibility() == View.VISIBLE;
+        boolean isCommentsVisible = commentsPanelContainer != null && commentsPanelContainer.getVisibility() == View.VISIBLE;
+        if (!isMenuVisible && !isCommentsVisible) {
             openProgress = 0f;
         }
 
@@ -410,11 +410,15 @@ public class PlayerPanelsController {
         float density = activity.getResources().getDisplayMetrics().density;
         float panelWidthPx = 360f * density;
 
-        if (menuPanelContainer != null && menuPanelContainer.getChildCount() > 0) {
-            int w = menuPanelContainer.getChildAt(0).getWidth();
-            if (w > 0) panelWidthPx = w;
-        } else if (commentsPanelContainer != null && commentsPanelContainer.getChildCount() > 0) {
-            int w = commentsPanelContainer.getChildAt(0).getWidth();
+        DraggableSidePanel activePanel = null;
+        if (commentsPanelContainer != null && commentsPanelContainer.getVisibility() == View.VISIBLE) {
+            activePanel = commentsPanelContainer;
+        } else if (menuPanelContainer != null && menuPanelContainer.getVisibility() == View.VISIBLE) {
+            activePanel = menuPanelContainer;
+        }
+
+        if (activePanel != null && activePanel.getChildCount() > 0) {
+            int w = activePanel.getChildAt(0).getWidth();
             if (w > 0) panelWidthPx = w;
         }
 
@@ -437,7 +441,7 @@ public class PlayerPanelsController {
         float currentVideoW = videoW0 + (videoW1 - videoW0) * openProgress;
         float currentVideoH = videoH0 + (videoH1 - videoH0) * openProgress;
         float currentLeft = videoLeft0 + (videoLeft1 - videoLeft0) * openProgress;
-        float currentTop = videoTop0 + (videoTop0 - videoTop0) * openProgress; // wait, let's fix top
+        float currentTop = videoTop0 + (videoTop1 - videoTop0) * openProgress;
 
         float scale = (videoW0 > 0) ? (currentVideoW / videoW0) : 1f;
 
