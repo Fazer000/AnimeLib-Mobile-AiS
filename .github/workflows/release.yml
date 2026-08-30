@@ -68,7 +68,7 @@ jobs:
       run: |
         CURRENT_VERSION=$(grep -E 'versionName\s+"[^"]+"' app/build.gradle | sed -E 's/.*versionName\s+"([^"]+)".*/\1/')
         if [ -z "$CURRENT_VERSION" ]; then
-          CURRENT_VERSION="1.8.5"
+          CURRENT_VERSION="1.8.6"
         fi
         echo "Current app versionName in build.gradle: $CURRENT_VERSION"
 
