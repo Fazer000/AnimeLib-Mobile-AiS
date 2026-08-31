@@ -780,12 +780,19 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
             @Override
             public void onFirstFrameRendered() {
+                hasRenderedFirstFrame = true;
+                isVideoLoading = false;
+                isSeeking = false;
                 hideLoading();
                 updatePlayPauseAndLoadingState(false);
             }
 
             @Override
             public void onPlaybackStateChanged(int state, boolean playWhenReady) {
+                if (state == Player.STATE_READY) {
+                    hasRenderedFirstFrame = true;
+                    isVideoLoading = false;
+                }
                 updatePlayLoadingIndicator(state);
             }
 
@@ -4701,17 +4708,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
             boolean isNearEnd = duration > 0 && currentPos >= (duration - 2000);
 
             // Детектируем реальную подгрузку/буферизацию сети (особенно для MP4 AnimeLib и HLS):
-            boolean isNetworkBuffering = isPlayWhenReady && !isNearEnd && (
-                    playbackState == Player.STATE_BUFFERING
-                    || bufferedAheadMs < 1500
-                    || (isLoading && bufferedAheadMs < 3500)
-                    || !realIsPlaying
-            );
+            boolean isNetworkBuffering = isPlayWhenReady && !isNearEnd && playbackState == Player.STATE_BUFFERING;
 
             // Буферизация / загрузка / перемотка:
             boolean isBuffering = !isEnded && (
-                    isVideoLoading
-                    || !hasRenderedFirstFrame
+                    (isVideoLoading && !hasRenderedFirstFrame && playbackState != Player.STATE_READY)
                     || isSeeking
                     || isScrubbingTimeBar
                     || isNetworkBuffering
@@ -5303,7 +5304,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
             // 5. Adjust timebar position & margin
             android.widget.LinearLayout playersControlBarView = controllerView.findViewById(R.id.playersControlBar);
-            View exoProgress = controllerView.findViewById(R.id.exo_progress);
+            View exoProgress = controllerView.findViewById(R.id.timeBarContainer);
+            if (exoProgress == null) {
+                exoProgress = controllerView.findViewById(R.id.exo_progress);
+            }
             View timeAndControlsContainer = controllerView.findViewById(R.id.timeAndControlsContainer);
             View overlayBadgesContainer = controllerView.findViewById(R.id.overlayBadgesContainer);
 
