@@ -211,32 +211,28 @@ public class ApiService {
      */
     public Map<String, String> getVideoRequestHeaders() {
         Map<String, String> headers = new HashMap<>();
-        String siteUrl = getSiteUrlFromDb();
-        if (siteUrl == null || siteUrl.isEmpty()) {
-            siteUrl = "https://" + context.getString(com.example.animelib.R.string.site_url);
-        }
-        if (siteUrl.endsWith("/")) {
-            siteUrl = siteUrl.substring(0, siteUrl.length() - 1);
-        }
-        String referer = siteUrl + "/";
 
         String token = getBearerToken();
         if (token != null && !token.trim().isEmpty()) {
-            headers.put("Authorization", "Bearer " + token);
+            if (token.toLowerCase().startsWith("bearer ")) {
+                headers.put("Authorization", token);
+            } else {
+                headers.put("Authorization", "Bearer " + token);
+            }
         }
 
-        headers.put("Referer", referer);
-        headers.put("Origin", siteUrl);
-        headers.put("accept", "*/*");
+        headers.put("Referer", "https://animelib.org/");
+        headers.put("Origin", "https://animelib.org");
+        headers.put("Content-Type", "video");
+        headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36");
+        headers.put("accept", "video/webm,video/ogg,video/*;q=0.9,application/ogg;q=0.7,audio/*;q=0.6,*/*;q=0.5");
         headers.put("accept-language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
-        headers.put("priority", "i");
         headers.put("sec-ch-ua", "\"Not=A?Brand\";v=\"99\", \"Android WebView\";v=\"151\", \"Chromium\";v=\"151\"");
         headers.put("sec-ch-ua-mobile", "?1");
         headers.put("sec-ch-ua-platform", "\"Android\"");
         headers.put("sec-fetch-dest", "video");
         headers.put("sec-fetch-mode", "cors");
         headers.put("sec-fetch-site", "cross-site");
-        headers.put("x-requested-with", "com.unixshells.devbrowser");
         return headers;
     }
     

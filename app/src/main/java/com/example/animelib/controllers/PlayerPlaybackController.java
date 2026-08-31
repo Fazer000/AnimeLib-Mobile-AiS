@@ -19,6 +19,7 @@ import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.ui.PlayerView;
 
 import com.example.animelib.R;
+import com.example.animelib.api.ApiService;
 import com.example.animelib.managers.AmbientLightManager;
 import com.example.animelib.managers.GesturesManager;
 import com.example.animelib.managers.TimecodeManager;
@@ -34,6 +35,7 @@ public class PlayerPlaybackController {
         GesturesManager getGesturesManager();
         TimecodeManager getTimecodeManager();
         HttpDataSource.Factory getHttpDataSourceFactory();
+        ApiService getApiService();
         void onFirstFrameRendered();
         void onPlaybackStateChanged(int state, boolean playWhenReady);
         void onPlayerError(PlaybackException error);
@@ -68,18 +70,34 @@ public class PlayerPlaybackController {
         } else if (callback != null && callback.getHttpDataSourceFactory() != null) {
             factory = callback.getHttpDataSourceFactory();
         }
-        if (factory instanceof DefaultHttpDataSource.Factory) {
-            ((DefaultHttpDataSource.Factory) factory)
-                    .setConnectTimeoutMs(8000)
-                    .setReadTimeoutMs(8000)
-                    .setAllowCrossProtocolRedirects(true);
-            return factory;
+
+        java.util.Map<String, String> headers = null;
+        if (callback != null && callback.getApiService() != null) {
+            headers = callback.getApiService().getVideoRequestHeaders();
         }
-        return new DefaultHttpDataSource.Factory()
+
+        if (factory instanceof DefaultHttpDataSource.Factory) {
+            DefaultHttpDataSource.Factory defaultFactory = (DefaultHttpDataSource.Factory) factory;
+            defaultFactory
+                    .setConnectTimeoutMs(15000)
+                    .setReadTimeoutMs(15000)
+                    .setAllowCrossProtocolRedirects(true);
+            if (headers != null) {
+                defaultFactory.setDefaultRequestProperties(headers);
+            }
+            return defaultFactory;
+        }
+
+        DefaultHttpDataSource.Factory newFactory = new DefaultHttpDataSource.Factory()
                 .setUserAgent("Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36")
-                .setConnectTimeoutMs(8000)
-                .setReadTimeoutMs(8000)
+                .setConnectTimeoutMs(15000)
+                .setReadTimeoutMs(15000)
                 .setAllowCrossProtocolRedirects(true);
+
+        if (headers != null) {
+            newFactory.setDefaultRequestProperties(headers);
+        }
+        return newFactory;
     }
 
     public ExoPlayer initializePlayer(String videoUrl, MediaItem mediaItem, int resizeMode, boolean playWhenReady) {
@@ -99,11 +117,12 @@ public class PlayerPlaybackController {
 
             DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
                     .setBufferDurationsMs(
-                            15_000, // minBufferMs
-                            50_000, // maxBufferMs
+                            30_000, // minBufferMs
+                            120_000, // maxBufferMs
                             1_000,  // bufferForPlaybackMs (instant playback start)
-                            1_500   // bufferForPlaybackAfterRebufferMs
+                            2_000   // bufferForPlaybackAfterRebufferMs
                     )
+                    .setBackBuffer(30_000, true)
                     .setPrioritizeTimeOverSizeThresholds(true)
                     .build();
 
@@ -131,7 +150,11 @@ public class PlayerPlaybackController {
                     .setAllowChunklessPreparation(true)
                     .createMediaSource(mediaItem != null ? mediaItem : MediaItem.fromUri(videoUrl));
         } else {
-            mediaSource = new DefaultMediaSourceFactory(dsFactory)
+            androidx.media3.extractor.DefaultExtractorsFactory extractorsFactory =
+                    new androidx.media3.extractor.DefaultExtractorsFactory()
+                            .setConstantBitrateSeekingEnabled(true);
+
+            mediaSource = new ProgressiveMediaSource.Factory(dsFactory, extractorsFactory)
                     .createMediaSource(mediaItem != null ? mediaItem : MediaItem.fromUri(videoUrl));
         }
 

@@ -16,7 +16,7 @@ public class VideoUrlHelper {
     public static final String DOMAIN_SECONDARY_1 = "secondary_1";
     public static final String DOMAIN_SECONDARY_2 = "secondary_2";
 
-    public static final String URL_MAIN = "https://video1.cdnlibs.org";
+    public static final String URL_MAIN = "https://video1.cdnlibs.org/.%D0%B0s";
     public static final String URL_SECONDARY_1 = "https://video2.cdnlibs.org";
     public static final String URL_SECONDARY_2 = "https://video1.imglib.info";
 
@@ -47,7 +47,7 @@ public class VideoUrlHelper {
     }
 
     public static String getDomainFullDescription(String domain) {
-        if (domain == null) return "Основной (video1.cdnlibs.org)";
+        if (domain == null) return "Основной (video1.cdnlibs.org/.%D0%B0s)";
         switch (domain) {
             case DOMAIN_SECONDARY_1:
                 return "Резервный 1 (video2.cdnlibs.org)";
@@ -55,7 +55,7 @@ public class VideoUrlHelper {
                 return "Резервный 2 (video1.imglib.info)";
             case DOMAIN_MAIN:
             default:
-                return "Основной (video1.cdnlibs.org)";
+                return "Основной (video1.cdnlibs.org/.%D0%B0s)";
         }
     }
 
@@ -99,7 +99,11 @@ public class VideoUrlHelper {
     public static String extractRelativePathFromCdnUrl(String fullUrl) {
         if (fullUrl == null) return null;
 
-        String[] cdnDomains = new String[] {
+        String[] prefixes = new String[] {
+            "https://video1.cdnlibs.org/.%D0%B0s",
+            "https://video1.cdnlibs.org/.\u0430s",
+            "http://video1.cdnlibs.org/.%D0%B0s",
+            "http://video1.cdnlibs.org/.\u0430s",
             "https://video1.cdnlibs.org",
             "http://video1.cdnlibs.org",
             "https://video2.cdnlibs.org",
@@ -108,9 +112,17 @@ public class VideoUrlHelper {
             "http://video1.imglib.info"
         };
 
-        for (String cdnDomain : cdnDomains) {
-            if (fullUrl.startsWith(cdnDomain)) {
-                return fullUrl.substring(cdnDomain.length());
+        for (String prefix : prefixes) {
+            if (fullUrl.startsWith(prefix)) {
+                String path = fullUrl.substring(prefix.length());
+                if (path.startsWith("/.%D0%B0s")) {
+                    path = path.substring("/.%D0%B0s".length());
+                } else if (path.startsWith("/.\u0430s")) {
+                    path = path.substring("/.\u0430s".length());
+                } else if (path.startsWith("/.%D0%B0")) {
+                    path = path.substring("/.%D0%B0".length());
+                }
+                return path;
             }
         }
         return null;

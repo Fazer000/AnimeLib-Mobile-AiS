@@ -774,6 +774,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
 
             @Override
+            public ApiService getApiService() {
+                return apiService;
+            }
+
+            @Override
             public void onFirstFrameRendered() {
                 hideLoading();
                 updatePlayPauseAndLoadingState(false);
@@ -4026,6 +4031,26 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private void handlePlaybackError(PlaybackException error) {
         Log.e("VideoPlayer", "Playback error: " + (error != null ? error.getMessage() : "unknown"), error);
+
+        if (currentVideoUrl != null && (currentVideoUrl.contains("cdnlibs.org") || currentVideoUrl.contains("imglib.info"))) {
+            String nextDomain = null;
+            if (VideoUrlHelper.DOMAIN_MAIN.equals(currentVideoDomain)) {
+                nextDomain = VideoUrlHelper.DOMAIN_SECONDARY_1;
+            } else if (VideoUrlHelper.DOMAIN_SECONDARY_1.equals(currentVideoDomain)) {
+                nextDomain = VideoUrlHelper.DOMAIN_SECONDARY_2;
+            }
+
+            if (nextDomain != null) {
+                Log.w("VideoPlayer", "CDN server " + currentVideoDomain + " failed. Trying fallback CDN server: " + nextDomain);
+                currentVideoDomain = nextDomain;
+                com.example.animelib.util.CustomToast.showInfo(this, "Переключение на сервер: " + VideoUrlHelper.getDomainDisplayName(nextDomain));
+                if (playersManager != null && playersManager.getCurrentPlayerData() != null) {
+                    onPlayerSelected(playersManager.getCurrentPlayerData());
+                    return;
+                }
+            }
+        }
+
         String errorMsg = "Ошибка воспроизведения: " + (error != null ? error.getMessage() : "неизвестная ошибка");
         String logDetails = buildErrorLog(error);
         showVideoErrorDialog("Ошибка воспроизведения", errorMsg, logDetails, () -> {
