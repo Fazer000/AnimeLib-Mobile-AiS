@@ -16,7 +16,7 @@ public class VideoUrlHelper {
     public static final String DOMAIN_SECONDARY_1 = "secondary_1";
     public static final String DOMAIN_SECONDARY_2 = "secondary_2";
 
-    public static final String URL_MAIN = "https://video1.cdnlibs.org/.%D0%B0s";
+    public static final String URL_MAIN = "https://video1.cdnlibs.org";
     public static final String URL_SECONDARY_1 = "https://video2.cdnlibs.org";
     public static final String URL_SECONDARY_2 = "https://video1.imglib.info";
 

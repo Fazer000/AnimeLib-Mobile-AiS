@@ -12,6 +12,7 @@ import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.HttpDataSource;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
+import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.exoplayer.source.MediaSource;
 import androidx.media3.exoplayer.source.ProgressiveMediaSource;
 import androidx.media3.ui.PlayerView;
@@ -107,7 +108,7 @@ public class PlayerPlaybackController {
             mediaSource = new HlsMediaSource.Factory(dsFactory)
                     .createMediaSource(mediaItem != null ? mediaItem : MediaItem.fromUri(videoUrl));
         } else {
-            mediaSource = new ProgressiveMediaSource.Factory(dsFactory)
+            mediaSource = new DefaultMediaSourceFactory(dsFactory)
                     .createMediaSource(mediaItem != null ? mediaItem : MediaItem.fromUri(videoUrl));
         }
 
