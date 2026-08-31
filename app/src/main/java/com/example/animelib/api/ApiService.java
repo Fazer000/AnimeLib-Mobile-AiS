@@ -12,6 +12,8 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import okhttp3.Call;
@@ -202,6 +204,43 @@ public class ApiService {
 
     private String getSiteUrlFromDb() {
         return databaseManager.getSiteUrl();
+    }
+
+    /**
+     * Возвращает полный набор заголовков для запросов плеера (такие же, как для API и комментариев)
+     */
+    public Map<String, String> getVideoRequestHeaders() {
+        Map<String, String> headers = new HashMap<>();
+        String siteUrl = getSiteUrlFromDb();
+        if (siteUrl == null || siteUrl.isEmpty()) {
+            siteUrl = "https://" + context.getString(com.example.animelib.R.string.site_url);
+        }
+        if (siteUrl.endsWith("/")) {
+            siteUrl = siteUrl.substring(0, siteUrl.length() - 1);
+        }
+        String referer = siteUrl + "/";
+
+        String token = getBearerToken();
+        if (token != null && !token.trim().isEmpty()) {
+            headers.put("Authorization", "Bearer " + token);
+        }
+
+        headers.put("Accept", "video/mp4,video/webm,video/*,*/*");
+        headers.put("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
+        headers.put("Origin", siteUrl);
+        headers.put("Referer", referer);
+        headers.put("Sec-Ch-Ua", "\"Not;A=Brand\";v=\"8\", \"Chromium\";v=\"150\", \"Android WebView\";v=\"150\"");
+        headers.put("Sec-Ch-Ua-Mobile", "?1");
+        headers.put("Sec-Ch-Ua-Platform", "\"Android\"");
+        headers.put("Sec-Fetch-Dest", "video");
+        headers.put("Sec-Fetch-Mode", "cors");
+        headers.put("Sec-Fetch-Site", "cross-site");
+        headers.put("Site-Id", "5");
+        headers.put("X-Requested-With", "com.unixshells.devbrowser");
+        headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36");
+        headers.put("Client-Time-Zone", "Europe/Moscow");
+        headers.put("Priority", "i");
+        return headers;
     }
     
     /**

@@ -127,6 +127,14 @@ public class AmbientLightManager {
         } else {
             ambientPlayerView.setAlpha(0.95f);
         }
+
+        ambientPlayerView.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+            if ((left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) && isEnabled && !isSuspended && ambientPlayer != null && mainPlayer != null) {
+                if (mainPlayer.isPlaying() && !ambientPlayer.isPlaying()) {
+                    ambientPlayer.play();
+                }
+            }
+        });
     }
 
     public void setDataSourceFactory(DataSource.Factory dataSourceFactory) {
@@ -522,6 +530,23 @@ public class AmbientLightManager {
 
     public void cleanup() {
         releaseAmbientPlayer();
+    }
+
+    public void onConfigurationChanged() {
+        mainHandler.post(() -> {
+            if (isEnabled && !isSuspended && !isFrozen && ambientPlayerView != null && ambientPlayer != null) {
+                ambientPlayerView.setPlayer(null);
+                ambientPlayerView.setPlayer(ambientPlayer);
+                if (mainPlayer != null) {
+                    ambientPlayer.seekTo(mainPlayer.getCurrentPosition());
+                    if (mainPlayer.isPlaying()) {
+                        ambientPlayer.play();
+                        mainHandler.removeCallbacks(syncRunnable);
+                        mainHandler.post(syncRunnable);
+                    }
+                }
+            }
+        });
     }
 
     public void onPause() {

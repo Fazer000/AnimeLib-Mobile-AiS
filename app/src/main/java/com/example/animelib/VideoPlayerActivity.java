@@ -523,21 +523,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
         playerApiController = new PlayerApiController(this);
         apiService = playerApiController.getApiService();
 
-        // Initialize HTTP data source with custom headers for video requests
+        // Initialize HTTP data source with full headers matching API/comments requests
         httpDataSourceFactory = new DefaultHttpDataSource.Factory()
-                .setUserAgent("Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36")
+                .setUserAgent("Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36")
                 .setAllowCrossProtocolRedirects(true)
-                .setDefaultRequestProperties(Map.of(
-                        "Referer", "https://v5.animelib.org/",
-                        "Accept", "video/mp4,video/webm,video/*,*/*",
-                        "Accept-Encoding", "identity;q=1, *;q=0",
-                        "Accept-Language", "ru,en;q=0.9,de;q=0.8,zh;q=0.7",
-                        "Origin", "https://v5.animelib.org",
-                        "Sec-Fetch-Dest", "video",
-                        "Sec-Fetch-Mode", "cors",
-                        "Sec-Fetch-Site", "cross-site",
-                        "Priority", "i"
-                ));
+                .setDefaultRequestProperties(apiService.getVideoRequestHeaders());
 
         loadAndApplyTheme();
 
@@ -1551,10 +1541,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
             ambientPlayerView.setScaleY(ambientScale);
             ambientPlayerView.setTranslationX(ambTransX);
             ambientPlayerView.setTranslationY(ambTransY);
-
-            if (ambientLightManager != null) {
-                ambientLightManager.resume();
-            }
         }
     }
     
@@ -4927,6 +4913,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         setupFullscreen();
         checkAndUpdateOrientation();
+        if (ambientLightManager != null) {
+            ambientLightManager.onConfigurationChanged();
+        }
     }
 
     private int getStatusBarHeight() {
