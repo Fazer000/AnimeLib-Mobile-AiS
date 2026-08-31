@@ -303,6 +303,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private com.example.animelib.controllers.PlayerOrientationController playerOrientationController;
     private com.example.animelib.controllers.PlayerAnimeInfoController playerAnimeInfoController;
     private com.example.animelib.controllers.PlayerDownloadController playerDownloadController;
+    private com.example.animelib.controllers.PlayerPlaybackController playerPlaybackController;
+    private com.example.animelib.controllers.PlayerProgressController playerProgressController;
+    private com.example.animelib.controllers.PlayerQualityController playerQualityController;
+    private com.example.animelib.controllers.PlayerDialogsController playerDialogsController;
+    private com.example.animelib.controllers.PlayerUIBinder playerUIBinder;
 
     // Subtitle settings
     private boolean subtitlesEnabled = true;
@@ -728,6 +733,157 @@ public class VideoPlayerActivity extends AppCompatActivity {
             @Override
             public String getCurrentVideoUrl() {
                 return currentVideoUrl;
+            }
+
+            @Override
+            public void safeRunOnUiThread(Runnable runnable) {
+                VideoPlayerActivity.this.safeRunOnUiThread(runnable);
+            }
+        });
+
+        playerUIBinder = new com.example.animelib.controllers.PlayerUIBinder();
+
+        playerPlaybackController = new com.example.animelib.controllers.PlayerPlaybackController(this, playerView, httpDataSourceFactory);
+        playerPlaybackController.setCallback(new com.example.animelib.controllers.PlayerPlaybackController.PlaybackCallback() {
+            @Override
+            public Context getPlayerContext() {
+                return VideoPlayerActivity.this.getPlayerContext();
+            }
+
+            @Override
+            public PlayerAudioController getPlayerAudioController() {
+                return playerAudioController;
+            }
+
+            @Override
+            public AmbientLightManager getAmbientLightManager() {
+                return ambientLightManager;
+            }
+
+            @Override
+            public GesturesManager getGesturesManager() {
+                return gesturesManager;
+            }
+
+            @Override
+            public TimecodeManager getTimecodeManager() {
+                return timecodeManager;
+            }
+
+            @Override
+            public void onFirstFrameRendered() {
+                hideLoading();
+                updatePlayPauseAndLoadingState(false);
+            }
+
+            @Override
+            public void onPlaybackStateChanged(int state, boolean playWhenReady) {
+                updatePlayLoadingIndicator(state);
+            }
+
+            @Override
+            public void onPlayerError(PlaybackException error) {
+                handlePlaybackError(error);
+            }
+
+            @Override
+            public void safeRunOnUiThread(Runnable runnable) {
+                VideoPlayerActivity.this.safeRunOnUiThread(runnable);
+            }
+        });
+
+        playerProgressController = new com.example.animelib.controllers.PlayerProgressController(this, apiService);
+        playerProgressController.setCallback(new com.example.animelib.controllers.PlayerProgressController.ProgressCallback() {
+            @Override
+            public String getAnimeId() {
+                return currentAnimeId;
+            }
+
+            @Override
+            public String getAnimeUrl() {
+                return animeUrl;
+            }
+
+            @Override
+            public boolean isOfflineMode() {
+                return isOfflineMode;
+            }
+
+            @Override
+            public Player getPlayer() {
+                return playerPlaybackController != null ? playerPlaybackController.getPlayer() : player;
+            }
+
+            @Override
+            public EpisodesManager getEpisodesManager() {
+                return episodesManager;
+            }
+
+            @Override
+            public PlayersManager getPlayersManager() {
+                return playersManager;
+            }
+
+            @Override
+            public ImageView getBookmarkButton() {
+                return bookmarkButton;
+            }
+
+            @Override
+            public ImageView getPortraitBookmarkButton() {
+                return portraitBookmarkButton;
+            }
+
+            @Override
+            public void saveLatestViewOnExit() {
+                VideoPlayerActivity.this.saveLatestViewOnExit();
+            }
+
+            @Override
+            public void safeRunOnUiThread(Runnable runnable) {
+                VideoPlayerActivity.this.safeRunOnUiThread(runnable);
+            }
+        });
+
+        playerQualityController = new com.example.animelib.controllers.PlayerQualityController();
+        playerQualityController.setCallback(new com.example.animelib.controllers.PlayerQualityController.QualityCallback() {
+            @Override
+            public void onQualityChanged(String newQuality, String newVideoUrl, boolean isHls) {
+                preferredQuality = newQuality;
+                currentVideoUrl = newVideoUrl;
+                if (isHls) {
+                    initializeHlsPlayer(newVideoUrl);
+                } else {
+                    restartPlayerWithNewQuality();
+                }
+            }
+
+            @Override
+            public void onError(String title, String message, Runnable retryAction) {
+                showVideoErrorDialog(title, message, retryAction);
+            }
+        });
+
+        playerDialogsController = new com.example.animelib.controllers.PlayerDialogsController(this);
+        playerDialogsController.setCallback(new com.example.animelib.controllers.PlayerDialogsController.DialogCallback() {
+            @Override
+            public PlayersManager getPlayersManager() {
+                return playersManager;
+            }
+
+            @Override
+            public String getPreferredQuality() {
+                return preferredQuality;
+            }
+
+            @Override
+            public void hideLoading() {
+                VideoPlayerActivity.this.hideLoading();
+            }
+
+            @Override
+            public void showLoading(String message) {
+                VideoPlayerActivity.this.showLoading(message);
             }
 
             @Override
@@ -1189,42 +1345,50 @@ public class VideoPlayerActivity extends AppCompatActivity {
      * Инициализация компонентов контроллера плеера
      */
     private void initializeControllerComponents() {
-        // Player info components
-        ibClosePlayer = controllerView.findViewById(R.id.ibClosePlayer);
-        settingsButton = controllerView.findViewById(R.id.settingsButton);
-        settingsQualityTag = controllerView.findViewById(R.id.settingsQualityTag);
-        updateSettingsQualityTag();
-        menuToggleFullscreen = controllerView.findViewById(R.id.menuToggleFullscreen);
-        if (pipButton == null && controllerView != null) {
-            pipButton = controllerView.findViewById(R.id.pipButton);
+        if (playerUIBinder != null && controllerView != null) {
+            playerUIBinder.bindControllerViews(controllerView);
+            ibClosePlayer = playerUIBinder.ibClosePlayer;
+            settingsButton = playerUIBinder.settingsButton;
+            settingsQualityTag = playerUIBinder.settingsQualityTag;
+            menuToggleFullscreen = playerUIBinder.menuToggleFullscreen;
+            if (pipButton == null) pipButton = playerUIBinder.pipButton;
+            animeTitleView = playerUIBinder.animeTitleView;
+            currentTeamName = playerUIBinder.currentTeamName;
+            currentEpisodeName = playerUIBinder.currentEpisodeName;
+            currentEpisodeNumberView = playerUIBinder.currentEpisodeNumberView;
+            episodesMenuButton = playerUIBinder.episodesMenuButton;
+            prevEpisodeButton = playerUIBinder.prevEpisodeButton;
+            nextEpisodeButton = playerUIBinder.nextEpisodeButton;
+            menuToggleButton = playerUIBinder.menuToggleButton;
+            playersControlBar = playerUIBinder.playersControlBar;
+            episodesHorizontalRecyclerView = playerUIBinder.episodesHorizontalRecyclerView;
+            commentsButton = playerUIBinder.commentsButton;
+            bookmarkButton = playerUIBinder.bookmarkButton;
+        } else if (controllerView != null) {
+            ibClosePlayer = controllerView.findViewById(R.id.ibClosePlayer);
+            settingsButton = controllerView.findViewById(R.id.settingsButton);
+            settingsQualityTag = controllerView.findViewById(R.id.settingsQualityTag);
+            menuToggleFullscreen = controllerView.findViewById(R.id.menuToggleFullscreen);
+            if (pipButton == null) pipButton = controllerView.findViewById(R.id.pipButton);
+            animeTitleView = controllerView.findViewById(R.id.animeTitle);
+            currentTeamName = controllerView.findViewById(R.id.currentTeamName);
+            currentEpisodeName = controllerView.findViewById(R.id.currentEpisodeName);
+            currentEpisodeNumberView = controllerView.findViewById(R.id.currentEpisodeNumber);
+            episodesMenuButton = controllerView.findViewById(R.id.episodesMenuButton);
+            prevEpisodeButton = controllerView.findViewById(R.id.prevEpisodeButton);
+            nextEpisodeButton = controllerView.findViewById(R.id.nextEpisodeButton);
+            menuToggleButton = controllerView.findViewById(R.id.menuToggleButton);
+            playersControlBar = controllerView.findViewById(R.id.playersControlBar);
+            episodesHorizontalRecyclerView = controllerView.findViewById(R.id.episodesHorizontalRecyclerView);
+            commentsButton = controllerView.findViewById(R.id.commentsButton);
+            bookmarkButton = controllerView.findViewById(R.id.bookmarkButton);
         }
-        animeTitleView = controllerView.findViewById(R.id.animeTitle);
-        currentTeamName = controllerView.findViewById(R.id.currentTeamName);
-        currentEpisodeName = controllerView.findViewById(R.id.currentEpisodeName);
-        currentEpisodeNumberView = controllerView.findViewById(R.id.currentEpisodeNumber);
-        
-        // Navigation components
-        episodesMenuButton = controllerView.findViewById(R.id.episodesMenuButton);
-        prevEpisodeButton = controllerView.findViewById(R.id.prevEpisodeButton);
-        nextEpisodeButton = controllerView.findViewById(R.id.nextEpisodeButton);
-        
-        // Control components
-        menuToggleButton = controllerView.findViewById(R.id.menuToggleButton);
-        playersControlBar = controllerView.findViewById(R.id.playersControlBar);
-        
-        // Episode list component
-        RecyclerView episodesHorizontalRecyclerView = controllerView.findViewById(R.id.episodesHorizontalRecyclerView);
-        ImageButton commentsButton = controllerView.findViewById(R.id.commentsButton);
-        bookmarkButton = controllerView.findViewById(R.id.bookmarkButton);
+        updateSettingsQualityTag();
         downloadButton = null;
         downloadButtonTop = null;
         btnDownloadFromMenu = findViewById(R.id.btnDownloadFromMenu);
         downloadProgressText = findViewById(R.id.downloadProgressText);
         setupDownloadListener();
-
-        // Store for manager initialization
-        this.episodesHorizontalRecyclerView = episodesHorizontalRecyclerView;
-        this.commentsButton = commentsButton;
     }
     
     /**
@@ -2543,51 +2707,14 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void startViewProgressTracking() {
-        stopViewProgressTracking();
-        viewProgressRunnable = new Runnable() {
-            @Override
-            public void run() {
-                checkPlaybackViewProgress();
-                if (player != null && player.isPlaying() && !isCurrentEpisodeMarkedViewed) {
-                    viewProgressHandler.postDelayed(this, 1000);
-                }
-            }
-        };
-        viewProgressHandler.post(viewProgressRunnable);
-    }
-
-    private void stopViewProgressTracking() {
-        if (viewProgressRunnable != null) {
-            viewProgressHandler.removeCallbacks(viewProgressRunnable);
-            viewProgressRunnable = null;
+        if (playerProgressController != null) {
+            playerProgressController.startViewProgressTracking();
         }
     }
 
-    private void checkPlaybackViewProgress() {
-        if (isCurrentEpisodeMarkedViewed || player == null) return;
-        long duration = player.getDuration();
-        long currentPos = player.getCurrentPosition();
-
-        if (duration > 0 && currentPos >= (long) (duration * 0.60)) {
-            isCurrentEpisodeMarkedViewed = true;
-            Log.d("VideoPlayer", "60% view threshold reached: " + currentPos + "/" + duration + "ms");
-
-            String animeId = currentAnimeId;
-            if (animeId == null || animeId.isEmpty()) {
-                animeId = (getIntent() != null) ? getIntent().getStringExtra("EXTRA_ANIME_ID") : null;
-            }
-
-            int playerId = 0;
-            if (playersManager != null && playersManager.getCurrentPlayerData() != null) {
-                playerId = playersManager.getCurrentPlayerData().getId();
-            }
-
-            if (animeId != null && !animeId.isEmpty() && playerId > 0) {
-                Log.d("VideoPlayer", "Enqueuing VIEW task for animeId: " + animeId + ", playerId: " + playerId);
-                com.example.animelib.managers.OfflineSyncManager.getInstance(this).enqueueViewTask(animeId, playerId);
-            } else {
-                Log.w("VideoPlayer", "Cannot enqueue VIEW task: animeId=" + animeId + ", playerId=" + playerId);
-            }
+    private void stopViewProgressTracking() {
+        if (playerProgressController != null) {
+            playerProgressController.stopViewProgressTracking();
         }
     }
     
@@ -4025,245 +4152,45 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void showVideoErrorDialog(String title, String message, Runnable retryAction) {
-        showVideoErrorDialog(title, message, retryAction, false);
+        if (playerDialogsController != null) {
+            playerDialogsController.showVideoErrorDialog(title, message, retryAction);
+        }
     }
 
     private void showVideoErrorDialog(String title, String message, Runnable retryAction, boolean isVoiceoverError) {
-        safeRunOnUiThread(() -> {
-            if (currentErrorDialog != null && currentErrorDialog.isShowing()) {
-                try {
-                    currentErrorDialog.dismiss();
-                } catch (Exception ignored) {}
+        if (playerDialogsController != null) {
+            playerDialogsController.showVideoErrorDialog(title, message, retryAction, isVoiceoverError);
+        }
+    }
+
+    private void handlePlaybackError(PlaybackException error) {
+        Log.e("VideoPlayer", "Playback error: " + (error != null ? error.getMessage() : "unknown"), error);
+        String errorMsg = "Ошибка воспроизведения: " + (error != null ? error.getMessage() : "неизвестная ошибка");
+        showVideoErrorDialog("Ошибка воспроизведения", errorMsg, () -> {
+            if (playersManager != null && playersManager.getCurrentPlayerData() != null) {
+                onPlayerSelected(playersManager.getCurrentPlayerData());
+            } else if (currentVideoUrl != null) {
+                retryWithUrl(currentVideoUrl);
             }
-
-            hideLoading();
-
-            View dialogView = getLayoutInflater().inflate(R.layout.dialog_video_error, null);
-            TextView titleTv = dialogView.findViewById(R.id.errorTitleText);
-            TextView messageTv = dialogView.findViewById(R.id.errorMessageText);
-            TextView detailsTv = dialogView.findViewById(R.id.errorPlayerDetailsText);
-            MaterialButton retryBtn = dialogView.findViewById(R.id.retryButton);
-            MaterialButton goToDownloadsBtn = dialogView.findViewById(R.id.goToDownloadsButton);
-            MaterialButton exitBtn = dialogView.findViewById(R.id.exitButton);
-            ImageButton closeCrossBtn = dialogView.findViewById(R.id.closeErrorCrossButton);
-
-            if (goToDownloadsBtn != null) {
-                goToDownloadsBtn.setOnClickListener(v -> {
-                    if (currentErrorDialog != null) {
-                        currentErrorDialog.dismiss();
-                    }
-                    com.example.animelib.ui.DownloadsActivity.start(VideoPlayerActivity.this);
-                });
-            }
-
-            if (title != null && !title.isEmpty()) {
-                titleTv.setText(title);
-            } else {
-                titleTv.setText("Ошибка загрузки видео");
-            }
-
-            messageTv.setText(message != null ? message : "Произошла ошибка при загрузке видео.");
-
-            EpisodeResponse.PlayerData playerData = playersManager != null ? playersManager.getCurrentPlayerData() : null;
-            if (playerData != null && !isVoiceoverError) {
-                String pName = playerData.getPlayer() != null ? playerData.getPlayer() : "Неизвестный";
-                String tName = playerData.getTeam() != null ? playerData.getTeam().getName() : "";
-                String qName = preferredQuality != null ? preferredQuality : "";
-                StringBuilder details = new StringBuilder("Плеер: ").append(pName);
-                if (tName != null && !tName.isEmpty()) {
-                    details.append(" (").append(tName).append(")");
-                }
-                if (qName != null && !qName.isEmpty()) {
-                    details.append(" • ").append(qName);
-                }
-                detailsTv.setText(details.toString());
-                detailsTv.setVisibility(View.VISIBLE);
-            } else {
-                detailsTv.setVisibility(View.GONE);
-            }
-
-            androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
-            builder.setView(dialogView);
-            currentErrorDialog = builder.create();
-
-            if (currentErrorDialog.getWindow() != null) {
-                currentErrorDialog.getWindow().setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
-            }
-
-            retryBtn.setOnClickListener(v -> {
-                if (currentErrorDialog != null) {
-                    currentErrorDialog.dismiss();
-                }
-                if (retryAction != null) {
-                    showLoading("Повторная попытка...");
-                    retryAction.run();
-                }
-            });
-
-            if (exitBtn != null) {
-                exitBtn.setOnClickListener(v -> {
-                    if (currentErrorDialog != null) {
-                        currentErrorDialog.dismiss();
-                    }
-                    finish();
-                });
-            }
-
-            if (closeCrossBtn != null) {
-                closeCrossBtn.setOnClickListener(v -> {
-                    if (currentErrorDialog != null) {
-                        currentErrorDialog.dismiss();
-                    }
-                });
-            }
-
-            currentErrorDialog.show();
         });
     }
 
     private void initializePlayer() {
-        isVideoLoading = true;
-        hasRenderedFirstFrame = false;
-        updatePlayPauseAndLoadingState(true);
-        // Create LoadControl with larger buffer for 4K support
-        LoadControl loadControl = new DefaultLoadControl.Builder()
-                .setBufferDurationsMs(
-                        50000,  // min buffer (50s для 4K)
-                        120000, // max buffer (120s для 4K)
-                        2500,   // buffer for playback
-                        5000    // buffer for playback after rebuffer
-                )
-                .build();
-        
-        // Create TrackSelector with 4K support
-        TrackSelector trackSelector = new DefaultTrackSelector(this);
-        
-        // Create ExoPlayer with cached data source, 5.1 Surround Sound processor, and 4K support
-        com.example.animelib.util.SurroundRenderersFactory rf1 = new com.example.animelib.util.SurroundRenderersFactory(
-                getPlayerContext(), playerAudioController != null ? playerAudioController.getSurroundAudioProcessor() : null);
-
-        androidx.media3.datasource.DataSource.Factory cachedHttpFactory = com.example.animelib.util.MediaCacheManager.createCacheDataSourceFactory(this, httpDataSourceFactory);
-
-        player = new ExoPlayer.Builder(getPlayerContext(), rf1)
-                .setSeekBackIncrementMs(10000)
-                .setSeekForwardIncrementMs(10000)
-                .setMediaSourceFactory(new DefaultMediaSourceFactory(cachedHttpFactory))
-                .setLoadControl(loadControl)
-                .setTrackSelector(trackSelector)
-                .build();
-
-        playerView.setPlayer(player);
-        setVideoResizeMode(currentResizeMode);
-        setupPlayerListener();
-        
-        // Set player for ambient light manager
-        if (ambientLightManager != null) {
-            ambientLightManager.setDataSourceFactory(httpDataSourceFactory);
-            ambientLightManager.setPlayer(player);
-        }
-
-        if (playerAudioController != null) {
-            playerAudioController.attachPlayer(player);
-        }
-
-        // Ensure controller is properly configured for play/pause buttons
-        playerView.setUseController(true);
-        updateControllerAutoHide();
-
-        Log.d("PlayerInit", "ExoPlayer bound to PlayerView with controller enabled");
-        
-        // Update gestures manager with new player
-        gesturesManager.updatePlayer(player);
-        
-        // Initialize timecode manager with UI components
-        MaterialButton skipSegmentButton = findViewById(R.id.skipSegmentButton);
-        timecodeManager.initializeViews(player, playerView, skipSegmentButton);
-
-        // Setup all player control buttons
-        setupPlayerControlButtons();
-
-        // Create media item
-        MediaItem mediaItem = createMediaItemWithSubtitles(currentVideoUrl);
-        player.setMediaItem(mediaItem);
-        if (ambientLightManager != null) {
-            ambientLightManager.setPlayer(player, mediaItem, currentVideoUrl);
-        }
-        player.prepare();
-        setupSubtitlePlayerListener(player);
-        applySubtitlesStateToPlayer();
-
-        // Start playback
-        if (autoPlayOnPrepare) {
-            player.play();
-        }
-        autoPlayOnPrepare = true;
-
-        // Add listener for errors
-        player.addListener(new Player.Listener() {
-            @Override
-            public void onPlayerError(@NonNull PlaybackException error) {
-                Log.e("VideoPlayer", "Playback error: " + error.getMessage(), error);
-                Log.e("VideoPlayer", "Error type: " + error.errorCode + ", current quality: " + preferredQuality);
-                String errorMsg = "Ошибка воспроизведения";
-
-                // Check if this is a 4K playback error (Source error, decoder error, etc.)
-                boolean is4KError = (preferredQuality != null && (preferredQuality.equals("2160p") || preferredQuality.equals("4Kp"))) &&
-                        (error.getMessage().contains("Source error") || 
-                         error.getMessage().contains("Decoder") ||
-                         error.getMessage().contains("Video decoder error") ||
-                         error.errorCode == PlaybackException.ERROR_CODE_DECODING_FAILED ||
-                         error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED);
-                
-                if (is4KError) {
-                    Log.w("VideoPlayer", "4K playback failed, attempting fallback to 1080p");
-                    errorMsg = "4K не поддерживается на этом устройстве. Переключаемся на 1080p...";
-                    CustomToast.showWarning(VideoPlayerActivity.this, errorMsg);
-                    
-                    // Try to fallback to 1080p
-                    List<String> availableQualities = playersManager.getAvailableQualities();
-                    if (availableQualities.contains("1080p")) {
-                        preferredQuality = "1080p";
-                        // Restart player with lower quality
-                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                            long savedPosition = player.getCurrentPosition();
-                            restartPlayerWithNewQuality();
-                        }, 500);
-                        return; // Don't show error toast
-                    } else if (!availableQualities.isEmpty()) {
-                        // Use any available quality
-                        preferredQuality = availableQualities.get(0);
-                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                            restartPlayerWithNewQuality();
-                        }, 500);
-                        return;
-                    }
-                } else if (error.getMessage().contains("403")) {
-                    errorMsg += ": доступ запрещен (403). Пробуем без токена...";
-                    Log.d("VideoPlayer", "403 Forbidden - trying URL without auth token");
-
-                    // Try loading video without auth token
-                    if (currentVideoUrl.contains("video1.cdnlibs.org/.%D0%B0s")) {
-                        String urlWithoutToken = currentVideoUrl.replace("https://video1.cdnlibs.org/.%D0%B0s", "https://video1.cdnlibs.org");
-                        Log.d("VideoPlayer", "Retrying with URL: " + urlWithoutToken);
-                        retryWithUrl(urlWithoutToken);
-                        return; // Don't show error toast yet
-                    }
-                } else if (error.getMessage().contains("404")) {
-                    errorMsg += ": видео не найдено (404).";
-                } else {
-                    errorMsg += ": " + error.getMessage();
-                }
-
-                showVideoErrorDialog("Ошибка воспроизведения", errorMsg, () -> {
-                    EpisodeResponse.PlayerData cur = playersManager.getCurrentPlayerData();
-                    if (cur != null) {
-                        onPlayerSelected(cur);
-                    } else if (currentVideoUrl != null) {
-                        retryWithUrl(currentVideoUrl);
-                    }
-                });
+        if (playerPlaybackController != null) {
+            MediaItem mediaItem = createMediaItemWithSubtitles(currentVideoUrl);
+            player = playerPlaybackController.initializePlayer(
+                    currentVideoUrl,
+                    mediaItem,
+                    currentResizeMode,
+                    autoPlayOnPrepare
+            );
+            autoPlayOnPrepare = true;
+            if (player != null) {
+                setupSubtitlePlayerListener(player);
+                applySubtitlesStateToPlayer();
+                setupPlayerControlButtons();
             }
-        });
+        }
     }
 
     private void retryWithUrl(String newUrl) {
@@ -4816,80 +4743,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
      * Автоматически сохраняет закладку с текущим таймкодом
      */
     private void autoSaveBookmark() {
-        Log.d("VideoPlayer", "Auto-saving bookmark on exit");
-        saveLatestViewOnExit();
-        
-        EpisodesListResponse.EpisodeItem currentEpisode = episodesManager != null ? episodesManager.getCurrentEpisode() : null;
-        if (currentEpisode == null) {
-            Log.d("VideoPlayer", "Cannot auto-save bookmark - episode not ready");
-            return;
+        if (playerProgressController != null) {
+            playerProgressController.autoSaveBookmark();
         }
-        
-        long currentPosition = player != null ? player.getCurrentPosition() : 0;
-        if (currentPosition < 1000) {
-            Log.d("VideoPlayer", "Position too small for auto-save: " + currentPosition + "ms");
-            return;
-        }
-
-        if (isOfflineMode) {
-            String animeId = currentAnimeId != null ? currentAnimeId : (getIntent() != null ? getIntent().getStringExtra("EXTRA_ANIME_ID") : null);
-            if (animeId == null && getIntent() != null && getIntent().getStringExtra("EXTRA_LOCAL_FILE_PATH") != null && apiService != null && apiService.getDatabaseManager() != null) {
-                com.example.animelib.data.entity.DownloadedEpisodeEntity dep =
-                        apiService.getDatabaseManager().findEpisodeByPath(getIntent().getStringExtra("EXTRA_LOCAL_FILE_PATH"));
-                if (dep != null) animeId = dep.getAnimeId();
-            }
-
-            if (animeId != null && apiService != null && apiService.getDatabaseManager() != null) {
-                String timecode = ApiService.formatTimecode(currentPosition);
-                apiService.getDatabaseManager().saveOfflineBookmark(animeId, currentEpisode.getId(), currentEpisode.getNumber(), timecode, currentPosition);
-                autoBookmarkSaved = true;
-                Log.d("VideoPlayer", "Offline bookmark saved successfully for anime " + animeId + ", episode: " + currentEpisode.getNumber() + " at " + timecode);
-            }
-            return;
-        }
-
-        if (apiService == null || !apiService.isAuthorized()) {
-            Log.d("VideoPlayer", "Cannot auto-save bookmark - user not authorized");
-            return;
-        }
-
-        EpisodeResponse.PlayerData currentPlayer = playersManager != null ? playersManager.getCurrentPlayerData() : null;
-        if (currentPlayer == null) {
-            Log.d("VideoPlayer", "Cannot auto-save bookmark - player not ready");
-            return;
-        }
-
-        String animeUrl = getIntent().getStringExtra("anime_url");
-        String mediaSlug = null;
-        if (animeUrl != null && !animeUrl.isEmpty()) {
-            mediaSlug = ApiService.extractMediaSlugFromUrl(animeUrl);
-        }
-        
-        if (mediaSlug == null) {
-            Log.d("VideoPlayer", "Cannot auto-save bookmark - media slug not available");
-            return;
-        }
-
-        // Используем BookmarkManager для добавления закладки (без UI обновлений)
-        episodesManager.getBookmarkManager().addBookmark(
-            mediaSlug,
-            currentPlayer,
-            currentEpisode,
-            currentPosition,
-            new BookmarkManager.BookmarkAddCallback() {
-                @Override
-                public void onBookmarkAdded(int episodeId) {
-                    Log.d("VideoPlayer", "Auto-bookmark saved successfully for episode: " + episodeId);
-                    autoBookmarkSaved = true;
-                }
-                
-                @Override
-                public void onBookmarkError(String error) {
-                    Log.e("VideoPlayer", "Failed to auto-save bookmark: " + error);
-                }
-            },
-            false
-        );
     }
     
     private static class ColorAnimHolder {
@@ -4935,73 +4791,15 @@ public class VideoPlayerActivity extends AppCompatActivity {
      * @param isBookmarked true если закладка добавлена, false если нет
      */
     private void updateBookmarkButtonColor(boolean isBookmarked) {
-        runOnUiThread(() -> {
-            if (bookmarkButton != null) {
-                bookmarkButton.setEnabled(true);
-                bookmarkButton.setClickable(true);
-                bookmarkButton.setAlpha(1.0f);
-                int targetColor = isBookmarked ? getResources().getColor(R.color.bookmark_color) : getResources().getColor(R.color.white_color);
-                animateImageColorFilter(bookmarkButton, targetColor);
-            }
-            if (portraitBookmarkButton != null) {
-                portraitBookmarkButton.setEnabled(true);
-                portraitBookmarkButton.setClickable(true);
-                portraitBookmarkButton.setFocusable(true);
-                portraitBookmarkButton.setAlpha(1.0f);
-                int targetColor = isBookmarked ? getResources().getColor(R.color.bookmark_color) : getResources().getColor(R.color.primary_text_color);
-                animateImageColorFilter(portraitBookmarkButton, targetColor);
-            }
-        });
+        if (playerProgressController != null) {
+            playerProgressController.updateBookmarkButtonColor(isBookmarked);
+        }
     }
-    
-    /**
-     * Обновляет список эпизодов после добавления закладки
-     */
-    private void updateEpisodesListAfterBookmark() {
-        safeRunOnUiThread(() -> {
-            if (isOfflineMode) {
-                String animeId = currentAnimeId != null ? currentAnimeId : (getIntent() != null ? getIntent().getStringExtra("EXTRA_ANIME_ID") : null);
-                if (animeId != null && apiService != null && apiService.getDatabaseManager() != null) {
-                    com.example.animelib.data.entity.OfflineBookmarkEntity bm = apiService.getDatabaseManager().getOfflineBookmarkSync(animeId);
-                    if (bm != null) {
-                        com.example.animelib.models.AnimeBookmarkResponse.BookmarkData bookmarkData = new com.example.animelib.models.AnimeBookmarkResponse.BookmarkData();
-                        bookmarkData.setItemId(bm.getEpisodeId());
-                        bookmarkData.setProgress(bm.getTimecode());
-                        episodesManager.updateBookmarkInAdapter(bookmarkData);
-                    }
-                }
-                return;
-            }
 
-            // Получаем media_slug для обновления закладки
-            String animeUrl = getIntent().getStringExtra("anime_url");
-            String mediaSlug = null;
-            if (animeUrl != null && !animeUrl.isEmpty()) {
-                mediaSlug = ApiService.extractMediaSlugFromUrl(animeUrl);
-            }
-            
-            if (mediaSlug != null) {
-                // Обновляем закладку в EpisodesManager
-                episodesManager.getBookmarkManager().fetchAnimeBookmark(mediaSlug, 
-                    new BookmarkManager.AnimeBookmarkCallback() {
-                        @Override
-                        public void onBookmarkReceived(com.example.animelib.models.AnimeBookmarkResponse response) {
-                            safeRunOnUiThread(() -> {
-                                if (response != null && response.getData() != null) {
-                                    // Обновляем закладку в адаптере
-                                    episodesManager.updateBookmarkInAdapter(response.getData());
-                                    Log.d("VideoPlayer", "Episodes list updated with new bookmark");
-                                }
-                            });
-                        }
-                        
-                        @Override
-                        public void onError(String error) {
-                            Log.e("VideoPlayer", "Failed to update bookmark in episodes list: " + error);
-                        }
-                    });
-            }
-        });
+    private void updateEpisodesListAfterBookmark() {
+        if (playerProgressController != null) {
+            playerProgressController.updateEpisodesListAfterBookmark();
+        }
     }
 
     private void initializeMenuWithoutAutoPlay() {
@@ -5167,151 +4965,21 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void initializeHlsPlayer(String hlsUrl) {
-        isVideoLoading = true;
-        hasRenderedFirstFrame = false;
-        updatePlayPauseAndLoadingState(true);
-        // Create HLS media source with OkHttp data source
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .addInterceptor(chain -> {
-                    Request original = chain.request();
-                    boolean kodikHost = original.url().host().contains("kodik");
-                    String referer = kodikHost ? "https://kodik.info/" : "https://v3.animelib.org/";
-                    String origin = kodikHost ? "https://kodik.info" : "https://v3.animelib.org";
-
-                    Request.Builder requestBuilder = original.newBuilder()
-                            .header("User-Agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1")
-                            .header("Referer", referer)
-                            .header("Accept", "video/mp4,video/*,*/*")
-                            .header("Accept-Encoding", "identity;q=1, *;q=0")
-                            .header("Accept-Language", "ru,en;q=0.9,de;q=0.8,zh;q=0.7")
-                            .header("Origin", origin)
-                            .header("Sec-Fetch-Dest", "video")
-                            .header("Sec-Fetch-Mode", "cors")
-                            .header("Sec-Fetch-Site", "cross-site")
-                            .header("Priority", "i");
-
-                    Request request = requestBuilder.build();
-                    return chain.proceed(request);
-                })
-                .build();
-
-        OkHttpDataSource.Factory okHttpDataSourceFactory = new OkHttpDataSource.Factory(okHttpClient);
-
-        MediaItem mediaItem = createMediaItemWithSubtitles(hlsUrl);
-
-        // Create LoadControl with larger buffer for 4K support
-        LoadControl loadControl = new DefaultLoadControl.Builder()
-                .setBufferDurationsMs(
-                        50000,  // min buffer (50s для 4K)
-                        120000, // max buffer (120s для 4K)
-                        2500,   // buffer for playback
-                        5000    // buffer for playback after rebuffer
-                )
-                .build();
-        
-        // Create TrackSelector with 4K support
-        TrackSelector trackSelector = new DefaultTrackSelector(this);
-        
-        // Create ExoPlayer with 4K support and 5.1 Surround Sound
-        com.example.animelib.util.SurroundRenderersFactory rf2 = new com.example.animelib.util.SurroundRenderersFactory(
-                getPlayerContext(), playerAudioController != null ? playerAudioController.getSurroundAudioProcessor() : null);
-
-        androidx.media3.datasource.DataSource.Factory cachedOkHttpFactory = com.example.animelib.util.MediaCacheManager.createCacheDataSourceFactory(this, okHttpDataSourceFactory);
-
-        player = new ExoPlayer.Builder(getPlayerContext(), rf2)
-                .setSeekBackIncrementMs(10000)
-                .setSeekForwardIncrementMs(10000)
-                .setMediaSourceFactory(new DefaultMediaSourceFactory(cachedOkHttpFactory))
-                .setLoadControl(loadControl)
-                .setTrackSelector(trackSelector)
-                .build();
-
-        playerView.setPlayer(player);
-        setVideoResizeMode(currentResizeMode);
-        setupPlayerListener();
-        
-        // Set player for ambient light manager
-        if (ambientLightManager != null) {
-            ambientLightManager.setDataSourceFactory(okHttpDataSourceFactory);
-            ambientLightManager.setPlayer(player, mediaItem, hlsUrl);
-        }
-
-        if (playerAudioController != null) {
-            playerAudioController.attachPlayer(player);
-        }
-
-        // Ensure controller is properly configured for play/pause buttons
-        playerView.setUseController(true);
-        updateControllerAutoHide();
-
-        Log.d("HlsPlayerInit", "HLS ExoPlayer bound to PlayerView with controller enabled");
-        
-        // Update gestures manager with new player
-        gesturesManager.updatePlayer(player);
-        
-        // Initialize timecode manager with UI components
-        MaterialButton skipSegmentButton = findViewById(R.id.skipSegmentButton);
-        timecodeManager.initializeViews(player, playerView, skipSegmentButton);
-
-        player.setMediaItem(mediaItem);
-        player.prepare();
-        setupSubtitlePlayerListener(player);
-        applySubtitlesStateToPlayer();
-        if (autoPlayOnPrepare) {
-            player.play();
-        }
-        autoPlayOnPrepare = true;
-
-        // Re-setup all player control buttons for the new player
-        setupPlayerControlButtons();
-
-        // Add listener for errors
-        player.addListener(new Player.Listener() {
-            @Override
-            public void onPlayerError(@NonNull PlaybackException error) {
-                Log.e("HlsPlayer", "HLS playback error: " + error.getMessage(), error);
-                Log.e("HlsPlayer", "Error type: " + error.errorCode + ", current quality: " + preferredQuality);
-                String errorMsg = "Ошибка HLS воспроизведения";
-
-                // Check if this is a 4K playback error
-                boolean is4KError = (preferredQuality != null && (preferredQuality.equals("2160p") || preferredQuality.equals("4Kp"))) &&
-                        (error.getMessage().contains("Source error") || 
-                         error.getMessage().contains("Decoder") ||
-                         error.getMessage().contains("Video decoder error") ||
-                         error.errorCode == PlaybackException.ERROR_CODE_DECODING_FAILED ||
-                         error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED);
-                
-                if (is4KError) {
-                    Log.w("HlsPlayer", "4K HLS playback failed, attempting fallback to 720p");
-                    errorMsg = "4K не поддерживается на этом устройстве. Переключаемся на 720p...";
-                    CustomToast.showWarning(VideoPlayerActivity.this, errorMsg);
-                    
-                    // For Kodik HLS, fallback to 720p (standard Kodik quality)
-                    preferredQuality = "720p";
-                    new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                        restartPlayerWithNewQuality();
-                    }, 500);
-                    return; // Don't show error toast
-                } else if (error.getMessage().contains("403")) {
-                    errorMsg += ": доступ запрещен (403)";
-                } else if (error.getMessage().contains("404")) {
-                    errorMsg += ": HLS плейлист не найден (404)";
-                } else {
-                    errorMsg += ": " + error.getMessage();
-                }
-
-                showVideoErrorDialog("Ошибка HLS воспроизведения", errorMsg, () -> {
-                    EpisodeResponse.PlayerData cur = playersManager.getCurrentPlayerData();
-                    if (cur != null) {
-                        onPlayerSelected(cur);
-                    } else if (currentVideoUrl != null) {
-                        initializeHlsPlayer(currentVideoUrl);
-                    }
-                });
+        if (playerPlaybackController != null) {
+            MediaItem mediaItem = createMediaItemWithSubtitles(hlsUrl);
+            player = playerPlaybackController.initializeHlsPlayer(
+                    hlsUrl,
+                    mediaItem,
+                    currentResizeMode,
+                    autoPlayOnPrepare
+            );
+            autoPlayOnPrepare = true;
+            if (player != null) {
+                setupSubtitlePlayerListener(player);
+                applySubtitlesStateToPlayer();
+                setupPlayerControlButtons();
             }
-        });
-
-        Log.d("HlsPlayer", "HLS player initialized and started");
+        }
     }
 
     // ================= Subtitle Helpers =================
