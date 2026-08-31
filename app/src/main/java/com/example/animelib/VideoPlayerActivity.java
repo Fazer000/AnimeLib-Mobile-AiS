@@ -523,6 +523,21 @@ public class VideoPlayerActivity extends AppCompatActivity {
         playerApiController = new PlayerApiController(this);
         apiService = playerApiController.getApiService();
 
+        // Initialize HTTP data source with custom headers for video requests
+        httpDataSourceFactory = new DefaultHttpDataSource.Factory()
+                .setUserAgent("Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36")
+                .setDefaultRequestProperties(Map.of(
+                        "Referer", "https://v3.animelib.org/",
+                        "Accept", "video/mp4,video/*,*/*",
+                        "Accept-Encoding", "identity;q=1, *;q=0",
+                        "Accept-Language", "ru,en;q=0.9,de;q=0.8,zh;q=0.7",
+                        "Origin", "https://v3.animelib.org",
+                        "Sec-Fetch-Dest", "video",
+                        "Sec-Fetch-Mode", "cors",
+                        "Sec-Fetch-Site", "cross-site",
+                        "Priority", "i"
+                ));
+
         loadAndApplyTheme();
 
         playerCommentsController = new PlayerCommentsController(this, apiService);
@@ -768,6 +783,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
             @Override
             public TimecodeManager getTimecodeManager() {
                 return timecodeManager;
+            }
+
+            @Override
+            public DefaultHttpDataSource.Factory getHttpDataSourceFactory() {
+                return httpDataSourceFactory;
             }
 
             @Override
@@ -1084,21 +1104,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 }
             });
         });
-
-        // Initialize HTTP data source with custom headers for video requests
-        httpDataSourceFactory = new DefaultHttpDataSource.Factory()
-                .setUserAgent("Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36")
-                .setDefaultRequestProperties(Map.of(
-                        "Referer", "https://v3.animelib.org/",
-                        "Accept", "video/mp4,video/*,*/*",
-                        "Accept-Encoding", "identity;q=1, *;q=0",
-                        "Accept-Language", "ru,en;q=0.9,de;q=0.8,zh;q=0.7",
-                        "Origin", "https://v3.animelib.org",
-                        "Sec-Fetch-Dest", "video",
-                        "Sec-Fetch-Mode", "cors",
-                        "Sec-Fetch-Site", "cross-site",
-                        "Priority", "i"
-                ));
 
         Log.d("VideoPlayer", "Initialized HTTP data source with custom headers: User-Agent, Referer, Accept, Accept-Encoding, Accept-Language, Origin, Sec-Fetch-*");
 
