@@ -227,9 +227,16 @@ public class ApiService {
 
         headers.put("Referer", referer);
         headers.put("Origin", siteUrl);
-        headers.put("Accept", "video/mp4,video/webm,video/*,*/*");
-        headers.put("Accept-Language", "ru-RU,ru;q=0.9,en;q=0.8");
-        headers.put("User-Agent", "Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36");
+        headers.put("accept", "*/*");
+        headers.put("accept-language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
+        headers.put("priority", "i");
+        headers.put("sec-ch-ua", "\"Not=A?Brand\";v=\"99\", \"Android WebView\";v=\"151\", \"Chromium\";v=\"151\"");
+        headers.put("sec-ch-ua-mobile", "?1");
+        headers.put("sec-ch-ua-platform", "\"Android\"");
+        headers.put("sec-fetch-dest", "video");
+        headers.put("sec-fetch-mode", "cors");
+        headers.put("sec-fetch-site", "cross-site");
+        headers.put("x-requested-with", "com.unixshells.devbrowser");
         return headers;
     }
     
