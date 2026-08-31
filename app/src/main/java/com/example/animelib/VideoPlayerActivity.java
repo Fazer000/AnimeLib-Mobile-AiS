@@ -2999,9 +2999,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private void onPlayerSelected(EpisodeResponse.PlayerData playerData) {
         Log.d("VideoPlayer", "Player selected: " + playerData.getPlayer());
 
-        if (playerData != null && playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty()) {
-            currentVideoDomain = playerData.getVideoDomain();
-            Log.d("VideoPlayer", "Set currentVideoDomain from API: " + currentVideoDomain);
+        if (playerData != null && "animelib".equalsIgnoreCase(playerData.getPlayer())) {
+            if (playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty()) {
+                currentVideoDomain = playerData.getVideoDomain();
+                Log.d("VideoPlayer", "Set currentVideoDomain from API for animelib: " + currentVideoDomain);
+            }
         }
 
         boolean isNew = playerEpisodesController != null && playerEpisodesController.isNewEpisodeSelection();

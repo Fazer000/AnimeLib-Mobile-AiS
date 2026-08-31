@@ -94,18 +94,27 @@ public class TimecodeManager {
                 @Override
                 public void onScrubStart(@NonNull TimeBar timeBar, long position) {
                     isScrubbing = true;
+                    if (timebarSegmentsView != null && player != null) {
+                        timebarSegmentsView.setProgress(position, player.getBufferedPosition(), player.getDuration());
+                    }
                     updateSegmentBadgeForPosition(position);
                 }
 
                 @Override
                 public void onScrubMove(@NonNull TimeBar timeBar, long position) {
                     isScrubbing = true;
+                    if (timebarSegmentsView != null && player != null) {
+                        timebarSegmentsView.setProgress(position, player.getBufferedPosition(), player.getDuration());
+                    }
                     updateSegmentBadgeForPosition(position);
                 }
 
                 @Override
                 public void onScrubStop(@NonNull TimeBar timeBar, long position, boolean canceled) {
                     isScrubbing = false;
+                    if (timebarSegmentsView != null && player != null) {
+                        timebarSegmentsView.setProgress(position, player.getBufferedPosition(), player.getDuration());
+                    }
                     updateTimecodeButtonsVisibility();
                 }
             };
@@ -169,6 +178,7 @@ public class TimecodeManager {
 
         if (timebarSegmentsView != null) {
             timebarSegmentsView.setTimecodes(timecodes, duration);
+            timebarSegmentsView.setProgress(player.getCurrentPosition(), player.getBufferedPosition(), duration);
         }
 
         if (timeBar != null && !timecodes.isEmpty()) {
@@ -292,8 +302,11 @@ public class TimecodeManager {
         updateRunnable = new Runnable() {
             @Override
             public void run() {
+                if (player != null && timebarSegmentsView != null && !isScrubbing) {
+                    timebarSegmentsView.setProgress(player.getCurrentPosition(), player.getBufferedPosition(), player.getDuration());
+                }
                 updateTimecodeButtonsVisibility();
-                updateHandler.postDelayed(this, 1000); // Обновляем каждую секунду
+                updateHandler.postDelayed(this, 100);
             }
         };
         updateHandler.post(updateRunnable);

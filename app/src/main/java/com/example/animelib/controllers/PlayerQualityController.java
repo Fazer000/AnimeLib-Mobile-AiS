@@ -64,7 +64,7 @@ public class PlayerQualityController {
             int target = Integer.parseInt(quality.replace("p", ""));
             for (EpisodeResponse.QualityData data : playerData.getVideo().getQuality()) {
                 if (data.getQuality() == target) {
-                    String domain = (playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty())
+                    String domain = ("animelib".equalsIgnoreCase(playerData.getPlayer()) && playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty())
                             ? playerData.getVideoDomain() : currentVideoDomain;
                     return VideoUrlHelper.toAbsoluteVideoUrl(data.getHref(), domain);
                 }

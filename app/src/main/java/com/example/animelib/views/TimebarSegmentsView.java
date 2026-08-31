@@ -13,18 +13,24 @@ import androidx.annotation.Nullable;
 import com.example.animelib.models.EpisodeResponse;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
- * Вью для отображения сегментов (оппенинги, эндинги и т.д.) прямо на таймбаре плеера
+ * Вью для отображения сегментов таймлайна (оппенинги, эндинги и т.д.)
+ * со скругленными краями сегментов и прозрачными разделителями (гапами).
  */
 public class TimebarSegmentsView extends View {
 
     private final List<EpisodeResponse.TimecodeData> timecodes = new ArrayList<>();
     private long durationMs = 0;
+    private long playedMs = 0;
+    private long bufferedMs = 0;
 
-    private Paint segmentPaint;
-    private Paint gapPaint;
+    private Paint playedPaint;
+    private Paint bufferedPaint;
+    private Paint unplayedPaint;
     private RectF rectF;
 
     public TimebarSegmentsView(Context context) {
@@ -43,18 +49,36 @@ public class TimebarSegmentsView extends View {
     }
 
     private void init() {
-        segmentPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        gapPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        gapPaint.setColor(Color.parseColor("#0F0F0F"));
+        playedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        playedPaint.setColor(Color.parseColor("#A855F7")); // Акцентный фиолетовый
+
+        bufferedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        bufferedPaint.setColor(Color.parseColor("#80FFFFFF")); // Полупрозрачный белый
+
+        unplayedPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        unplayedPaint.setColor(Color.parseColor("#4DFFFFFF")); // Темно-серый трек
+
         rectF = new RectF();
+    }
+
+    public void setProgress(long playedMs, long bufferedMs, long durationMs) {
+        this.playedMs = Math.max(0, playedMs);
+        this.bufferedMs = Math.max(0, bufferedMs);
+        if (durationMs > 0) {
+            this.durationMs = durationMs;
+        }
+        invalidate();
     }
 
     public void setTimecodes(List<EpisodeResponse.TimecodeData> timecodes, long durationMs) {
         this.timecodes.clear();
         if (timecodes != null) {
             this.timecodes.addAll(timecodes);
+            Collections.sort(this.timecodes, (t1, t2) -> Integer.compare(t1.getFrom(), t2.getFrom()));
         }
-        this.durationMs = durationMs;
+        if (durationMs > 0) {
+            this.durationMs = durationMs;
+        }
         invalidate();
     }
 
@@ -65,66 +89,109 @@ public class TimebarSegmentsView extends View {
         }
     }
 
+    private static class Interval {
+        long fromMs;
+        long toMs;
+
+        Interval(long fromMs, long toMs) {
+            this.fromMs = fromMs;
+            this.toMs = toMs;
+        }
+    }
+
+    private List<Interval> buildIntervals() {
+        List<Interval> intervals = new ArrayList<>();
+        if (durationMs <= 0) return intervals;
+
+        long currentPointer = 0;
+
+        for (EpisodeResponse.TimecodeData tc : timecodes) {
+            long from = Math.max(0, tc.getFrom() * 1000L);
+            long to = Math.min(durationMs, tc.getTo() * 1000L);
+
+            if (to <= from || from >= durationMs) continue;
+
+            if (from > currentPointer) {
+                intervals.add(new Interval(currentPointer, from));
+            }
+            intervals.add(new Interval(from, to));
+            currentPointer = Math.max(currentPointer, to);
+        }
+
+        if (currentPointer < durationMs) {
+            intervals.add(new Interval(currentPointer, durationMs));
+        }
+
+        return intervals;
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        if (durationMs <= 0 || timecodes.isEmpty()) {
+        if (durationMs <= 0) {
             return;
         }
 
-        float width = getWidth();
+        float paddingLeft = getPaddingLeft();
+        float paddingRight = getPaddingRight();
+        float width = getWidth() - paddingLeft - paddingRight;
         float height = getHeight();
+
         if (width <= 0 || height <= 0) return;
 
         float density = getResources().getDisplayMetrics().density;
-        float barHeight = 4.5f * density; // Слегка утолщенная полоска под таймбаром
+        float barHeight = 4f * density; // Высота полоски таймбара 4dp
         float centerY = height / 2f;
         float top = centerY - barHeight / 2f;
         float bottom = centerY + barHeight / 2f;
-        float cornerRadius = 2f * density;
-        float gapWidth = 2.5f * density;
+        float cornerRadius = barHeight / 2f; // Скругление концов сегмента (полный pill)
+        float gapWidth = 3f * density; // Прозрачный разделитель между сегментами
 
-        for (EpisodeResponse.TimecodeData tc : timecodes) {
-            long fromMs = tc.getFrom() * 1000L;
-            long toMs = tc.getTo() * 1000L;
+        List<Interval> intervals = buildIntervals();
+        int count = intervals.size();
 
-            if (fromMs >= durationMs || toMs <= fromMs) continue;
+        for (int i = 0; i < count; i++) {
+            Interval interval = intervals.get(i);
+            if (interval.toMs <= interval.fromMs) continue;
 
-            float startX = (float) fromMs / durationMs * width;
-            float endX = (float) Math.min(toMs, durationMs) / durationMs * width;
+            float rawStartX = paddingLeft + ((float) interval.fromMs / durationMs) * width;
+            float rawEndX = paddingLeft + ((float) interval.toMs / durationMs) * width;
 
-            if (endX <= startX) continue;
+            // Накладываем отступы разделителей (гапов) между соседними сегментами
+            float left = (i == 0) ? rawStartX : (rawStartX + gapWidth / 2f);
+            float right = (i == count - 1) ? rawEndX : (rawEndX - gapWidth / 2f);
 
-            int color = getSegmentColor(tc.getType());
-            segmentPaint.setColor(color);
+            if (right <= left) continue;
 
-            rectF.set(startX, top, endX, bottom);
-            canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, segmentPaint);
+            rectF.set(left, top, right, bottom);
 
-            // Отрисовка разделителей (гапов) на границах сегмента
-            if (startX > 0) {
-                canvas.drawRect(startX - gapWidth / 2f, top - 2f * density, startX + gapWidth / 2f, bottom + 2f * density, gapPaint);
+            // 1. Отрисовка не сыгранного фона сегмента со скруглениями
+            canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, unplayedPaint);
+
+            // 2. Отрисовка забуферизованной части
+            if (bufferedMs > interval.fromMs) {
+                float bufX = paddingLeft + ((float) Math.min(bufferedMs, durationMs) / durationMs) * width;
+                float clipRight = Math.min(right, bufX);
+                if (clipRight > left) {
+                    canvas.save();
+                    canvas.clipRect(left, top, clipRight, bottom);
+                    canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, bufferedPaint);
+                    canvas.restore();
+                }
             }
-            if (endX < width) {
-                canvas.drawRect(endX - gapWidth / 2f, top - 2f * density, endX + gapWidth / 2f, bottom + 2f * density, gapPaint);
-            }
-        }
-    }
 
-    private int getSegmentColor(String type) {
-        if (type == null) return Color.parseColor("#A855F7");
-        switch (type.toLowerCase()) {
-            case "opening":
-                return Color.parseColor("#9333EA"); // Фиолетовый акцент
-            case "ending":
-                return Color.parseColor("#EA580C"); // Оранжевый
-            case "splashscreen":
-                return Color.parseColor("#0D9488"); // Бирюзовый
-            case "compilation":
-                return Color.parseColor("#DB2777"); // Розовый
-            default:
-                return Color.parseColor("#7C3AED"); // Индиго
+            // 3. Отрисовка сыгранной части
+            if (playedMs > interval.fromMs) {
+                float playX = paddingLeft + ((float) Math.min(playedMs, durationMs) / durationMs) * width;
+                float clipRight = Math.min(right, playX);
+                if (clipRight > left) {
+                    canvas.save();
+                    canvas.clipRect(left, top, clipRight, bottom);
+                    canvas.drawRoundRect(rectF, cornerRadius, cornerRadius, playedPaint);
+                    canvas.restore();
+                }
+            }
         }
     }
 }
