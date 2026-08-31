@@ -3963,26 +3963,78 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private void showVideoErrorDialog(String title, String message, Runnable retryAction) {
         if (playerDialogsController != null) {
-            playerDialogsController.showVideoErrorDialog(title, message, retryAction);
+            playerDialogsController.showVideoErrorDialog(title, message, null, retryAction, false);
         }
     }
 
     private void showVideoErrorDialog(String title, String message, Runnable retryAction, boolean isVoiceoverError) {
         if (playerDialogsController != null) {
-            playerDialogsController.showVideoErrorDialog(title, message, retryAction, isVoiceoverError);
+            playerDialogsController.showVideoErrorDialog(title, message, null, retryAction, isVoiceoverError);
         }
+    }
+
+    private void showVideoErrorDialog(String title, String message, String logDetails, Runnable retryAction, boolean isVoiceoverError) {
+        if (playerDialogsController != null) {
+            playerDialogsController.showVideoErrorDialog(title, message, logDetails, retryAction, isVoiceoverError);
+        }
+    }
+
+    private String buildErrorLog(PlaybackException error) {
+        StringBuilder log = new StringBuilder();
+        log.append("Time: ").append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(new java.util.Date())).append("\n");
+        log.append("Current Video URL: ").append(currentVideoUrl != null ? currentVideoUrl : "null").append("\n");
+        log.append("Anime ID: ").append(currentAnimeId != null ? currentAnimeId : "null").append("\n");
+        if (episodesManager != null && episodesManager.getCurrentEpisode() != null) {
+            log.append("Episode: ").append(episodesManager.getCurrentEpisode().getNumber()).append("\n");
+        }
+        if (playersManager != null && playersManager.getCurrentPlayerData() != null) {
+            EpisodeResponse.PlayerData pd = playersManager.getCurrentPlayerData();
+            log.append("Player: ").append(pd.getPlayer()).append("\n");
+            if (pd.getTeam() != null) {
+                log.append("Team: ").append(pd.getTeam().getName()).append("\n");
+            }
+        }
+        log.append("Preferred Quality: ").append(preferredQuality).append("\n");
+        log.append("CDN Server Domain: ").append(currentVideoDomain).append("\n");
+        log.append("Device: ").append(android.os.Build.MANUFACTURER).append(" ").append(android.os.Build.MODEL)
+                .append(" (Android ").append(android.os.Build.VERSION.RELEASE)
+                .append(", API ").append(android.os.Build.VERSION.SDK_INT).append(")\n");
+
+        if (error != null) {
+            log.append("\nExoPlayer Error Code: ").append(error.getErrorCodeName()).append(" (").append(error.errorCode).append(")\n");
+            log.append("Exception Message: ").append(error.getMessage()).append("\n");
+
+            Throwable cause = error.getCause();
+            if (cause != null) {
+                log.append("Cause: ").append(cause.getClass().getName()).append(": ").append(cause.getMessage()).append("\n");
+                if (cause instanceof androidx.media3.datasource.HttpDataSource.HttpDataSourceException) {
+                    androidx.media3.datasource.HttpDataSource.HttpDataSourceException httpEx = (androidx.media3.datasource.HttpDataSource.HttpDataSourceException) cause;
+                    if (httpEx.dataSpec != null) {
+                        log.append("HTTP Request URI: ").append(httpEx.dataSpec.uri).append("\n");
+                    }
+                    if (cause instanceof androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException) {
+                        androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException codeEx = (androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException) cause;
+                        log.append("HTTP Response Code: ").append(codeEx.responseCode).append("\n");
+                        log.append("HTTP Response Message: ").append(codeEx.responseMessage).append("\n");
+                    }
+                }
+            }
+            log.append("\nStacktrace:\n").append(android.util.Log.getStackTraceString(error));
+        }
+        return log.toString();
     }
 
     private void handlePlaybackError(PlaybackException error) {
         Log.e("VideoPlayer", "Playback error: " + (error != null ? error.getMessage() : "unknown"), error);
         String errorMsg = "Ошибка воспроизведения: " + (error != null ? error.getMessage() : "неизвестная ошибка");
-        showVideoErrorDialog("Ошибка воспроизведения", errorMsg, () -> {
+        String logDetails = buildErrorLog(error);
+        showVideoErrorDialog("Ошибка воспроизведения", errorMsg, logDetails, () -> {
             if (playersManager != null && playersManager.getCurrentPlayerData() != null) {
                 onPlayerSelected(playersManager.getCurrentPlayerData());
             } else if (currentVideoUrl != null) {
                 retryWithUrl(currentVideoUrl);
             }
-        });
+        }, false);
     }
 
     private void initializePlayer() {

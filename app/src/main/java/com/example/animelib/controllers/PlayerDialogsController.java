@@ -59,10 +59,14 @@ public class PlayerDialogsController {
     }
 
     public void showVideoErrorDialog(String title, String message, Runnable retryAction) {
-        showVideoErrorDialog(title, message, retryAction, false);
+        showVideoErrorDialog(title, message, null, retryAction, false);
     }
 
     public void showVideoErrorDialog(String title, String message, Runnable retryAction, boolean isVoiceoverError) {
+        showVideoErrorDialog(title, message, null, retryAction, isVoiceoverError);
+    }
+
+    public void showVideoErrorDialog(String title, String message, @Nullable String logDetails, Runnable retryAction, boolean isVoiceoverError) {
         if (activity == null || activity.isFinishing()) return;
 
         Runnable action = () -> {
@@ -77,8 +81,10 @@ public class PlayerDialogsController {
             TextView titleTv = dialogView.findViewById(R.id.errorTitleText);
             TextView messageTv = dialogView.findViewById(R.id.errorMessageText);
             TextView detailsTv = dialogView.findViewById(R.id.errorPlayerDetailsText);
+            TextView logTv = dialogView.findViewById(R.id.errorLogDetailsText);
             MaterialButton retryBtn = dialogView.findViewById(R.id.retryButton);
             MaterialButton goToDownloadsBtn = dialogView.findViewById(R.id.goToDownloadsButton);
+            MaterialButton copyLogBtn = dialogView.findViewById(R.id.copyLogButton);
             MaterialButton exitBtn = dialogView.findViewById(R.id.exitButton);
             ImageButton closeCrossBtn = dialogView.findViewById(R.id.closeErrorCrossButton);
 
@@ -99,21 +105,54 @@ public class PlayerDialogsController {
 
             PlayersManager pm = callback != null ? callback.getPlayersManager() : null;
             EpisodeResponse.PlayerData playerData = pm != null ? pm.getCurrentPlayerData() : null;
+            StringBuilder playerDetailsBuilder = new StringBuilder();
             if (playerData != null && !isVoiceoverError && detailsTv != null) {
                 String pName = playerData.getPlayer() != null ? playerData.getPlayer() : "Неизвестный";
                 String tName = playerData.getTeam() != null ? playerData.getTeam().getName() : "";
                 String qName = callback != null ? callback.getPreferredQuality() : "";
-                StringBuilder details = new StringBuilder("Плеер: ").append(pName);
+                playerDetailsBuilder.append("Плеер: ").append(pName);
                 if (tName != null && !tName.isEmpty()) {
-                    details.append(" (").append(tName).append(")");
+                    playerDetailsBuilder.append(" (").append(tName).append(")");
                 }
                 if (qName != null && !qName.isEmpty()) {
-                    details.append(" • ").append(qName);
+                    playerDetailsBuilder.append(" • ").append(qName);
                 }
-                detailsTv.setText(details.toString());
+                detailsTv.setText(playerDetailsBuilder.toString());
                 detailsTv.setVisibility(View.VISIBLE);
             } else if (detailsTv != null) {
                 detailsTv.setVisibility(View.GONE);
+            }
+
+            final StringBuilder fullLogBuilder = new StringBuilder();
+            fullLogBuilder.append("=== ANIME LIB ERROR LOG ===");
+            fullLogBuilder.append("\nTitle: ").append(title != null ? title : "Ошибка");
+            fullLogBuilder.append("\nMessage: ").append(message != null ? message : "Нет сообщения");
+            if (playerDetailsBuilder.length() > 0) {
+                fullLogBuilder.append("\nDetails: ").append(playerDetailsBuilder);
+            }
+            if (logDetails != null && !logDetails.isEmpty()) {
+                fullLogBuilder.append("\n\n--- TECHNICAL DETAILS ---\n").append(logDetails);
+            }
+
+            final String fullLogString = fullLogBuilder.toString();
+
+            if (logTv != null) {
+                logTv.setText(fullLogString);
+            }
+
+            if (copyLogBtn != null) {
+                copyLogBtn.setOnClickListener(v -> {
+                    try {
+                        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE);
+                        android.content.ClipData clip = android.content.ClipData.newPlainText("AnimeLib Error Log", fullLogString);
+                        if (clipboard != null) {
+                            clipboard.setPrimaryClip(clip);
+                            CustomToast.showInfo(activity, "Лог скопирован в буфер обмена");
+                        }
+                    } catch (Exception e) {
+                        CustomToast.showWarning(activity, "Ошибка копирования лога");
+                    }
+                });
             }
 
             AlertDialog.Builder builder = new AlertDialog.Builder(activity);
