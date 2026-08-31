@@ -104,6 +104,29 @@ public class PlayerNextEpisodeController {
         nextEpisodeHandler.postDelayed(nextEpisodeRunnable, 1000);
     }
 
+    public void handlePlaybackEnded(boolean autoPlay) {
+        if (autoPlay && episodesManager != null && episodesManager.getNextEpisode() != null) {
+            Log.d(TAG, "Video ended, showing next episode overlay");
+            showNextEpisodeOverlay();
+        } else {
+            Log.d(TAG, "Playback ended but autoPlay is disabled or no next episode available");
+        }
+    }
+
+    public boolean isOverlayVisible() {
+        return nextEpisodeOverlay != null && nextEpisodeOverlay.getVisibility() == View.VISIBLE;
+    }
+
+    public void setupNextEpisodeButton(android.widget.ImageButton button) {
+        if (button != null) {
+            button.setOnClickListener(v -> {
+                if (button.isEnabled() && episodesManager != null) {
+                    playNextEpisodeNow();
+                }
+            });
+        }
+    }
+
     public void cancelNextEpisode() {
         Log.d(TAG, "Next episode cancelled by user");
         stopCountdown();
