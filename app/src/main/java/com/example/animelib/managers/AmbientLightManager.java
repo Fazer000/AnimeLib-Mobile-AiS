@@ -5,10 +5,12 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
+import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.TextureView;
 import android.view.View;
 
 import androidx.annotation.NonNull;
@@ -129,12 +131,69 @@ public class AmbientLightManager {
         }
 
         ambientPlayerView.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
-            if ((left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) && isEnabled && !isSuspended && ambientPlayer != null && mainPlayer != null) {
-                if (mainPlayer.isPlaying() && !ambientPlayer.isPlaying()) {
-                    ambientPlayer.play();
+            if ((left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) && isEnabled && !isSuspended && !isFrozen && ambientPlayer != null && mainPlayer != null) {
+                refreshAmbientFrame();
+            }
+        });
+        attachTextureViewListener();
+    }
+
+    public void refreshAmbientFrame() {
+        mainHandler.post(() -> {
+            if (isEnabled && !isSuspended && !isFrozen && ambientPlayer != null && mainPlayer != null && !isErrorState) {
+                try {
+                    ambientPlayer.seekTo(mainPlayer.getCurrentPosition());
+                    if (mainPlayer.isPlaying()) {
+                        ambientPlayer.play();
+                        mainHandler.removeCallbacks(syncRunnable);
+                        mainHandler.post(syncRunnable);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error refreshing ambient frame", e);
                 }
             }
         });
+    }
+
+    private void attachTextureViewListener() {
+        if (ambientPlayerView == null) return;
+        View videoSurfaceView = ambientPlayerView.getVideoSurfaceView();
+        if (videoSurfaceView instanceof TextureView) {
+            TextureView textureView = (TextureView) videoSurfaceView;
+            TextureView.SurfaceTextureListener origListener = textureView.getSurfaceTextureListener();
+            textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+                @Override
+                public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
+                    if (origListener != null) {
+                        origListener.onSurfaceTextureAvailable(surface, width, height);
+                    }
+                    refreshAmbientFrame();
+                }
+
+                @Override
+                public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surface, int width, int height) {
+                    if (origListener != null) {
+                        origListener.onSurfaceTextureSizeChanged(surface, width, height);
+                    }
+                    refreshAmbientFrame();
+                }
+
+                @Override
+                public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
+                    if (origListener != null) {
+                        return origListener.onSurfaceTextureDestroyed(surface);
+                    }
+                    return true;
+                }
+
+                @Override
+                public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
+                    if (origListener != null) {
+                        origListener.onSurfaceTextureUpdated(surface);
+                    }
+                }
+            });
+        }
     }
 
     public void setDataSourceFactory(DataSource.Factory dataSourceFactory) {
@@ -287,6 +346,7 @@ public class AmbientLightManager {
 
                 ambientPlayer = builder.build();
                 ambientPlayerView.setPlayer(ambientPlayer);
+                attachTextureViewListener();
 
                 // ОПТИМИЗАЦИЯ ДЛЯ МИНИМАЛЬНОГО ПОТРЕБЛЕНИЯ РЕСУРСОВ:
                 // 1. Отключаем звук полностью
@@ -533,20 +593,12 @@ public class AmbientLightManager {
     }
 
     public void onConfigurationChanged() {
-        mainHandler.post(() -> {
+        mainHandler.postDelayed(() -> {
             if (isEnabled && !isSuspended && !isFrozen && ambientPlayerView != null && ambientPlayer != null) {
-                ambientPlayerView.setPlayer(null);
-                ambientPlayerView.setPlayer(ambientPlayer);
-                if (mainPlayer != null) {
-                    ambientPlayer.seekTo(mainPlayer.getCurrentPosition());
-                    if (mainPlayer.isPlaying()) {
-                        ambientPlayer.play();
-                        mainHandler.removeCallbacks(syncRunnable);
-                        mainHandler.post(syncRunnable);
-                    }
-                }
+                attachTextureViewListener();
+                refreshAmbientFrame();
             }
-        });
+        }, 150);
     }
 
     public void onPause() {

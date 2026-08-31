@@ -1587,6 +1587,18 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
             ambientLightManager.setEnabled(enableAmbientLight);
         }
+
+        View playerContainer = findViewById(R.id.playerContainer);
+        if (playerContainer != null) {
+            playerContainer.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
+                    updateAmbientPlayerTransform(1f, 0f, 0f, false);
+                    if (ambientLightManager != null) {
+                        ambientLightManager.refreshAmbientFrame();
+                    }
+                }
+            });
+        }
         
         // Initialize video filters manager
         if (playerFiltersController != null) {
