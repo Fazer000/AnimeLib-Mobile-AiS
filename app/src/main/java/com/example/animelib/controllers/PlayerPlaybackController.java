@@ -10,6 +10,7 @@ import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
 import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.HttpDataSource;
+import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.hls.HlsMediaSource;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
@@ -86,7 +87,18 @@ public class PlayerPlaybackController {
                     playerContext,
                     audioController != null ? audioController.getSurroundAudioProcessor() : null);
 
+            DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
+                    .setBufferDurationsMs(
+                            15_000, // minBufferMs
+                            50_000, // maxBufferMs
+                            1_000,  // bufferForPlaybackMs (instant playback start)
+                            1_500   // bufferForPlaybackAfterRebufferMs
+                    )
+                    .setPrioritizeTimeOverSizeThresholds(true)
+                    .build();
+
             ExoPlayer.Builder builder = new ExoPlayer.Builder(playerContext, rf)
+                    .setLoadControl(loadControl)
                     .setSeekBackIncrementMs(10000)
                     .setSeekForwardIncrementMs(10000);
 
@@ -106,6 +118,7 @@ public class PlayerPlaybackController {
         MediaSource mediaSource;
         if (videoUrl.contains(".m3u8") || videoUrl.contains("hls")) {
             mediaSource = new HlsMediaSource.Factory(dsFactory)
+                    .setAllowChunklessPreparation(true)
                     .createMediaSource(mediaItem != null ? mediaItem : MediaItem.fromUri(videoUrl));
         } else {
             mediaSource = new DefaultMediaSourceFactory(dsFactory)

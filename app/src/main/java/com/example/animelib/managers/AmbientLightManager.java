@@ -20,6 +20,7 @@ import androidx.media3.common.PlaybackParameters;
 import androidx.media3.common.Player;
 import androidx.media3.common.TrackSelectionParameters;
 import androidx.media3.datasource.DataSource;
+import androidx.media3.exoplayer.DefaultLoadControl;
 import androidx.media3.exoplayer.ExoPlayer;
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory;
 import androidx.media3.ui.AspectRatioFrameLayout;
@@ -36,7 +37,7 @@ public class AmbientLightManager {
     private static final String TAG = "AmbientLightManager";
     private static final long HARD_SEEK_THRESHOLD_MS = 1200; // Жёсткая подгонка кадра через seekTo только при разрыве >1.2с
     private static final long SPEED_ADJUST_MIN_DELTA_MS = 15; // Минимальный порог подстройки скорости (sub-frame sync)
-    private static final long SYNC_INTERVAL_MS = 150; // Высокочастотный плавный цикл синхронизации (150 мс)
+    private static final long SYNC_INTERVAL_MS = 200; // Оптимизированный плавный цикл синхронизации (200 мс)
 
     private final Context context;
     private final PlayerView mainPlayerView;
@@ -259,7 +260,19 @@ public class AmbientLightManager {
 
         if (ambientPlayer == null) {
             try {
-                ExoPlayer.Builder builder = new ExoPlayer.Builder(context);
+                DefaultLoadControl ambientLoadControl = new DefaultLoadControl.Builder()
+                        .setBufferDurationsMs(
+                                1_500, // minBufferMs
+                                4_000, // maxBufferMs
+                                300,   // bufferForPlaybackMs
+                                500    // bufferForPlaybackAfterRebufferMs
+                        )
+                        .setPrioritizeTimeOverSizeThresholds(true)
+                        .build();
+
+                ExoPlayer.Builder builder = new ExoPlayer.Builder(context)
+                        .setLoadControl(ambientLoadControl);
+
                 if (cacheDataSourceFactory != null) {
                     builder.setMediaSourceFactory(new DefaultMediaSourceFactory(cacheDataSourceFactory));
                 }
@@ -271,13 +284,13 @@ public class AmbientLightManager {
                 // 1. Отключаем звук полностью
                 ambientPlayer.setVolume(0f);
 
-                // 2. Отключаем аудио и текстовые треки, ограничиваем максимальное качество до 240p/360p
+                // 2. Отключаем аудио и текстовые треки, ограничиваем максимальное качество до 180p/240p
                 TrackSelectionParameters parameters = ambientPlayer.getTrackSelectionParameters()
                         .buildUpon()
                         .setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, true)
                         .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true)
-                        .setMaxVideoSize(360, 240)
-                        .setMaxVideoBitrate(350_000)
+                        .setMaxVideoSize(320, 180)
+                        .setMaxVideoBitrate(200_000)
                         .build();
                 ambientPlayer.setTrackSelectionParameters(parameters);
 
