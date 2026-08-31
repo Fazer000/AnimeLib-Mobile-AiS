@@ -299,6 +299,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private PlayerControlsOverlayManager playerControlsOverlayManager;
     private PlayerSubtitlesController playerSubtitlesController;
     private PlayerFiltersController playerFiltersController;
+    private com.example.animelib.controllers.PlayerNextEpisodeController playerNextEpisodeController;
+    private com.example.animelib.controllers.PlayerOrientationController playerOrientationController;
+    private com.example.animelib.controllers.PlayerAnimeInfoController playerAnimeInfoController;
+    private com.example.animelib.controllers.PlayerDownloadController playerDownloadController;
 
     // Subtitle settings
     private boolean subtitlesEnabled = true;
@@ -593,8 +597,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
 
             @Override
-            public void updateAmbientPlayerTransform(float left, float top, float width, float height, boolean isCropped) {
-                VideoPlayerActivity.this.updateAmbientPlayerTransform(left, top, width, height, isCropped);
+            public void updateAmbientPlayerTransform(float scale, float translationX, float translationY, boolean isCropped) {
+                VideoPlayerActivity.this.updateAmbientPlayerTransform(scale, translationX, translationY, isCropped);
             }
 
             @Override
@@ -692,7 +696,45 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
         playerFiltersController = new PlayerFiltersController();
 
-        initOrientationEventListener();
+        playerNextEpisodeController = new com.example.animelib.controllers.PlayerNextEpisodeController();
+        playerNextEpisodeController.initViews(findViewById(android.R.id.content));
+        playerNextEpisodeController.setEpisodesManager(episodesManager);
+
+        playerAnimeInfoController = new com.example.animelib.controllers.PlayerAnimeInfoController();
+        playerAnimeInfoController.initViews(findViewById(android.R.id.content));
+
+        playerOrientationController = new com.example.animelib.controllers.PlayerOrientationController(this);
+        playerOrientationController.init();
+
+        databaseManager = new com.example.animelib.data.DatabaseManager(this);
+        playerDownloadController = new com.example.animelib.controllers.PlayerDownloadController(this, databaseManager);
+        playerDownloadController.initViews(findViewById(android.R.id.content));
+        playerDownloadController.setCallback(new com.example.animelib.controllers.PlayerDownloadController.DownloadCallback() {
+            @Override
+            public String getAnimeId() {
+                return currentAnimeId;
+            }
+
+            @Override
+            public String getAnimeTitle() {
+                return animeTitleView != null ? animeTitleView.getText().toString() : "Аниме";
+            }
+
+            @Override
+            public String getPosterUrl() {
+                return currentPosterUrl;
+            }
+
+            @Override
+            public String getCurrentVideoUrl() {
+                return currentVideoUrl;
+            }
+
+            @Override
+            public void safeRunOnUiThread(Runnable runnable) {
+                VideoPlayerActivity.this.safeRunOnUiThread(runnable);
+            }
+        });
 
         try {
             android.webkit.WebView webView = new android.webkit.WebView(this);
@@ -857,41 +899,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
      * Переключает ориентацию экрана (портретная / альбомная)
      */
     private void toggleOrientation() {
-        boolean isPortrait = getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT;
-        manualOrientationOverride = true;
-        if (isPortrait) {
-            setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
-        } else {
-            setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        }
-    }
-
-    private void initOrientationEventListener() {
-        orientationEventListener = new android.view.OrientationEventListener(this, android.hardware.SensorManager.SENSOR_DELAY_NORMAL) {
-            @Override
-            public void onOrientationChanged(int orientation) {
-                if (orientation == android.view.OrientationEventListener.ORIENTATION_UNKNOWN) return;
-
-                int currentPhysicalOrientation;
-                if ((orientation >= 315 || orientation < 45) || (orientation >= 135 && orientation < 225)) {
-                    currentPhysicalOrientation = android.content.res.Configuration.ORIENTATION_PORTRAIT;
-                } else if ((orientation >= 45 && orientation < 135) || (orientation >= 225 && orientation < 315)) {
-                    currentPhysicalOrientation = android.content.res.Configuration.ORIENTATION_LANDSCAPE;
-                } else {
-                    return;
-                }
-
-                if (lastPhysicalOrientation != -1 && currentPhysicalOrientation != lastPhysicalOrientation) {
-                    if (manualOrientationOverride) {
-                        manualOrientationOverride = false;
-                        setRequestedOrientation(android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-                    }
-                }
-                lastPhysicalOrientation = currentPhysicalOrientation;
-            }
-        };
-        if (orientationEventListener.canDetectOrientation()) {
-            orientationEventListener.enable();
+        if (playerOrientationController != null) {
+            playerOrientationController.toggleFullscreenOrientation();
         }
     }
 
@@ -1227,43 +1236,34 @@ public class VideoPlayerActivity extends AppCompatActivity {
         }
     }
 
-    private void updateAmbientPlayerTransform(float vLeft, float vTop, float vWidth, float vHeight, boolean isCroppedToVideo) {
+    private void updateAmbientPlayerTransform(float scale, float translationX, float translationY, boolean isCroppedToVideo) {
         androidx.media3.ui.PlayerView ambientPlayerView = findViewById(R.id.ambientPlayerView);
+        View playerContainer = findViewById(R.id.playerContainer);
         if (ambientPlayerView != null) {
             android.view.ViewGroup.LayoutParams lp = ambientPlayerView.getLayoutParams();
-            if (isCroppedToVideo && vWidth > 0 && vHeight > 0) {
-                int targetW = (int) Math.ceil(vWidth);
-                int targetH = (int) Math.ceil(vHeight);
-                if (lp != null && (lp.width != targetW || lp.height != targetH)) {
-                    lp.width = targetW;
-                    lp.height = targetH;
-                    if (lp instanceof FrameLayout.LayoutParams) {
-                        ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
-                    }
-                    ambientPlayerView.setLayoutParams(lp);
+            if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
+                lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                if (lp instanceof FrameLayout.LayoutParams) {
+                    ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
                 }
-                ambientPlayerView.setPivotX(vWidth / 2f);
-                ambientPlayerView.setPivotY(vHeight / 2f);
-                ambientPlayerView.setTranslationX(vLeft);
-                ambientPlayerView.setTranslationY(vTop);
-
-                ambientPlayerView.setScaleX(1.12f);
-                ambientPlayerView.setScaleY(1.12f);
-            } else {
-                if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
-                    lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-                    lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-                    if (lp instanceof FrameLayout.LayoutParams) {
-                        ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
-                    }
-                    ambientPlayerView.setLayoutParams(lp);
-                }
-                ambientPlayerView.setTranslationX(0f);
-                ambientPlayerView.setTranslationY(0f);
-
-                ambientPlayerView.setScaleX(1.0f);
-                ambientPlayerView.setScaleY(1.0f);
+                ambientPlayerView.setLayoutParams(lp);
             }
+
+            float baseW = (playerContainer != null && playerContainer.getWidth() > 0) ? playerContainer.getWidth() : getResources().getDisplayMetrics().widthPixels;
+            float baseH = (playerContainer != null && playerContainer.getHeight() > 0) ? playerContainer.getHeight() : (baseW * 9f / 16f);
+
+            // Ambient glow is scaled 1.15x larger than playerContainer and centered behind it
+            float ambientScale = scale * 1.15f;
+            float ambTransX = translationX - (baseW * scale * 0.075f);
+            float ambTransY = translationY - (baseH * scale * 0.075f);
+
+            ambientPlayerView.setPivotX(0f);
+            ambientPlayerView.setPivotY(0f);
+            ambientPlayerView.setScaleX(ambientScale);
+            ambientPlayerView.setScaleY(ambientScale);
+            ambientPlayerView.setTranslationX(ambTransX);
+            ambientPlayerView.setTranslationY(ambTransY);
 
             if (ambientLightManager != null) {
                 ambientLightManager.resume();
@@ -3024,47 +3024,24 @@ public class VideoPlayerActivity extends AppCompatActivity {
         if (isOfflineMode) return;
         boolean isPortrait = getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT;
         if (isPortrait) return;
-        if (hasShownInitialAnimeInfo) {
-            Log.d("VideoPlayer", "Anime info placeholder already shown once, skipping");
-            return;
-        }
-        hasShownInitialAnimeInfo = true;
-        if (animeInfoPlaceholder != null) {
-            animeInfoPlaceholder.setVisibility(View.VISIBLE);
-            animeInfoPlaceholder.setTranslationX(0); // Показываем справа
+        if (playerAnimeInfoController != null) {
+            if (playerAnimeInfoController.isHasShownInitialAnimeInfo()) return;
+            playerAnimeInfoController.setHasShownInitialAnimeInfo(true);
+            playerAnimeInfoController.showPlaceholder();
         }
     }
-    
-    /**
-     * Скрывает placeholder с информацией об аниме
-     */
+
     private void hideAnimeInfoPlaceholder() {
-        if (animeInfoPlaceholder != null) {
-            animeInfoPlaceholder.animate()
-                .alpha(0f)
-                .setDuration(200)
-                .withEndAction(() -> {
-                    animeInfoPlaceholder.setVisibility(View.GONE);
-                    animeInfoPlaceholder.setAlpha(1f);
-                })
-                .start();
+        if (playerAnimeInfoController != null) {
+            playerAnimeInfoController.hidePlaceholderAnimated();
         }
     }
-    
-    /**
-     * Загружает информацию об аниме для placeholder
-     */
+
     private void loadAnimeInfoForPlaceholder() {
         if (animeUrl == null) return;
-        
-        // Извлекаем slug из URL для API
         String animeSlug = apiService.extractAnimeSlug(animeUrl);
-        if (animeSlug == null) {
-            Log.e("VideoPlayer", "Could not extract anime slug from URL: " + animeUrl);
-            return;
-        }
-        
-        Log.d("VideoPlayer", "Loading anime info for slug: " + animeSlug);
+        if (animeSlug == null) return;
+
         apiService.fetchAnimeInfo(animeSlug, new ApiService.AnimeInfoCallback() {
             @Override
             public void onAnimeInfoReceived(AnimeInfoResponse response) {
@@ -3077,103 +3054,17 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
         });
     }
-    
-    /**
-     * Отображает информацию об аниме в placeholder
-     */
+
     @SuppressLint("SetTextI18n")
     private void displayAnimeInfo(AnimeInfoResponse animeInfo) {
-        if (animeInfo == null || animeInfo.getData() == null) {
-            Log.e("VideoPlayer", "displayAnimeInfo: animeInfo or data is null");
-            return;
-        }
+        if (animeInfo == null || animeInfo.getData() == null) return;
         this.currentAnimeInfo = animeInfo;
-        
-        AnimeInfoResponse.Data data = animeInfo.getData();
-        Log.d("VideoPlayer", "Displaying anime info: " + data.getRus_name());
-        
-        // Устанавливаем информацию об аниме в панель связанных тайтлов
-        setAnimeInfoToRelatedPanel(data);
-        
-        // Название
-        if (animeInfoTitle != null) {
-            SkeletonHelper.hideSkeleton(animeInfoTitle, data.getRus_name() != null ? data.getRus_name() : "—");
-        }
-        
-        // Оригинальное название
-        if (animeInfoOriginalTitle != null) {
-            if (data.getEng_name() != null && !data.getEng_name().isEmpty()) {
-                SkeletonHelper.hideSkeleton(animeInfoOriginalTitle, data.getEng_name());
-                animeInfoOriginalTitle.setVisibility(View.VISIBLE);
-            } else {
-                SkeletonHelper.hideSkeleton(animeInfoOriginalTitle, "");
-                animeInfoOriginalTitle.setVisibility(View.GONE);
-            }
-        }
-        
-        // Год из releaseDate
-        if (animeInfoYear != null) {
-            String year = (data.getReleaseDate() != null && data.getReleaseDate().length() >= 4)
-                    ? data.getReleaseDate().substring(0, 4) : "—";
-            SkeletonHelper.hideSkeleton(animeInfoYear, year);
-        }
-        
-        // Тип
-        if (animeInfoType != null) {
-            String type = (data.getType() != null && data.getType().getLabel() != null)
-                    ? data.getType().getLabel().replace("TV ", "") : "—";
-            SkeletonHelper.hideSkeleton(animeInfoType, type);
-        }
-        
-        // Статус
-        if (animeInfoStatus != null) {
-            String statusLabel = (data.getStatus() != null && data.getStatus().getLabel() != null)
-                    ? data.getStatus().getLabel() : "—";
-            SkeletonHelper.hideSkeleton(animeInfoStatus, statusLabel);
-        }
-        
-        // Рейтинг
-        if (animeInfoRating != null) {
-            String ratingStr = (data.getRating() != null && data.getRating().getAverageFormated() != null)
-                    ? data.getRating().getAverageFormated() : "—";
-            SkeletonHelper.hideSkeleton(animeInfoRating, ratingStr);
-        }
-        
-        // Количество эпизодов
-        if (animeInfoEpisodes != null) {
-            String epStr = (data.getItems_count() != null && data.getItems_count().getUploaded() > 0)
-                    ? (data.getItems_count().getUploaded() + " эпизодов") : "—";
-            SkeletonHelper.hideSkeleton(animeInfoEpisodes, epStr);
-        }
-        
-        // Возрастное ограничение
-        if (animeInfoAge != null) {
-            String ageStr = (data.getAgeRestriction() != null && data.getAgeRestriction().getLabel() != null)
-                    ? data.getAgeRestriction().getLabel() : "—";
-            SkeletonHelper.hideSkeleton(animeInfoAge, ageStr);
-        }
-        
-        // Дата выхода
-        if (animeInfoReleaseDate != null) {
-            String relStr = data.getReleaseDateString() != null ? data.getReleaseDateString() : "—";
-            SkeletonHelper.hideSkeleton(animeInfoReleaseDate, relStr);
-        }
-        
-        // Shikimori рейтинг
-        if (animeInfoShikimori != null) {
-            String shikiStr = data.getShikimori_href() != null ? String.valueOf(data.getShiki_rate()) : "—";
-            SkeletonHelper.hideSkeleton(animeInfoShikimori, shikiStr);
-        }
-        
-        // Постер - загружаем через ImageLoader
-        if (animeInfoPoster != null && data.getCover() != null) {
-            String posterUrl = data.getCover().getDefaultUrl();
-            if (posterUrl != null && !posterUrl.isEmpty()) {
-                currentPosterUrl = posterUrl;
-                com.example.animelib.util.ImageLoader.getInstance()
-                    .loadInto(animeInfoPoster, posterUrl, R.drawable.ic_image_placeholder);
-            } else {
-                animeInfoPoster.setImageResource(R.drawable.ic_image_placeholder);
+        setAnimeInfoToRelatedPanel(animeInfo.getData());
+
+        if (playerAnimeInfoController != null) {
+            playerAnimeInfoController.displayAnimeInfo(this, animeInfo);
+            if (playerAnimeInfoController.getCurrentPosterUrl() != null) {
+                currentPosterUrl = playerAnimeInfoController.getCurrentPosterUrl();
             }
         }
     }
@@ -3187,117 +3078,27 @@ public class VideoPlayerActivity extends AppCompatActivity {
      * Показывает оверлей следующего эпизода с обратным отсчетом
      */
     private void showNextEpisodeOverlay() {
-        if (nextEpisodeOverlay == null || episodesManager == null) return;
-        
-        // Проверяем есть ли следующий эпизод
-        EpisodesListResponse.EpisodeItem nextEpisode = episodesManager.getNextEpisode();
-        if (nextEpisode == null) {
-            Log.d("VideoPlayer", "No next episode available");
-            return;
+        if (playerNextEpisodeController != null) {
+            playerNextEpisodeController.showNextEpisodeOverlay();
         }
-        
-        Log.d("VideoPlayer", "Showing next episode overlay for episode: " + nextEpisode.getNumber());
-        
-        // Устанавливаем номер эпизода
-        if (nextEpisodeNumber != null) {
-            nextEpisodeNumber.setText("эпизод " + nextEpisode.getNumber());
-        }
-        
-        // Сбрасываем счетчик
-        countdownSeconds = 7;
-        if (nextEpisodeCountdown != null) {
-            nextEpisodeCountdown.setText(String.valueOf(countdownSeconds));
-        }
-        
-        // Показываем оверлей
-        nextEpisodeOverlay.setVisibility(View.VISIBLE);
-        nextEpisodeOverlay.setAlpha(0f);
-        nextEpisodeOverlay.animate()
-            .alpha(1f)
-            .setDuration(300)
-            .start();
-        
-        // Запускаем обратный отсчет
-        startCountdown();
     }
-    
-    /**
-     * Запускает обратный отсчет до следующего эпизода
-     */
-    private void startCountdown() {
-        if (nextEpisodeHandler == null) return;
-        
-        nextEpisodeRunnable = new Runnable() {
-            @Override
-            public void run() {
-                countdownSeconds--;
-                
-                if (nextEpisodeCountdown != null) {
-                    nextEpisodeCountdown.setText(String.valueOf(countdownSeconds));
-                }
-                
-                if (countdownSeconds > 0) {
-                    nextEpisodeHandler.postDelayed(this, 1000);
-                } else {
-                    // Время вышло - запускаем следующий эпизод
-                    playNextEpisodeNow();
-                }
-            }
-        };
-        
-        nextEpisodeHandler.postDelayed(nextEpisodeRunnable, 1000);
-    }
-    
-    /**
-     * Отменяет автовоспроизведение следующего эпизода
-     */
+
     private void cancelNextEpisode() {
-        Log.d("VideoPlayer", "Next episode cancelled by user");
-        
-        // Останавливаем обратный отсчет
-        if (nextEpisodeHandler != null && nextEpisodeRunnable != null) {
-            nextEpisodeHandler.removeCallbacks(nextEpisodeRunnable);
+        if (playerNextEpisodeController != null) {
+            playerNextEpisodeController.cancelNextEpisode();
         }
-        
-        // Скрываем оверлей
-        hideNextEpisodeOverlay();
     }
-    
-    /**
-     * Немедленно запускает следующий эпизод
-     */
+
     private void playNextEpisodeNow() {
-        Log.d("VideoPlayer", "Playing next episode now");
-        
-        // Останавливаем обратный отсчет
-        if (nextEpisodeHandler != null && nextEpisodeRunnable != null) {
-            nextEpisodeHandler.removeCallbacks(nextEpisodeRunnable);
-        }
-        
-        // Скрываем оверлей
-        hideNextEpisodeOverlay();
-        
-        // Переключаемся на следующий эпизод
-        if (episodesManager != null) {
-            episodesManager.navigateToNextEpisode();
+        if (playerNextEpisodeController != null) {
+            playerNextEpisodeController.playNextEpisodeNow();
         }
     }
-    
-    /**
-     * Скрывает оверлей следующего эпизода
-     */
+
     private void hideNextEpisodeOverlay() {
-        if (nextEpisodeOverlay == null) return;
-        
-        nextEpisodeOverlay.animate()
-            .alpha(0f)
-            .setDuration(300)
-            .withEndAction(() -> {
-                if (nextEpisodeOverlay != null) {
-                    nextEpisodeOverlay.setVisibility(View.GONE);
-                }
-            })
-            .start();
+        if (playerNextEpisodeController != null) {
+            playerNextEpisodeController.hideNextEpisodeOverlay();
+        }
     }
 
     private void toggleEpisodesInController() {
@@ -3528,99 +3329,27 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private com.example.animelib.data.entity.DownloadedEpisodeEntity getDownloadedEpisodeForActive() {
-        if (databaseManager == null) {
-            if (apiService != null) {
-                databaseManager = apiService.getDatabaseManager();
-            }
-            if (databaseManager == null) {
-                databaseManager = new com.example.animelib.data.DatabaseManager(this);
-            }
+        if (playerDownloadController != null) {
+            String animeId = currentAnimeId != null ? currentAnimeId : (getIntent() != null ? getIntent().getStringExtra("EXTRA_ANIME_ID") : null);
+            String localPath = getIntent() != null ? getIntent().getStringExtra("EXTRA_LOCAL_FILE_PATH") : null;
+            return playerDownloadController.getDownloadedEpisodeForActive(animeId, episodesManager, playersManager, localPath);
         }
-
-        String animeId = currentAnimeId != null ? currentAnimeId : (getIntent() != null ? getIntent().getStringExtra("EXTRA_ANIME_ID") : null);
-        if (animeId == null && getIntent() != null) {
-            String localPath = getIntent().getStringExtra("EXTRA_LOCAL_FILE_PATH");
-            if (localPath != null) {
-                com.example.animelib.data.entity.DownloadedEpisodeEntity dep = databaseManager.findEpisodeByPath(localPath);
-                if (dep != null) animeId = dep.getAnimeId();
-            }
-        }
-        if (animeId == null) return null;
-
-        EpisodesListResponse.EpisodeItem currentEpisode = episodesManager != null ? episodesManager.getCurrentEpisode() : null;
-        String epNum = currentEpisode != null ? currentEpisode.getNumber() : (getIntent() != null ? getIntent().getStringExtra("EXTRA_EPISODE_NUMBER") : null);
-        int currentEpId = currentEpisode != null ? currentEpisode.getId() : 0;
-        if (epNum == null && currentEpId == 0) return null;
-
-        EpisodeResponse.PlayerData currentPlayerData = playersManager != null ? playersManager.getCurrentPlayerData() : null;
-        String team = (currentPlayerData != null && currentPlayerData.getTeam() != null) ? currentPlayerData.getTeam().getName() : null;
-
-        com.example.animelib.data.entity.DownloadedEpisodeEntity downloaded = null;
-
-        // 1. Try exact match by episodeId and team
-        if (currentEpId != 0) {
-            downloaded = databaseManager.findDownloadedEpisode(animeId, currentEpId, epNum, team);
-        }
-
-        // 1b. Fallback to exact match by epNum and team
-        if (downloaded == null && team != null && !team.isEmpty() && epNum != null) {
-            downloaded = databaseManager.findDownloadedEpisode(animeId, epNum, team);
-        }
-
-        // 2. If not found, check all downloaded episodes for this anime
-        if (downloaded == null) {
-            List<com.example.animelib.data.entity.DownloadedEpisodeEntity> downloadedEps = databaseManager.getEpisodesForAnimeSync(animeId);
-            if (downloadedEps != null) {
-                for (com.example.animelib.data.entity.DownloadedEpisodeEntity ep : downloadedEps) {
-                    if (currentEpId != 0 && ep.getEpisodeId() == currentEpId) {
-                        downloaded = ep;
-                        break;
-                    } else if (epNum != null && epNum.equals(ep.getEpisodeNumber())) {
-                        downloaded = ep;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // 3. Confirm file exists on disk
-        if (downloaded != null && downloaded.getLocalFilePath() != null) {
-            java.io.File file = new java.io.File(downloaded.getLocalFilePath());
-            if (file.exists() && file.length() > 0) {
-                return downloaded;
-            }
-        }
-
         return null;
     }
 
     private List<String> getQualitiesWithDownloadedOption(List<String> onlineQualities) {
-        List<String> result = new ArrayList<>();
-        com.example.animelib.data.entity.DownloadedEpisodeEntity downloadedEp = getDownloadedEpisodeForActive();
-        if (downloadedEp != null) {
-            String q = downloadedEp.getQuality();
-            if (q == null || q.isEmpty()) {
-                q = "1080p";
-            } else if (!q.endsWith("p") && !q.equalsIgnoreCase("4k")) {
-                q = q + "p";
-            }
-            String label = "Загруженное (" + q + ")";
-            result.add(label);
+        if (playerDownloadController != null) {
+            com.example.animelib.data.entity.DownloadedEpisodeEntity downloadedEp = getDownloadedEpisodeForActive();
+            return playerDownloadController.getQualitiesWithDownloadedOption(onlineQualities, downloadedEp);
         }
-        if (onlineQualities != null) {
-            for (String oq : onlineQualities) {
-                if (!result.contains(oq)) {
-                    result.add(oq);
-                }
-            }
-        }
-        return result;
+        return onlineQualities != null ? onlineQualities : new ArrayList<>();
     }
 
     private boolean isDownloadedQuality(String quality) {
-        if (quality == null) return false;
-        String q = quality.toLowerCase();
-        return q.contains("загруженное") || q.contains("скачанное") || q.contains("локально");
+        if (playerDownloadController != null) {
+            return playerDownloadController.isDownloadedQuality(quality);
+        }
+        return false;
     }
 
     private void showSettingsDialog() {
@@ -4170,148 +3899,30 @@ public class VideoPlayerActivity extends AppCompatActivity {
             CustomToast.showInfo(this, "Воспроизводится скачанный файл");
             return;
         }
-
-        List<EpisodesListResponse.EpisodeItem> epList = episodesManager != null ? episodesManager.getEpisodes() : new ArrayList<>();
-        List<EpisodeResponse.PlayerData> players = playersManager != null ? playersManager.getAllPlayers() : new ArrayList<>();
-
-        boolean isTitleLoading = (animeTitleView != null && Boolean.TRUE.equals(animeTitleView.getTag(R.id.tag_skeleton_active)));
-        String titleTxt = animeTitleView != null ? animeTitleView.getText().toString() : null;
-        boolean hasIntentTitle = getIntent() != null && getIntent().getStringExtra("EXTRA_ANIME_TITLE") != null && !getIntent().getStringExtra("EXTRA_ANIME_TITLE").isEmpty();
-        boolean isTitleValid = (titleTxt != null && !titleTxt.isEmpty() && !titleTxt.equalsIgnoreCase("Загрузка...") && !titleTxt.equalsIgnoreCase("Аниме") && !titleTxt.contains("Маг Целитель")) || hasIntentTitle;
-
-        if (currentAnimeId == null || players == null || players.isEmpty() || epList == null || epList.isEmpty() || isTitleLoading || !isTitleValid) {
-            CustomToast.showInfo(this, "Данные еще не загружены, подождите...");
-            return;
-        }
-
         requestNotificationPermission();
-
-        String title = null;
-        if (animeTitleView != null && !Boolean.TRUE.equals(animeTitleView.getTag(R.id.tag_skeleton_active))) {
-            String viewTxt = animeTitleView.getText().toString();
-            if (viewTxt != null && !viewTxt.isEmpty() && !viewTxt.equalsIgnoreCase("Загрузка...") && !viewTxt.contains("Маг Целитель")) {
-                title = viewTxt;
-            }
+        if (playerDownloadController != null) {
+            playerDownloadController.showDownloadBottomSheet(episodesManager, playersManager);
         }
-        if ((title == null || title.isEmpty() || title.equalsIgnoreCase("Аниме") || title.contains("Маг Целитель")) && getIntent() != null) {
-            title = getIntent().getStringExtra("EXTRA_ANIME_TITLE");
-        }
-        if (title == null || title.isEmpty() || title.equalsIgnoreCase("Загрузка...") || title.contains("Маг Целитель")) {
-            title = "Аниме";
-        }
-
-        com.example.animelib.ui.DownloadBottomSheet bottomSheet = com.example.animelib.ui.DownloadBottomSheet.newInstance(
-                currentAnimeId,
-                title,
-                currentPosterUrl,
-                epList,
-                players
-        );
-        bottomSheet.show(getSupportFragmentManager(), "DownloadBottomSheet");
     }
 
-    /**
-     * Показывает окно прогресса скачивания серий (BottomSheet)
-     */
     public void showDownloadProgressBottomSheet() {
-        com.example.animelib.ui.DownloadProgressBottomSheet progressSheet = com.example.animelib.ui.DownloadProgressBottomSheet.newInstance();
-        progressSheet.show(getSupportFragmentManager(), "DownloadProgressBottomSheet");
+        if (playerDownloadController != null) {
+            playerDownloadController.showDownloadProgressBottomSheet();
+        }
     }
 
-    /**
-     * Подписывает плеер на события фонового скачивания
-     */
     private void setupDownloadListener() {
-        DownloadService.setListener(new DownloadService.ProgressListener() {
-            @Override
-            public void onProgress(int currentTaskIndex, int totalTasks, int taskPercent, String currentTaskTitle) {
-                safeRunOnUiThread(() -> showDownloadProgress(taskPercent));
-            }
-
-            @Override
-            public void onFinished(int totalDownloaded, int errorCount, boolean wasCancelled) {
-                safeRunOnUiThread(() -> {
-                    resetDownloadUi();
-                    if (wasCancelled) {
-                        CustomToast.showInfo(VideoPlayerActivity.this, "Скачивание остановлено");
-                    } else if (errorCount > 0) {
-                        if (totalDownloaded > 0) {
-                            CustomToast.showWarning(VideoPlayerActivity.this,
-                                    "Скачивание завершено: " + totalDownloaded + " успешно, " + errorCount + " с ошибкой");
-                        } else {
-                            CustomToast.showWarning(VideoPlayerActivity.this,
-                                    "Ошибка скачивания серий");
-                        }
-                    } else {
-                        CustomToast.showSuccess(VideoPlayerActivity.this,
-                                "Скачивание завершено (" + totalDownloaded + " серий)");
-                    }
-                });
-            }
-
-            @Override
-            public void onError(String message) {
-                safeRunOnUiThread(() -> {
-                    resetDownloadUi();
-                    CustomToast.showWarning(VideoPlayerActivity.this,
-                            "Ошибка скачивания: " + message);
-                });
-            }
-        });
+        if (playerDownloadController != null) {
+            playerDownloadController.setupDownloadListener(playersManager);
+        }
     }
 
-    /**
-     * Показывает плашку прогресса скачивания
-     */
     private void showDownloadProgress(int percent) {
-        boolean isPortrait = getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT;
-
-        isDownloading = true;
-        currentDownloadPercent = percent;
-
-        if (downloadProgressText != null) {
-            downloadProgressText.setText("Скачивание " + percent + "%");
-            if (!isPortrait && isControllerVisible) {
-                downloadProgressText.setVisibility(View.VISIBLE);
-                downloadProgressText.setAlpha(1.0f);
-            } else {
-                downloadProgressText.setVisibility(View.GONE);
-            }
-        }
-
-        if (portraitDownloadProgressContainer != null) {
-            if (isPortrait) {
-                portraitDownloadProgressContainer.setVisibility(View.VISIBLE);
-                if (tvPortraitDownloadPercent != null) {
-                    tvPortraitDownloadPercent.setText("Скачивание: " + percent + "%");
-                }
-            } else {
-                portraitDownloadProgressContainer.setVisibility(View.GONE);
-            }
-        }
-
-        if (downloadButton != null) {
-            downloadButton.setAlpha(0.85f);
-        }
-        if (downloadButtonTop != null) {
-            downloadButtonTop.setAlpha(0.85f);
-        }
-        if (btnDownloadFromMenu != null) {
-            btnDownloadFromMenu.setAlpha(1.0f);
-            com.example.animelib.util.DownloadAnimationUtils.startDownloadAnimation(btnDownloadFromMenu);
-        }
-        if (portraitDownloadButton != null) {
-            portraitDownloadButton.setAlpha(1.0f);
-            com.example.animelib.util.DownloadAnimationUtils.startDownloadAnimation(portraitDownloadButton);
-        }
-        if (playersManager != null) {
-            playersManager.updateDownloadButtonState(true);
+        if (playerDownloadController != null) {
+            playerDownloadController.showDownloadProgress(percent, playersManager);
         }
     }
 
-    /**
-     * Запрашивает разрешение на уведомления о прогрессе
-     */
     private void requestNotificationPermission() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             return;
@@ -4323,90 +3934,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Возвращает ссылку на файл выбранного качества
-     */
-    private String resolveDownloadUrl(String quality) {
-        EpisodeResponse.PlayerData playerData = playersManager.getCurrentPlayerData();
-        if (playerData == null || playerData.getVideo() == null || playerData.getVideo().getQuality() == null) {
-            return null;
-        }
-
-        try {
-            int target = Integer.parseInt(quality.replace("p", ""));
-            for (EpisodeResponse.QualityData data : playerData.getVideo().getQuality()) {
-                if (data.getQuality() == target) {
-                    String domain = (playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty())
-                            ? playerData.getVideoDomain() : currentVideoDomain;
-                    return VideoUrlHelper.toAbsoluteVideoUrl(data.getHref(), domain);
-                }
-            }
-        } catch (NumberFormatException e) {
-            Log.w("VideoPlayer", "Invalid quality format: " + quality);
-        }
-        return null;
-    }
-
-    /**
-     * Формирует имя файла для скачиваемой серии
-     */
-    private String buildDownloadFileName(String quality) {
-        String title = animeTitleView != null ? animeTitleView.getText().toString() : "anime";
-        EpisodesListResponse.EpisodeItem episode = episodesManager.getCurrentEpisode();
-        String number = episode != null ? episode.getNumber() : "0";
-        String name = title + " - " + number + " серия (" + quality + ")";
-        return name.replaceAll("[\\\\/:*?\"<>|]", "_").trim() + ".mp4";
-    }
-
-    /**
-     * Возвращает элементы скачивания в исходное состояние
-     */
     private void resetDownloadUi() {
-        isDownloading = false;
-        currentDownloadPercent = 0;
-        if (downloadProgressText != null) {
-            downloadProgressText.setVisibility(View.GONE);
-        }
-        if (portraitDownloadProgressContainer != null) {
-            portraitDownloadProgressContainer.setVisibility(View.GONE);
-        }
-        if (downloadButton != null) {
-            com.example.animelib.util.DownloadAnimationUtils.stopDownloadAnimation(downloadButton);
-        }
-        if (downloadButtonTop != null) {
-            com.example.animelib.util.DownloadAnimationUtils.stopDownloadAnimation(downloadButtonTop);
-        }
-        if (btnDownloadFromMenu != null) {
-            com.example.animelib.util.DownloadAnimationUtils.stopDownloadAnimation(btnDownloadFromMenu);
-        }
-        if (portraitDownloadButton != null) {
-            com.example.animelib.util.DownloadAnimationUtils.stopDownloadAnimation(portraitDownloadButton);
-        }
-        if (isOfflineMode) {
-            if (downloadButton != null) {
-                downloadButton.setEnabled(false);
-                downloadButton.setAlpha(0.3f);
-                downloadButton.setVisibility(View.GONE);
-            }
-            if (downloadButtonTop != null) {
-                downloadButtonTop.setEnabled(false);
-                downloadButtonTop.setAlpha(0.3f);
-                downloadButtonTop.setVisibility(View.GONE);
-            }
-            if (btnDownloadFromMenu != null) {
-                btnDownloadFromMenu.setEnabled(false);
-                btnDownloadFromMenu.setAlpha(0.3f);
-                btnDownloadFromMenu.setVisibility(View.GONE);
-            }
-            if (portraitDownloadButton != null) {
-                portraitDownloadButton.setEnabled(false);
-                portraitDownloadButton.setClickable(false);
-                portraitDownloadButton.setFocusable(false);
-                portraitDownloadButton.setAlpha(0.35f);
-            }
-        }
-        if (playersManager != null) {
-            playersManager.updateDownloadButtonState(false);
+        if (playerDownloadController != null) {
+            playerDownloadController.resetDownloadUi(playersManager);
         }
     }
 
@@ -6820,8 +6350,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
         super.onPause();
         stopBufferingMonitoring();
 
-        if (orientationEventListener != null) {
-            orientationEventListener.disable();
+        if (playerOrientationController != null) {
+            playerOrientationController.disable();
         }
 
         autoSaveBookmark();
@@ -7295,8 +6825,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        if (orientationEventListener != null && orientationEventListener.canDetectOrientation()) {
-            orientationEventListener.enable();
+        if (playerOrientationController != null) {
+            playerOrientationController.enable();
         }
 
         setupFullscreen();
@@ -7316,9 +6846,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
         stopViewProgressTracking();
         stopBufferingMonitoring();
         
-        if (orientationEventListener != null) {
-            orientationEventListener.disable();
-            orientationEventListener = null;
+        if (playerOrientationController != null) {
+            playerOrientationController.cleanup();
+            playerOrientationController = null;
+        }
+        if (playerNextEpisodeController != null) {
+            playerNextEpisodeController.cleanup();
+            playerNextEpisodeController = null;
         }
 
         // Автоматически сохраняем закладку при закрытии плеера
@@ -7368,8 +6902,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
             playerPipController = null;
         }
 
-        DownloadService.setListener(null);
-        if (btnDownloadFromMenu != null) com.example.animelib.util.DownloadAnimationUtils.stopDownloadAnimation(btnDownloadFromMenu);
+        if (playerDownloadController != null) {
+            playerDownloadController.cleanup();
+            playerDownloadController = null;
+        }
 
         if (nextEpisodeHandler != null && nextEpisodeRunnable != null) {
             nextEpisodeHandler.removeCallbacks(nextEpisodeRunnable);
