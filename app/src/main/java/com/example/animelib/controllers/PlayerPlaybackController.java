@@ -62,14 +62,23 @@ public class PlayerPlaybackController {
     }
 
     private HttpDataSource.Factory getEffectiveHttpDataSourceFactory() {
+        HttpDataSource.Factory factory = null;
         if (httpDataSourceFactory != null) {
-            return httpDataSourceFactory;
+            factory = httpDataSourceFactory;
+        } else if (callback != null && callback.getHttpDataSourceFactory() != null) {
+            factory = callback.getHttpDataSourceFactory();
         }
-        if (callback != null && callback.getHttpDataSourceFactory() != null) {
-            return callback.getHttpDataSourceFactory();
+        if (factory instanceof DefaultHttpDataSource.Factory) {
+            ((DefaultHttpDataSource.Factory) factory)
+                    .setConnectTimeoutMs(8000)
+                    .setReadTimeoutMs(8000)
+                    .setAllowCrossProtocolRedirects(true);
+            return factory;
         }
         return new DefaultHttpDataSource.Factory()
                 .setUserAgent("Mozilla/5.0 (Linux; Android 14; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36")
+                .setConnectTimeoutMs(8000)
+                .setReadTimeoutMs(8000)
                 .setAllowCrossProtocolRedirects(true);
     }
 

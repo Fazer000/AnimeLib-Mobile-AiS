@@ -99,9 +99,7 @@ public class VideoUrlHelper {
     public static String extractRelativePathFromCdnUrl(String fullUrl) {
         if (fullUrl == null) return null;
 
-        String[] prefixes = new String[] {
-            "https://video1.cdnlibs.org/.%D0%B0s",
-            "https://video1.cdnlibs.org/.\u0430s",
+        String[] cdnDomains = new String[] {
             "https://video1.cdnlibs.org",
             "http://video1.cdnlibs.org",
             "https://video2.cdnlibs.org",
@@ -110,15 +108,9 @@ public class VideoUrlHelper {
             "http://video1.imglib.info"
         };
 
-        for (String prefix : prefixes) {
-            if (fullUrl.startsWith(prefix)) {
-                String path = fullUrl.substring(prefix.length());
-                if (path.startsWith("/.%D0%B0s")) {
-                    path = path.substring("/.%D0%B0s".length());
-                } else if (path.startsWith("/.\u0430s")) {
-                    path = path.substring("/.\u0430s".length());
-                }
-                return path;
+        for (String cdnDomain : cdnDomains) {
+            if (fullUrl.startsWith(cdnDomain)) {
+                return fullUrl.substring(cdnDomain.length());
             }
         }
         return null;

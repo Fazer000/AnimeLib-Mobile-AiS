@@ -482,16 +482,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 playerContainer.setOutlineProvider(new ViewOutlineProvider() {
                     @Override
                     public void getOutline(View view, Outline outline) {
-                        int l = Math.round(currentOutlineLeft);
-                        int t = Math.round(currentOutlineTop);
-                        int r = Math.round(currentOutlineRight);
-                        int b = Math.round(currentOutlineBottom);
-                        if (r > l && b > t && (l > 0 || t > 0 || r < view.getWidth() || b < view.getHeight() || currentCornerRadiusPx > 0)) {
-                            if (currentCornerRadiusPx > 0) {
-                                outline.setRoundRect(l, t, r, b, currentCornerRadiusPx);
-                            } else {
-                                outline.setRect(l, t, r, b);
-                            }
+                        if (currentCornerRadiusPx > 0) {
+                            outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), currentCornerRadiusPx);
                         } else {
                             outline.setRect(0, 0, view.getWidth(), view.getHeight());
                         }

@@ -395,18 +395,6 @@ public class PlayerPanelsController {
             }
         }
 
-        float screenAspect = (float) screenWidth / (float) screenHeight;
-        float videoW0, videoH0;
-        if (screenAspect > videoAspect) {
-            videoH0 = screenHeight;
-            videoW0 = screenHeight * videoAspect;
-        } else {
-            videoW0 = screenWidth;
-            videoH0 = screenWidth / videoAspect;
-        }
-        float videoLeft0 = (screenWidth - videoW0) / 2f;
-        float videoTop0 = (screenHeight - videoH0) / 2f;
-
         float density = activity.getResources().getDisplayMetrics().density;
         float panelWidthPx = 360f * density;
 
@@ -426,43 +414,30 @@ public class PlayerPanelsController {
 
         float availWidth1 = Math.max(0f, screenWidth - panelWidthPx - (2f * sideMarginPx));
         float availHeight1 = Math.max(0f, screenHeight - (2f * sideMarginPx));
-        float availAspect1 = (availHeight1 > 0) ? (availWidth1 / availHeight1) : videoAspect;
-        float videoW1, videoH1;
-        if (availAspect1 > videoAspect) {
-            videoH1 = availHeight1;
-            videoW1 = availHeight1 * videoAspect;
-        } else {
-            videoW1 = availWidth1;
-            videoH1 = availWidth1 / videoAspect;
-        }
-        float videoLeft1 = sideMarginPx + (availWidth1 - videoW1) / 2f;
-        float videoTop1 = sideMarginPx + (availHeight1 - videoH1) / 2f;
 
-        float currentVideoW = videoW0 + (videoW1 - videoW0) * openProgress;
-        float currentVideoH = videoH0 + (videoH1 - videoH0) * openProgress;
-        float currentLeft = videoLeft0 + (videoLeft1 - videoLeft0) * openProgress;
-        float currentTop = videoTop0 + (videoTop1 - videoTop0) * openProgress;
+        float targetScale = Math.min(availWidth1 / (float) screenWidth, availHeight1 / (float) screenHeight);
+        targetScale = Math.max(0.1f, Math.min(1f, targetScale));
 
-        float scale = (videoW0 > 0) ? (currentVideoW / videoW0) : 1f;
+        float currentScale = 1f + (targetScale - 1f) * openProgress;
 
-        float translationX = currentLeft - (videoLeft0 * scale);
-        float translationY = currentTop - (videoTop0 * scale);
+        float currentPanelWidthShown = panelWidthPx * openProgress;
+        float currentAvailW = screenWidth - currentPanelWidthShown;
+        float scaledW = screenWidth * currentScale;
+        float scaledH = screenHeight * currentScale;
+
+        float translationX = (currentAvailW - scaledW) / 2f;
+        float translationY = (screenHeight - scaledH) / 2f;
 
         playerContainer.setPivotX(0f);
         playerContainer.setPivotY(0f);
-        playerContainer.setScaleX(scale);
-        playerContainer.setScaleY(scale);
+        playerContainer.setScaleX(currentScale);
+        playerContainer.setScaleY(currentScale);
         playerContainer.setTranslationX(translationX);
         playerContainer.setTranslationY(translationY);
 
-        float outlineLeft = videoLeft0 * openProgress;
-        float outlineTop = videoTop0 * openProgress;
-        float outlineRight = screenWidth + (videoLeft0 + videoW0 - screenWidth) * openProgress;
-        float outlineBottom = screenHeight + (videoTop0 + videoH0 - screenHeight) * openProgress;
-
-        float maxRadiusPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, activity.getResources().getDisplayMetrics());
-        float cornerRadiusPx = (scale > 0) ? (maxRadiusPx * openProgress / scale) : 0f;
-        callback.onOutlineValuesChanged(outlineLeft, outlineTop, outlineRight, outlineBottom, cornerRadiusPx);
+        float maxRadiusPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, activity.getResources().getDisplayMetrics());
+        float cornerRadiusPx = (currentScale > 0) ? (maxRadiusPx * openProgress / currentScale) : 0f;
+        callback.onOutlineValuesChanged(0f, 0f, 0f, 0f, cornerRadiusPx);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             playerContainer.invalidateOutline();
@@ -472,6 +447,6 @@ public class PlayerPanelsController {
         if (ambientVignetteOverlay != null) {
             ambientVignetteOverlay.clearCustomVideoBounds();
         }
-        callback.updateAmbientPlayerTransform(1f, 0f, 0f, false);
+        callback.updateAmbientPlayerTransform(currentScale, translationX, translationY, false);
     }
 }
