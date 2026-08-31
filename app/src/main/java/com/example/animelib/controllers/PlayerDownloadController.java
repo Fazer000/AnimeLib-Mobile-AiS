@@ -65,7 +65,7 @@ public class PlayerDownloadController {
 
     public void initViews(View rootView) {
         if (rootView == null) return;
-        portraitDownloadProgressContainer = rootView.findViewById(R.id.portraitDownloadProgressCard);
+        portraitDownloadProgressContainer = rootView.findViewById(R.id.portraitDownloadProgressContainer);
         tvPortraitDownloadPercent = rootView.findViewById(R.id.tvPortraitDownloadPercent);
         btnDownloadFromMenu = rootView.findViewById(R.id.btnDownloadFromMenu);
         portraitDownloadButton = rootView.findViewById(R.id.portraitDownloadButton);
@@ -125,13 +125,13 @@ public class PlayerDownloadController {
         currentDownloadPercent = percent;
 
         if (portraitDownloadProgressContainer != null) {
-            if (percent > 0) {
-                portraitDownloadProgressContainer.setVisibility(View.VISIBLE);
-                if (tvPortraitDownloadPercent != null) {
+            portraitDownloadProgressContainer.setVisibility(View.VISIBLE);
+            if (tvPortraitDownloadPercent != null) {
+                if (percent > 0) {
                     tvPortraitDownloadPercent.setText("Скачивание: " + percent + "%");
+                } else {
+                    tvPortraitDownloadPercent.setText("Подготовка к скачиванию...");
                 }
-            } else {
-                portraitDownloadProgressContainer.setVisibility(View.GONE);
             }
         }
 

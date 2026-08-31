@@ -52,6 +52,13 @@ public class PlayerRelatedTitlesController {
     private RecyclerView relatedTitlesRecyclerView;
     private View portraitRelatedTitlesContainer;
     private RecyclerView portraitRelatedTitlesRecyclerView;
+    private View portraitRelatedLoadingIndicator;
+    private View portraitRelatedErrorContainer;
+    private View btnRetryPortraitRelated;
+    private View btnRefreshPortraitRelated;
+
+    private String lastAnimeId;
+    private String lastAnimeUrl;
 
     public PlayerRelatedTitlesController(RelatedTitlesCallback callback) {
         this.callback = callback;
@@ -131,7 +138,28 @@ public class PlayerRelatedTitlesController {
 
         setupRelatedTitlesDragToClose(context);
 
-        // Setup Portrait RecyclerView
+        // Setup Portrait RecyclerView and controls
+        if (portraitRelatedTitlesContainer != null) {
+            portraitRelatedLoadingIndicator = portraitRelatedTitlesContainer.findViewById(R.id.portraitRelatedLoadingIndicator);
+            portraitRelatedErrorContainer = portraitRelatedTitlesContainer.findViewById(R.id.portraitRelatedErrorContainer);
+            btnRetryPortraitRelated = portraitRelatedTitlesContainer.findViewById(R.id.btnRetryPortraitRelated);
+            btnRefreshPortraitRelated = portraitRelatedTitlesContainer.findViewById(R.id.btnRefreshPortraitRelated);
+
+            View.OnClickListener retryListener = v -> {
+                if (lastAnimeId != null) {
+                    CustomToast.showInfo(context, "Повторная загрузка связанного...");
+                    loadRelatedTitles(lastAnimeId, lastAnimeUrl);
+                }
+            };
+
+            if (btnRetryPortraitRelated != null) {
+                btnRetryPortraitRelated.setOnClickListener(retryListener);
+            }
+            if (btnRefreshPortraitRelated != null) {
+                btnRefreshPortraitRelated.setOnClickListener(retryListener);
+            }
+        }
+
         if (portraitRelatedTitlesRecyclerView != null) {
             portraitRelatedTitlesRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
             portraitRelatedTitlesAdapter = new HorizontalRelatedTitlesAdapter(new ArrayList<>(), this::onRelatedTitleSelected);
@@ -248,6 +276,9 @@ public class PlayerRelatedTitlesController {
             return;
         }
 
+        this.lastAnimeId = currentAnimeId;
+        this.lastAnimeUrl = animeUrl;
+
         String animeSlug = currentAnimeId;
         if (animeUrl != null && !animeUrl.isEmpty()) {
             animeSlug = ApiService.extractMediaSlugFromUrl(animeUrl);
@@ -258,18 +289,56 @@ public class PlayerRelatedTitlesController {
             return;
         }
 
+        boolean isOffline = callback != null && callback.isOfflineMode();
+        if (isOffline) {
+            if (portraitRelatedTitlesContainer != null) {
+                portraitRelatedTitlesContainer.setVisibility(View.GONE);
+            }
+            return;
+        }
+
         Log.d(TAG, "Loading related titles for anime: " + animeSlug);
 
+        if (portraitRelatedTitlesContainer != null) {
+            portraitRelatedTitlesContainer.setVisibility(View.VISIBLE);
+        }
+        if (portraitRelatedLoadingIndicator != null) {
+            portraitRelatedLoadingIndicator.setVisibility(View.VISIBLE);
+        }
+        if (portraitRelatedErrorContainer != null) {
+            portraitRelatedErrorContainer.setVisibility(View.GONE);
+        }
+        if (portraitRelatedTitlesRecyclerView != null) {
+            portraitRelatedTitlesRecyclerView.setVisibility(View.GONE);
+        }
+
         ApiService apiService = callback != null ? callback.getApiService() : null;
-        if (apiService == null) return;
+        if (apiService == null) {
+            if (portraitRelatedLoadingIndicator != null) {
+                portraitRelatedLoadingIndicator.setVisibility(View.GONE);
+            }
+            if (portraitRelatedErrorContainer != null) {
+                portraitRelatedErrorContainer.setVisibility(View.VISIBLE);
+            }
+            return;
+        }
 
         apiService.getRelatedTitles(animeSlug, new ApiService.RelatedTitlesCallback() {
             @Override
             public void onRelatedTitlesReceived(RelatedTitlesResponse response) {
                 if (callback != null) {
                     callback.safeRunOnUiThread(() -> {
+                        if (portraitRelatedLoadingIndicator != null) {
+                            portraitRelatedLoadingIndicator.setVisibility(View.GONE);
+                        }
                         if (response.getData() != null && !response.getData().isEmpty()) {
                             Log.d(TAG, "Related titles loaded: " + response.getData().size());
+                            if (portraitRelatedErrorContainer != null) {
+                                portraitRelatedErrorContainer.setVisibility(View.GONE);
+                            }
+                            if (portraitRelatedTitlesRecyclerView != null) {
+                                portraitRelatedTitlesRecyclerView.setVisibility(View.VISIBLE);
+                            }
                             showRelatedTitles(response.getData());
                         } else {
                             Log.d(TAG, "No related titles found");
@@ -286,8 +355,17 @@ public class PlayerRelatedTitlesController {
                 Log.e(TAG, "Error loading related titles: " + error);
                 if (callback != null) {
                     callback.safeRunOnUiThread(() -> {
+                        if (portraitRelatedLoadingIndicator != null) {
+                            portraitRelatedLoadingIndicator.setVisibility(View.GONE);
+                        }
+                        if (portraitRelatedTitlesRecyclerView != null) {
+                            portraitRelatedTitlesRecyclerView.setVisibility(View.GONE);
+                        }
+                        if (portraitRelatedErrorContainer != null) {
+                            portraitRelatedErrorContainer.setVisibility(View.VISIBLE);
+                        }
                         if (portraitRelatedTitlesContainer != null) {
-                            portraitRelatedTitlesContainer.setVisibility(View.GONE);
+                            portraitRelatedTitlesContainer.setVisibility(View.VISIBLE);
                         }
                     });
                 }

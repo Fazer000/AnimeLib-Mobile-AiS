@@ -155,6 +155,75 @@
             android:layout_marginBottom="16dp"
             android:visibility="gone">
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingHorizontal="16dp"
+                android:paddingBottom="8dp">
+
+                <TextView
+                    android:id="@+id/tvPortraitRelatedTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Связанные тайтлы"
+                    android:textColor="@color/primary_text_color"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <ImageButton
+                    android:id="@+id/btnRefreshPortraitRelated"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_refresh"
+                    app:tint="@color/purple_primary"
+                    android:contentDescription="Обновить связанное" />
+            </LinearLayout>
+
+            <com.google.android.material.progressindicator.CircularProgressIndicator
+                android:id="@+id/portraitRelatedLoadingIndicator"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginVertical="12dp"
+                android:indeterminate="true"
+                android:visibility="gone"
+                app:indicatorSize="32dp"
+                app:indicatorColor="@color/purple_primary" />
+
+            <LinearLayout
+                android:id="@+id/portraitRelatedErrorContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Не удалось загрузить связанное"
+                    android:textColor="#94A3B8"
+                    android:textSize="13sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRetryPortraitRelated"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Повторить загрузку"
+                    android:textColor="@color/purple_primary"
+                    app:icon="@drawable/ic_refresh"
+                    app:iconTint="@color/purple_primary"
+                    app:strokeColor="@color/purple_primary" />
+            </LinearLayout>
+
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/portraitRelatedTitlesRecyclerView"
                 android:layout_width="match_parent"

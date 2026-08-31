@@ -57,6 +57,7 @@ public class AmbientLightManager {
     private boolean isErrorState = false;
     private boolean isSuspended = false;
     private boolean isFrozen = false;
+    private long lastHardSeekTimeMs = 0;
 
     private Player.Listener mainPlayerListener;
     private Player.Listener ambientPlayerListener;
@@ -130,6 +131,12 @@ public class AmbientLightManager {
     public void setDataSourceFactory(DataSource.Factory dataSourceFactory) {
         if (dataSourceFactory != null) {
             this.cacheDataSourceFactory = MediaCacheManager.createCacheDataSourceFactory(context, dataSourceFactory);
+            if (ambientPlayer != null) {
+                releaseAmbientPlayer();
+                if (isEnabled && !isSuspended) {
+                    ensureAmbientPlayerInitialized();
+                }
+            }
         }
     }
 
@@ -145,6 +152,9 @@ public class AmbientLightManager {
         this.mainPlayer = mainPlayer;
         if (mediaItem != null) this.currentMediaItem = mediaItem;
         if (videoUrl != null) this.currentVideoUrl = videoUrl;
+
+        this.isErrorState = false;
+        this.isPrepared = false;
 
         if (mainPlayer == null) {
             releaseAmbientPlayer();
@@ -349,8 +359,13 @@ public class AmbientLightManager {
             @Override
             public void onPositionDiscontinuity(Player.PositionInfo oldPosition, Player.PositionInfo newPosition, int reason) {
                 if (!isEnabled || isSuspended || isFrozen || ambientPlayer == null) return;
-                ambientPlayer.seekTo(mainPlayer.getCurrentPosition());
-                syncPositionAndSpeed();
+                if (isErrorState) {
+                    isErrorState = false;
+                    prepareAmbientMedia();
+                } else {
+                    ambientPlayer.seekTo(mainPlayer.getCurrentPosition());
+                    syncPositionAndSpeed();
+                }
                 if (mainPlayer.isPlaying()) {
                     mainHandler.removeCallbacks(syncRunnable);
                     mainHandler.post(syncRunnable);
@@ -411,8 +426,12 @@ public class AmbientLightManager {
             if (mainSpeed <= 0.1f) mainSpeed = 1.0f;
 
             if (Math.abs(deltaMs) > HARD_SEEK_THRESHOLD_MS) {
-                ambientPlayer.seekTo(mainPos);
-                ambientPlayer.setPlaybackParameters(new PlaybackParameters(mainSpeed));
+                long now = android.os.SystemClock.elapsedRealtime();
+                if (now - lastHardSeekTimeMs > 2000) {
+                    lastHardSeekTimeMs = now;
+                    ambientPlayer.seekTo(mainPos);
+                    ambientPlayer.setPlaybackParameters(new PlaybackParameters(mainSpeed));
+                }
             } else if (Math.abs(deltaMs) > SPEED_ADJUST_MIN_DELTA_MS) {
                 // Бесшовное динамическое микро-выравнивание скорости воспроизведения (NTP-Style)
                 // Без рестартов, скачков и фризов декодера!

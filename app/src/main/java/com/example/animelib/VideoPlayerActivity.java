@@ -1596,6 +1596,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
         com.example.animelib.ui.AmbientVignetteOverlayView ambientVignetteOverlay = findViewById(R.id.ambientVignetteOverlay);
         ambientLightManager = new AmbientLightManager(this, playerView, ambientContainer, ambientPlayerView, ambientVignetteOverlay);
         if (ambientLightManager != null) {
+            if (httpDataSourceFactory != null) {
+                ambientLightManager.setDataSourceFactory(httpDataSourceFactory);
+            }
             ambientLightManager.setEnabled(enableAmbientLight);
         }
         
