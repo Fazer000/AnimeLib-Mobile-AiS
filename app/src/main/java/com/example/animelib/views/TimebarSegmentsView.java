@@ -133,14 +133,15 @@ public class TimebarSegmentsView extends View {
             return;
         }
 
-        float paddingLeft = getPaddingLeft();
-        float paddingRight = getPaddingRight();
+        float density = getResources().getDisplayMetrics().density;
+        float defaultPadding = 8f * density;
+        float paddingLeft = getPaddingLeft() > 0 ? getPaddingLeft() : defaultPadding;
+        float paddingRight = getPaddingRight() > 0 ? getPaddingRight() : defaultPadding;
         float width = getWidth() - paddingLeft - paddingRight;
         float height = getHeight();
 
         if (width <= 0 || height <= 0) return;
 
-        float density = getResources().getDisplayMetrics().density;
         float barHeight = 4f * density; // Высота полоски таймбара 4dp
         float centerY = height / 2f;
         float top = centerY - barHeight / 2f;

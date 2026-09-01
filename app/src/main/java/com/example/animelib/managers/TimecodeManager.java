@@ -172,13 +172,12 @@ public class TimecodeManager {
      * Обновляет отображение сегментов на самом таймбаре и устанавливает маркера
      */
     public void updateTimecodeSegmentsOnBar() {
-        if (player == null) return;
-        long duration = player.getDuration();
-        if (duration <= 0) return;
-
         if (timebarSegmentsView != null) {
+            long duration = (player != null && player.getDuration() > 0) ? player.getDuration() : 0;
             timebarSegmentsView.setTimecodes(timecodes, duration);
-            timebarSegmentsView.setProgress(player.getCurrentPosition(), player.getBufferedPosition(), duration);
+            if (player != null && duration > 0) {
+                timebarSegmentsView.setProgress(player.getCurrentPosition(), player.getBufferedPosition(), duration);
+            }
         }
 
         if (timeBar != null) {

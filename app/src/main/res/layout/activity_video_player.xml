@@ -43,17 +43,10 @@
         android:clipToPadding="false"
         android:visibility="gone">
 
-        <!-- Secondary Ambient Player View (blurred edge glow) -->
-        <androidx.media3.ui.PlayerView
-            android:id="@+id/ambientPlayerView"
+        <com.example.animelib.ui.AmbientLightView
+            android:id="@+id/ambientLightView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_gravity="top|start"
-            app:use_controller="false"
-            app:surface_type="texture_view"
-            app:resize_mode="fit"
-            app:show_buffering="never"
-            app:shutter_background_color="@android:color/transparent" />
+            android:layout_height="match_parent" />
 
         <!-- Organic Vignette & Falloff Overlay for Ambient Light -->
         <com.example.animelib.ui.AmbientVignetteOverlayView
