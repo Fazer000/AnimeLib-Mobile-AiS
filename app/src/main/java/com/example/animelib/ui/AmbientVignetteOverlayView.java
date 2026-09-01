@@ -29,6 +29,11 @@ public class AmbientVignetteOverlayView extends View {
     private final Paint portraitBottomFadePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
     private final Paint portraitFullErasePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
+    private final Paint cardRightFadePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
+    private final Paint cardLeftFadePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
+    private final Paint cardTopFadePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
+    private final Paint cardBottomFadePaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
+
     private final RectF videoBounds = new RectF();
     private boolean hasVideoBounds = false;
 
@@ -82,6 +87,10 @@ public class AmbientVignetteOverlayView extends View {
         rightEdgePaint.setXfermode(dstOutMode);
 
         portraitBottomFadePaint.setXfermode(dstOutMode);
+        cardRightFadePaint.setXfermode(dstOutMode);
+        cardLeftFadePaint.setXfermode(dstOutMode);
+        cardTopFadePaint.setXfermode(dstOutMode);
+        cardBottomFadePaint.setXfermode(dstOutMode);
 
         portraitFullErasePaint.setColor(0xFF000000);
         portraitFullErasePaint.setXfermode(dstOutMode);
@@ -125,10 +134,31 @@ public class AmbientVignetteOverlayView extends View {
 
         if (hasVideoBounds) {
             float vBottom = videoBounds.bottom;
+            float vTop = videoBounds.top;
+            float vLeft = videoBounds.left;
+            float vRight = videoBounds.right;
             float fadeDistance = dpToPx(100);
+            float glowDist = dpToPx(50);
 
             portraitBottomFadePaint.setShader(new LinearGradient(
                     0, vBottom, 0, vBottom + fadeDistance,
+                    ALPHA_FALLOFF_PORTRAIT_BOTTOM, PORTRAIT_STOPS, Shader.TileMode.CLAMP
+            ));
+
+            cardRightFadePaint.setShader(new LinearGradient(
+                    vRight, 0, vRight + glowDist, 0,
+                    ALPHA_FALLOFF_PORTRAIT_BOTTOM, PORTRAIT_STOPS, Shader.TileMode.CLAMP
+            ));
+            cardLeftFadePaint.setShader(new LinearGradient(
+                    vLeft, 0, Math.max(0, vLeft - glowDist), 0,
+                    ALPHA_FALLOFF_PORTRAIT_BOTTOM, PORTRAIT_STOPS, Shader.TileMode.CLAMP
+            ));
+            cardTopFadePaint.setShader(new LinearGradient(
+                    0, vTop, 0, Math.max(0, vTop - glowDist),
+                    ALPHA_FALLOFF_PORTRAIT_BOTTOM, PORTRAIT_STOPS, Shader.TileMode.CLAMP
+            ));
+            cardBottomFadePaint.setShader(new LinearGradient(
+                    0, vBottom, 0, vBottom + glowDist,
                     ALPHA_FALLOFF_PORTRAIT_BOTTOM, PORTRAIT_STOPS, Shader.TileMode.CLAMP
             ));
         } else {
@@ -171,13 +201,46 @@ public class AmbientVignetteOverlayView extends View {
         int saveCount = canvas.saveLayer(0, 0, w, h, null);
 
         if (hasVideoBounds) {
+            float vLeft = videoBounds.left;
+            float vTop = videoBounds.top;
+            float vRight = videoBounds.right;
             float vBottom = videoBounds.bottom;
-            float fadeDistance = dpToPx(100);
 
-            if (vBottom < h) {
-                canvas.drawRect(0, vBottom, w, Math.min(h, vBottom + fadeDistance), portraitBottomFadePaint);
-                if (vBottom + fadeDistance < h) {
-                    canvas.drawRect(0, vBottom + fadeDistance, w, h, portraitFullErasePaint);
+            if (vLeft <= 0 && vRight >= w) {
+                // Portrait mode: fade out below vBottom
+                float fadeDistance = dpToPx(100);
+                if (vBottom < h) {
+                    canvas.drawRect(0, vBottom, w, Math.min(h, vBottom + fadeDistance), portraitBottomFadePaint);
+                    if (vBottom + fadeDistance < h) {
+                        canvas.drawRect(0, vBottom + fadeDistance, w, h, portraitFullErasePaint);
+                    }
+                }
+            } else {
+                // Transformed card mode in landscape
+                float glowDist = dpToPx(50);
+                if (vRight < w) {
+                    canvas.drawRect(vRight, 0, Math.min(w, vRight + glowDist), h, cardRightFadePaint);
+                    if (vRight + glowDist < w) {
+                        canvas.drawRect(vRight + glowDist, 0, w, h, portraitFullErasePaint);
+                    }
+                }
+                if (vLeft > 0) {
+                    canvas.drawRect(Math.max(0, vLeft - glowDist), 0, vLeft, h, cardLeftFadePaint);
+                    if (vLeft - glowDist > 0) {
+                        canvas.drawRect(0, 0, vLeft - glowDist, h, portraitFullErasePaint);
+                    }
+                }
+                if (vTop > 0) {
+                    canvas.drawRect(0, Math.max(0, vTop - glowDist), w, vTop, cardTopFadePaint);
+                    if (vTop - glowDist > 0) {
+                        canvas.drawRect(0, 0, w, vTop - glowDist, portraitFullErasePaint);
+                    }
+                }
+                if (vBottom < h) {
+                    canvas.drawRect(0, vBottom, w, Math.min(h, vBottom + glowDist), cardBottomFadePaint);
+                    if (vBottom + glowDist < h) {
+                        canvas.drawRect(0, vBottom + glowDist, w, h, portraitFullErasePaint);
+                    }
                 }
             }
         } else {

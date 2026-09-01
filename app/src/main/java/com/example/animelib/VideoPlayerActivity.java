@@ -478,6 +478,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         playerView = findViewById(R.id.playerView);
         playerContainer = findViewById(R.id.playerContainer);
         if (playerContainer != null) {
+            playerContainer.setBackgroundColor(android.graphics.Color.BLACK);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 playerContainer.setOutlineProvider(new ViewOutlineProvider() {
                     @Override
@@ -588,6 +589,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 currentOutlineRight = right;
                 currentOutlineBottom = bottom;
                 currentCornerRadiusPx = radiusPx;
+                if (playerContainer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    playerContainer.invalidateOutline();
+                }
             }
         });
 
@@ -5358,7 +5362,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     // Reset translationY to 0 so timebar and timecode are fully visible
                     playersControlBarView.setTranslationY(0f);
 
-                    // Align timeAndControls (16dp) with exoProgress (8dp + 8dp internal padding = 16dp)
+                    // Align timeAndControls (16dp) with exoProgress (16dp)
                     timeAndControlsParams.topMargin = (int) (2 * density);
                     timeAndControlsParams.bottomMargin = (int) (2 * density);
                     timeAndControlsParams.leftMargin = (int) (16 * density);
@@ -5366,8 +5370,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
                     progressParams.topMargin = (int) (2 * density);
                     progressParams.bottomMargin = (int) (12 * density);
-                    progressParams.leftMargin = (int) (8 * density);
-                    progressParams.rightMargin = (int) (8 * density);
+                    progressParams.leftMargin = (int) (16 * density);
+                    progressParams.rightMargin = (int) (16 * density);
 
                     timeAndControlsContainer.setLayoutParams(timeAndControlsParams);
                     exoProgress.setLayoutParams(progressParams);
@@ -5391,7 +5395,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                         playersControlBarView.setTranslationY(60f * density);
                     }
 
-                    // Align timeAndControls (24dp) with exoProgress (16dp + 8dp internal padding = 24dp)
+                    // Align timeAndControls (24dp) with exoProgress (24dp)
                     timeAndControlsParams.topMargin = (int) (2 * density);
                     timeAndControlsParams.bottomMargin = (int) (2 * density);
                     timeAndControlsParams.leftMargin = (int) (24 * density);
@@ -5399,8 +5403,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
                     progressParams.topMargin = (int) (2 * density);
                     progressParams.bottomMargin = (int) (14 * density);
-                    progressParams.leftMargin = (int) (16 * density);
-                    progressParams.rightMargin = (int) (16 * density);
+                    progressParams.leftMargin = (int) (24 * density);
+                    progressParams.rightMargin = (int) (24 * density);
 
                     timeAndControlsContainer.setLayoutParams(timeAndControlsParams);
                     exoProgress.setLayoutParams(progressParams);

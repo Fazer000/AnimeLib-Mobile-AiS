@@ -468,6 +468,28 @@ public class AmbientLightManager {
 
         ambientPlayerListener = new Player.Listener() {
             @Override
+            public void onPlaybackStateChanged(int playbackState) {
+                if (!isEnabled || isSuspended || isFrozen || mainPlayer == null) return;
+                if (playbackState == Player.STATE_READY) {
+                    syncPositionAndSpeed();
+                    if (mainPlayer.isPlaying()) {
+                        ambientPlayer.play();
+                        mainHandler.removeCallbacks(syncRunnable);
+                        mainHandler.post(syncRunnable);
+                    }
+                }
+            }
+
+            @Override
+            public void onIsPlayingChanged(boolean isPlaying) {
+                if (!isEnabled || isSuspended || isFrozen || mainPlayer == null) return;
+                if (isPlaying && mainPlayer.isPlaying()) {
+                    mainHandler.removeCallbacks(syncRunnable);
+                    mainHandler.post(syncRunnable);
+                }
+            }
+
+            @Override
             public void onPlayerError(PlaybackException error) {
                 Log.w(TAG, "Ambient player encountered playback error: " + error.getMessage() + ". Retrying softly.");
                 isErrorState = true;
@@ -508,7 +530,7 @@ public class AmbientLightManager {
 
             if (Math.abs(deltaMs) > HARD_SEEK_THRESHOLD_MS) {
                 long now = android.os.SystemClock.elapsedRealtime();
-                if (now - lastHardSeekTimeMs > 2000) {
+                if (now - lastHardSeekTimeMs > 300) {
                     lastHardSeekTimeMs = now;
                     ambientPlayer.seekTo(mainPos);
                     ambientPlayer.setPlaybackParameters(new PlaybackParameters(mainSpeed));
@@ -594,9 +616,17 @@ public class AmbientLightManager {
 
     public void onConfigurationChanged() {
         mainHandler.postDelayed(() -> {
-            if (isEnabled && !isSuspended && !isFrozen && ambientPlayerView != null && ambientPlayer != null) {
+            if (isEnabled && !isSuspended && !isFrozen && ambientPlayerView != null) {
+                ensureAmbientPlayerInitialized();
                 attachTextureViewListener();
                 refreshAmbientFrame();
+                if (mainPlayer != null && mainPlayer.isPlaying()) {
+                    if (ambientPlayer != null && !ambientPlayer.isPlaying()) {
+                        ambientPlayer.play();
+                    }
+                    mainHandler.removeCallbacks(syncRunnable);
+                    mainHandler.post(syncRunnable);
+                }
             }
         }, 150);
     }

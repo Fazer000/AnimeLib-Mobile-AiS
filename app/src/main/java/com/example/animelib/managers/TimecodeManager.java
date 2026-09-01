@@ -181,18 +181,7 @@ public class TimecodeManager {
             timebarSegmentsView.setProgress(player.getCurrentPosition(), player.getBufferedPosition(), duration);
         }
 
-        if (timeBar != null && !timecodes.isEmpty()) {
-            long[] adGroupTimes = new long[timecodes.size() * 2];
-            boolean[] playedAdGroups = new boolean[timecodes.size() * 2];
-            for (int i = 0; i < timecodes.size(); i++) {
-                EpisodeResponse.TimecodeData tc = timecodes.get(i);
-                adGroupTimes[2 * i] = tc.getFrom() * 1000L;
-                adGroupTimes[2 * i + 1] = tc.getTo() * 1000L;
-                playedAdGroups[2 * i] = false;
-                playedAdGroups[2 * i + 1] = false;
-            }
-            timeBar.setAdGroupTimesMs(adGroupTimes, playedAdGroups, adGroupTimes.length);
-        } else if (timeBar != null) {
+        if (timeBar != null) {
             timeBar.setAdGroupTimesMs(null, null, 0);
         }
     }

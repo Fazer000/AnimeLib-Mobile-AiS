@@ -410,12 +410,18 @@ public class PlayerPanelsController {
             if (w > 0) panelWidthPx = w;
         }
 
-        float sideMarginPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, activity.getResources().getDisplayMetrics());
+        float marginPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 12f, activity.getResources().getDisplayMetrics());
 
-        float availWidth1 = Math.max(0f, screenWidth - panelWidthPx - (2f * sideMarginPx));
-        float availHeight1 = Math.max(0f, screenHeight - (2f * sideMarginPx));
+        float availW = Math.max(0f, screenWidth - panelWidthPx - (2f * marginPx));
+        float availH = Math.max(0f, screenHeight - (2f * marginPx));
 
-        float targetScale = Math.min(availWidth1 / (float) screenWidth, availHeight1 / (float) screenHeight);
+        float fullVideoW = Math.min((float) screenWidth, (float) screenHeight * videoAspect);
+        float fullVideoH = Math.min((float) screenHeight, (float) screenWidth / videoAspect);
+
+        float targetVideoW = Math.min(availW, availH * videoAspect);
+        float targetVideoH = targetVideoW / videoAspect;
+
+        float targetScale = (fullVideoW > 0) ? (targetVideoW / fullVideoW) : (availW / (float) screenWidth);
         targetScale = Math.max(0.1f, Math.min(1f, targetScale));
 
         float currentScale = 1f + (targetScale - 1f) * openProgress;
@@ -445,7 +451,14 @@ public class PlayerPanelsController {
 
         AmbientVignetteOverlayView ambientVignetteOverlay = activity.findViewById(R.id.ambientVignetteOverlay);
         if (ambientVignetteOverlay != null) {
-            ambientVignetteOverlay.clearCustomVideoBounds();
+            float currentVideoW = fullVideoW * currentScale;
+            float currentVideoH = fullVideoH * currentScale;
+            float videoLeft = translationX + (scaledW - currentVideoW) / 2f;
+            float videoTop = translationY + (scaledH - currentVideoH) / 2f;
+            float videoRight = videoLeft + currentVideoW;
+            float videoBottom = videoTop + currentVideoH;
+
+            ambientVignetteOverlay.setVideoBounds(videoLeft, videoTop, videoRight, videoBottom);
         }
         callback.updateAmbientPlayerTransform(currentScale, translationX, translationY, false);
     }
