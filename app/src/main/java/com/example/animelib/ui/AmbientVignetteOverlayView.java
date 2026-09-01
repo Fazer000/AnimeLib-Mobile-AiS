@@ -79,24 +79,9 @@ public class AmbientVignetteOverlayView extends View {
     }
 
     private void init() {
-        PorterDuffXfermode dstOutMode = new PorterDuffXfermode(PorterDuff.Mode.DST_OUT);
-
-        topEdgePaint.setXfermode(dstOutMode);
-        bottomEdgePaint.setXfermode(dstOutMode);
-        leftEdgePaint.setXfermode(dstOutMode);
-        rightEdgePaint.setXfermode(dstOutMode);
-
-        portraitBottomFadePaint.setXfermode(dstOutMode);
-        cardRightFadePaint.setXfermode(dstOutMode);
-        cardLeftFadePaint.setXfermode(dstOutMode);
-        cardTopFadePaint.setXfermode(dstOutMode);
-        cardBottomFadePaint.setXfermode(dstOutMode);
-
+        // Use standard SRC_OVER painting (default) to overlay black gradients on top of ambient player view
         portraitFullErasePaint.setColor(0xFF000000);
-        portraitFullErasePaint.setXfermode(dstOutMode);
         portraitFullErasePaint.setStyle(Paint.Style.FILL);
-
-        setLayerType(LAYER_TYPE_NONE, null);
     }
 
     public void setVideoBounds(float left, float top, float right, float bottom) {
@@ -198,8 +183,6 @@ public class AmbientVignetteOverlayView extends View {
         int h = getHeight();
         if (w <= 0 || h <= 0) return;
 
-        int saveCount = canvas.saveLayer(0, 0, w, h, null);
-
         if (hasVideoBounds) {
             float vLeft = videoBounds.left;
             float vTop = videoBounds.top;
@@ -251,7 +234,5 @@ public class AmbientVignetteOverlayView extends View {
             canvas.drawRect(0, 0, edgeDepth, h, leftEdgePaint);
             canvas.drawRect(w - edgeDepth, 0, w, h, rightEdgePaint);
         }
-
-        canvas.restoreToCount(saveCount);
     }
 }

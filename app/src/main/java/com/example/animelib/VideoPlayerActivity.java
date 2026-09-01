@@ -1522,8 +1522,33 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
 
     private void updateAmbientPlayerTransform(float scale, float translationX, float translationY, boolean isCroppedToVideo) {
-        if (ambientLightManager != null) {
-            ambientLightManager.refreshAmbientFrame();
+        androidx.media3.ui.PlayerView ambientPlayerView = findViewById(R.id.ambientPlayerView);
+        View playerContainer = findViewById(R.id.playerContainer);
+        if (ambientPlayerView != null) {
+            android.view.ViewGroup.LayoutParams lp = ambientPlayerView.getLayoutParams();
+            if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
+                lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
+                if (lp instanceof FrameLayout.LayoutParams) {
+                    ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
+                }
+                ambientPlayerView.setLayoutParams(lp);
+            }
+
+            float baseW = (playerContainer != null && playerContainer.getWidth() > 0) ? playerContainer.getWidth() : getResources().getDisplayMetrics().widthPixels;
+            float baseH = (playerContainer != null && playerContainer.getHeight() > 0) ? playerContainer.getHeight() : (baseW * 9f / 16f);
+
+            // Ambient glow is scaled 1.15x larger than playerContainer and centered behind it
+            float ambientScale = scale * 1.15f;
+            float ambTransX = translationX - (baseW * scale * 0.075f);
+            float ambTransY = translationY - (baseH * scale * 0.075f);
+
+            ambientPlayerView.setPivotX(0f);
+            ambientPlayerView.setPivotY(0f);
+            ambientPlayerView.setScaleX(ambientScale);
+            ambientPlayerView.setScaleY(ambientScale);
+            ambientPlayerView.setTranslationX(ambTransX);
+            ambientPlayerView.setTranslationY(ambTransY);
         }
     }
     
@@ -1559,12 +1584,15 @@ public class VideoPlayerActivity extends AppCompatActivity {
         menuWidth = (int) (menuWidth * density);
         playersManager.setMenuWidth(menuWidth);
         
-        // Initialize ambient light manager with ambient view & vignette overlay
+        // Initialize ambient light manager with secondary ambient player view & vignette overlay
         View ambientContainer = findViewById(R.id.ambientContainer);
-        com.example.animelib.ui.AmbientLightView ambientLightView = findViewById(R.id.ambientLightView);
+        androidx.media3.ui.PlayerView ambientPlayerView = findViewById(R.id.ambientPlayerView);
         com.example.animelib.ui.AmbientVignetteOverlayView ambientVignetteOverlay = findViewById(R.id.ambientVignetteOverlay);
-        ambientLightManager = new AmbientLightManager(this, playerView, ambientContainer, ambientLightView, ambientVignetteOverlay);
+        ambientLightManager = new AmbientLightManager(this, playerView, ambientContainer, ambientPlayerView, ambientVignetteOverlay);
         if (ambientLightManager != null) {
+            if (httpDataSourceFactory != null) {
+                ambientLightManager.setDataSourceFactory(httpDataSourceFactory);
+            }
             ambientLightManager.setEnabled(enableAmbientLight);
         }
 
