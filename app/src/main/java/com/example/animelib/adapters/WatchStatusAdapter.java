@@ -1,11 +1,10 @@
 package com.example.animelib.adapters;
 
-import android.graphics.Color;
-import android.graphics.drawable.GradientDrawable;
+import android.content.Context;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -13,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.animelib.R;
 import com.example.animelib.models.WatchStatusItem;
+import com.example.animelib.util.ItemAnimationUtils;
 
 import java.util.List;
 
@@ -42,16 +42,56 @@ public class WatchStatusAdapter extends RecyclerView.Adapter<WatchStatusAdapter.
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         WatchStatusItem item = items.get(position);
-        holder.tvStatusLabel.setText(item.getLabel());
+        Context context = holder.itemView.getContext();
+        int itemCount = getItemCount();
+
+        if (holder.itemContainer != null) {
+            if (itemCount == 1) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_single);
+            } else if (position == 0) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_top);
+            } else if (position == itemCount - 1) {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_bottom);
+            } else {
+                holder.itemContainer.setBackgroundResource(R.drawable.bg_m3_item_middle);
+            }
+        }
+
+        if (holder.tvStatusLabel != null) {
+            holder.tvStatusLabel.setText(item.getLabel());
+        }
 
         boolean isSelected = isSameStatus(currentStatusId, item.getId());
-        holder.ivStatusSelectedCheck.setVisibility(isSelected ? View.VISIBLE : View.GONE);
 
-        holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onStatusClick(item);
-            }
-        });
+        if (holder.selectedPill != null) {
+            holder.selectedPill.setVisibility(isSelected ? View.VISIBLE : View.GONE);
+        }
+        if (holder.unselectedIndicator != null) {
+            holder.unselectedIndicator.setVisibility(isSelected ? View.GONE : View.VISIBLE);
+        }
+
+        TypedValue primaryColorVal = new TypedValue();
+        TypedValue secondaryColorVal = new TypedValue();
+        context.getTheme().resolveAttribute(R.attr.primaryTextColor, primaryColorVal, true);
+        context.getTheme().resolveAttribute(R.attr.secondaryColor, secondaryColorVal, true);
+
+        if (holder.tvStatusLabel != null) {
+            holder.tvStatusLabel.setTextColor(isSelected ? secondaryColorVal.data : primaryColorVal.data);
+        }
+
+        holder.itemView.setSelected(isSelected);
+
+        View.OnClickListener clickListener = v -> {
+            ItemAnimationUtils.animateItemClick(v, () -> {
+                if (listener != null) {
+                    listener.onStatusClick(item);
+                }
+            });
+        };
+        holder.itemView.setOnClickListener(clickListener);
+        if (holder.itemContainer != null) {
+            holder.itemContainer.setOnClickListener(clickListener);
+        }
     }
 
     private boolean isSameStatus(Object id1, Object id2) {
@@ -72,13 +112,17 @@ public class WatchStatusAdapter extends RecyclerView.Adapter<WatchStatusAdapter.
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
+        View itemContainer;
         TextView tvStatusLabel;
-        ImageView ivStatusSelectedCheck;
+        View selectedPill;
+        View unselectedIndicator;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
+            itemContainer = itemView.findViewById(R.id.itemContainer);
             tvStatusLabel = itemView.findViewById(R.id.tvStatusLabel);
-            ivStatusSelectedCheck = itemView.findViewById(R.id.ivStatusSelectedCheck);
+            selectedPill = itemView.findViewById(R.id.selectedPill);
+            unselectedIndicator = itemView.findViewById(R.id.unselectedIndicator);
         }
     }
 }
