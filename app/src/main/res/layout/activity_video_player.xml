@@ -221,6 +221,70 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
+            <!-- Vertical gesture brightness indicator (Left side) -->
+            <LinearLayout
+                android:id="@+id/brightnessIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|start"
+                android:layout_marginStart="80dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/video_time_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/brightnessIcon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_brightness"
+                    app:tint="@color/white_color" />
+
+                <TextView
+                    android:id="@+id/brightnessText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="100%"
+                    android:textColor="?attr/primaryTextColor"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Vertical gesture volume indicator (Right side) -->
+            <LinearLayout
+                android:id="@+id/volumeIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|end"
+                android:layout_marginEnd="80dp"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/video_time_background"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="10dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/volumeIcon"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_volume"
+                    app:tint="@color/white_color" />
+
+                <TextView
+                    android:id="@+id/volumeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="100%"
+                    android:textColor="?attr/primaryTextColor"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
         </com.example.animelib.ui.RoundedCornerFrameLayout>
 
         <!-- Container for Portrait Mode (below player) -->

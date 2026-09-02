@@ -242,6 +242,14 @@ public class VideoPlayerActivity extends AppCompatActivity {
     // Gestures manager
     private GesturesManager gesturesManager;
     private VerticalGesturesManager verticalGesturesManager;
+
+    // Brightness and Volume gesture indicators
+    private View brightnessIndicator;
+    private TextView brightnessText;
+    private View volumeIndicator;
+    private TextView volumeText;
+    private final Handler gestureIndicatorHandler = new Handler(Looper.getMainLooper());
+    private Runnable hideGestureIndicatorsRunnable;
     
     // Timecode manager
     private TimecodeManager timecodeManager;
@@ -1414,6 +1422,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
         TextView holdSpeedToast = findViewById(R.id.holdSpeedToast);
         View skipIndicatorLeft = findViewById(R.id.skipIndicatorLeft);
         View skipIndicatorRight = findViewById(R.id.skipIndicatorRight);
+        this.brightnessIndicator = findViewById(R.id.brightnessIndicator);
+        this.brightnessText = findViewById(R.id.brightnessText);
+        this.volumeIndicator = findViewById(R.id.volumeIndicator);
+        this.volumeText = findViewById(R.id.volumeText);
         
         // Comments components
         View commentsPanel = findViewById(R.id.commentsPanel);
@@ -2647,41 +2659,20 @@ public class VideoPlayerActivity extends AppCompatActivity {
             
             @Override
             public void onRelatedInfoDragProgress(float progress) {
-                if (isOfflineMode) return;
-                
-                // Показываем интерфейс плеера при начале drag
-                if (progress > 0 && playerView != null && !playerView.isControllerFullyVisible()) {
-                    playerView.showController();
-                    Log.d("VideoPlayer", "Showing controller on related titles drag start");
-                }
-                
-                RelatedTitlesManager rtm = playerRelatedTitlesController != null ? playerRelatedTitlesController.getRelatedTitlesManager() : null;
-                if (rtm != null) {
-                    rtm.setDragProgress(progress);
-                }
+                // Отключено по запросу (верхняя шторка с инфой)
             }
             
             @Override
             public void onEpisodesDragComplete(boolean shouldOpen) {
                 Log.d("VideoPlayer", "Episodes drag complete: shouldOpen=" + shouldOpen);
                 if (episodesManager != null) {
-                    // Используем completeDrag для корректного завершения анимации
                     episodesManager.completeDrag(shouldOpen);
                 }
             }
             
             @Override
             public void onRelatedInfoDragComplete(boolean shouldOpen) {
-                if (isOfflineMode) return;
-                Log.d("VideoPlayer", "Related info drag complete: shouldOpen=" + shouldOpen);
-                // Сначала сбрасываем эпизоды если они открыты
-                if (episodesManager != null && episodesManager.isEpisodesMenuVisible()) {
-                    episodesManager.resetControllerPosition();
-                }
-                RelatedTitlesManager rtm = playerRelatedTitlesController != null ? playerRelatedTitlesController.getRelatedTitlesManager() : null;
-                if (rtm != null) {
-                    rtm.completeDrag(shouldOpen);
-                }
+                // Отключено по запросу
             }
             
             @Override
@@ -2691,12 +2682,55 @@ public class VideoPlayerActivity extends AppCompatActivity {
             
             @Override
             public boolean isRelatedInfoOpen() {
-                RelatedTitlesManager rtm = playerRelatedTitlesController != null ? playerRelatedTitlesController.getRelatedTitlesManager() : null;
-                return rtm != null && rtm.isRelatedTitlesVisible();
+                return false; // Отключена верхняя шторка
+            }
+
+            @Override
+            public void onBrightnessChanged(float brightness) {
+                if (gestureIndicatorHandler != null && hideGestureIndicatorsRunnable != null) {
+                    gestureIndicatorHandler.removeCallbacks(hideGestureIndicatorsRunnable);
+                }
+                if (brightnessIndicator != null && brightnessText != null) {
+                    if (volumeIndicator != null) volumeIndicator.setVisibility(View.GONE);
+                    brightnessIndicator.setVisibility(View.VISIBLE);
+                    int percent = Math.round(brightness * 100f);
+                    brightnessText.setText(percent + "%");
+                }
+            }
+
+            @Override
+            public void onVolumeChanged(int currentVolume, int maxVolume) {
+                if (gestureIndicatorHandler != null && hideGestureIndicatorsRunnable != null) {
+                    gestureIndicatorHandler.removeCallbacks(hideGestureIndicatorsRunnable);
+                }
+                if (volumeIndicator != null && volumeText != null) {
+                    if (brightnessIndicator != null) brightnessIndicator.setVisibility(View.GONE);
+                    volumeIndicator.setVisibility(View.VISIBLE);
+                    int percent = maxVolume > 0 ? Math.round((float) currentVolume / maxVolume * 100f) : 0;
+                    volumeText.setText(percent + "%");
+                }
+            }
+
+            @Override
+            public void onGestureCompleted() {
+                scheduleHideGestureIndicators();
             }
         });
     }
     
+    private void scheduleHideGestureIndicators() {
+        if (gestureIndicatorHandler != null) {
+            if (hideGestureIndicatorsRunnable == null) {
+                hideGestureIndicatorsRunnable = () -> {
+                    if (brightnessIndicator != null) brightnessIndicator.setVisibility(View.GONE);
+                    if (volumeIndicator != null) volumeIndicator.setVisibility(View.GONE);
+                };
+            }
+            gestureIndicatorHandler.removeCallbacks(hideGestureIndicatorsRunnable);
+            gestureIndicatorHandler.postDelayed(hideGestureIndicatorsRunnable, 1000);
+        }
+    }
+
     /**
      * Настройка начального состояния UI
      */
