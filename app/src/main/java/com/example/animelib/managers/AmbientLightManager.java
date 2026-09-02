@@ -116,13 +116,13 @@ public class AmbientLightManager {
         if (ambientPlayerView == null) return;
 
         ambientPlayerView.setUseController(false);
-        ambientPlayerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
+        ambientPlayerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
         ambientPlayerView.setAlpha(1.0f);
 
         // Аппаратный размытый краевой блюр GPU (Android 12+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             try {
-                RenderEffect blurEffect = RenderEffect.createBlurEffect(100f, 100f, Shader.TileMode.CLAMP);
+                RenderEffect blurEffect = RenderEffect.createBlurEffect(120f, 120f, Shader.TileMode.CLAMP);
                 
                 // Матрица цвета: повышенная насыщенность (+35%) и легкое усиление яркости
                 ColorMatrix colorMatrix = new ColorMatrix();

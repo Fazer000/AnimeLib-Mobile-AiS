@@ -48,10 +48,10 @@
             android:id="@+id/ambientPlayerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="top|start"
+            android:layout_gravity="center"
             app:use_controller="false"
             app:surface_type="texture_view"
-            app:resize_mode="fit"
+            app:resize_mode="zoom"
             app:show_buffering="never"
             app:shutter_background_color="@android:color/transparent" />
 
@@ -73,20 +73,16 @@
         android:orientation="vertical">
 
         <!-- Video Player Container -->
-        <FrameLayout
+        <com.example.animelib.ui.RoundedCornerFrameLayout
             android:id="@+id/playerContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clipChildren="false"
-            android:clipToPadding="false"
             android:layout_gravity="top|start">
 
             <androidx.media3.ui.PlayerView
                 android:id="@+id/playerView"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:clipChildren="false"
-                android:clipToPadding="false"
                 android:background="@android:color/transparent"
                 app:shutter_background_color="@android:color/transparent"
                 app:surface_type="texture_view"
@@ -217,7 +213,7 @@
                     android:textStyle="bold" />
             </LinearLayout>
 
-        </FrameLayout>
+        </com.example.animelib.ui.RoundedCornerFrameLayout>
 
         <!-- Container for Portrait Mode (below player) -->
         <FrameLayout

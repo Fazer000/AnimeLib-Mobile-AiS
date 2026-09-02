@@ -478,9 +478,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
         playerView = findViewById(R.id.playerView);
         playerContainer = findViewById(R.id.playerContainer);
         if (playerContainer != null) {
-            playerContainer.setBackgroundColor(android.graphics.Color.BLACK);
+            playerContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                playerContainer.setOutlineProvider(new ViewOutlineProvider() {
+                ViewOutlineProvider outlineProvider = new ViewOutlineProvider() {
                     @Override
                     public void getOutline(View view, Outline outline) {
                         if (currentCornerRadiusPx > 0) {
@@ -489,8 +489,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
                             outline.setRect(0, 0, view.getWidth(), view.getHeight());
                         }
                     }
-                });
+                };
+                playerContainer.setOutlineProvider(outlineProvider);
                 playerContainer.setClipToOutline(true);
+                if (playerView != null) {
+                    playerView.setOutlineProvider(outlineProvider);
+                    playerView.setClipToOutline(true);
+                }
             }
             playerContainer.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
                 if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
@@ -589,8 +594,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 currentOutlineRight = right;
                 currentOutlineBottom = bottom;
                 currentCornerRadiusPx = radiusPx;
-                if (playerContainer != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    playerContainer.invalidateOutline();
+                if (playerContainer instanceof com.example.animelib.ui.RoundedCornerFrameLayout) {
+                    ((com.example.animelib.ui.RoundedCornerFrameLayout) playerContainer).setCornerRadius(radiusPx);
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    if (playerContainer != null) {
+                        playerContainer.invalidateOutline();
+                    }
                 }
             }
         });
@@ -1523,32 +1533,35 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private void updateAmbientPlayerTransform(float scale, float translationX, float translationY, boolean isCroppedToVideo) {
         androidx.media3.ui.PlayerView ambientPlayerView = findViewById(R.id.ambientPlayerView);
-        View playerContainer = findViewById(R.id.playerContainer);
         if (ambientPlayerView != null) {
             android.view.ViewGroup.LayoutParams lp = ambientPlayerView.getLayoutParams();
             if (lp != null && (lp.width != android.view.ViewGroup.LayoutParams.MATCH_PARENT || lp.height != android.view.ViewGroup.LayoutParams.MATCH_PARENT)) {
                 lp.width = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
                 lp.height = android.view.ViewGroup.LayoutParams.MATCH_PARENT;
                 if (lp instanceof FrameLayout.LayoutParams) {
-                    ((FrameLayout.LayoutParams) lp).gravity = Gravity.TOP | Gravity.START;
+                    ((FrameLayout.LayoutParams) lp).gravity = Gravity.CENTER;
                 }
                 ambientPlayerView.setLayoutParams(lp);
             }
 
-            float baseW = (playerContainer != null && playerContainer.getWidth() > 0) ? playerContainer.getWidth() : getResources().getDisplayMetrics().widthPixels;
-            float baseH = (playerContainer != null && playerContainer.getHeight() > 0) ? playerContainer.getHeight() : (baseW * 9f / 16f);
+            int viewW = ambientPlayerView.getWidth();
+            int viewH = ambientPlayerView.getHeight();
+            if (viewW <= 0 || viewH <= 0) {
+                viewW = getResources().getDisplayMetrics().widthPixels;
+                viewH = getResources().getDisplayMetrics().heightPixels;
+            }
 
-            // Ambient glow is scaled 1.15x larger than playerContainer and centered behind it
-            float ambientScale = scale * 1.15f;
-            float ambTransX = translationX - (baseW * scale * 0.075f);
-            float ambTransY = translationY - (baseH * scale * 0.075f);
+            // Pivot at center of full screen
+            ambientPlayerView.setPivotX(viewW / 2f);
+            ambientPlayerView.setPivotY(viewH / 2f);
 
-            ambientPlayerView.setPivotX(0f);
-            ambientPlayerView.setPivotY(0f);
-            ambientPlayerView.setScaleX(ambientScale);
-            ambientPlayerView.setScaleY(ambientScale);
-            ambientPlayerView.setTranslationX(ambTransX);
-            ambientPlayerView.setTranslationY(ambTransY);
+            // Scale slightly larger than screen so blurred edges bleed offscreen cleanly
+            ambientPlayerView.setScaleX(1.08f);
+            ambientPlayerView.setScaleY(1.08f);
+            
+            // Subtle parallax following card if offset, otherwise centered
+            ambientPlayerView.setTranslationX(translationX * 0.15f);
+            ambientPlayerView.setTranslationY(translationY * 0.15f);
         }
     }
     
