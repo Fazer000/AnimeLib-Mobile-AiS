@@ -1621,11 +1621,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
             playerFiltersController.init(this, playerView);
         }
         
-        // Initialize related titles
-        initializeRelatedTitles();
-
         // Initialize portrait views
         initializePortraitViews();
+
+        // Initialize related titles
+        initializeRelatedTitles();
     }
 
     public static String cleanEpisodeName(String name, String epNumber) {
@@ -1768,18 +1768,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
         tvPortraitDownloadPercent = findViewById(R.id.tvPortraitDownloadPercent);
         portraitRelatedTitlesContainer = findViewById(R.id.portraitRelatedTitlesContainer);
         portraitRelatedTitlesRecyclerView = findViewById(R.id.portraitRelatedTitlesRecyclerView);
-
-        if (portraitRelatedTitlesRecyclerView != null) {
-            portraitRelatedTitlesRecyclerView.setLayoutManager(
-                    new androidx.recyclerview.widget.LinearLayoutManager(this,
-                            androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL, false)
-            );
-            portraitRelatedTitlesAdapter = new HorizontalRelatedTitlesAdapter(
-                    new java.util.ArrayList<>(),
-                    this::onRelatedTitleSelected
-            );
-            portraitRelatedTitlesRecyclerView.setAdapter(portraitRelatedTitlesAdapter);
-        }
 
         if (isOfflineMode && portraitRelatedTitlesContainer != null) {
             portraitRelatedTitlesContainer.setVisibility(View.GONE);
@@ -4141,7 +4129,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
             if (nextDomain != null) {
                 Log.w("VideoPlayer", "CDN server " + currentVideoDomain + " failed. Trying fallback CDN server: " + nextDomain);
                 currentVideoDomain = nextDomain;
-                com.example.animelib.util.CustomToast.showInfo(this, "Переключение на сервер: " + VideoUrlHelper.getDomainDisplayName(nextDomain));
                 if (playersManager != null && playersManager.getCurrentPlayerData() != null) {
                     onPlayerSelected(playersManager.getCurrentPlayerData());
                     return;
@@ -5447,7 +5434,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     // Reset translationY to 0 so timebar and timecode are fully visible
                     playersControlBarView.setTranslationY(0f);
 
-                    // Align timeAndControls (16dp) with exoProgress (16dp)
+                    // Align timeAndControls (16dp) with exoProgress (8dp container margin + 8dp internal padding = 16dp track)
                     timeAndControlsParams.topMargin = (int) (2 * density);
                     timeAndControlsParams.bottomMargin = (int) (2 * density);
                     timeAndControlsParams.leftMargin = (int) (16 * density);
@@ -5455,8 +5442,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
                     progressParams.topMargin = (int) (2 * density);
                     progressParams.bottomMargin = (int) (12 * density);
-                    progressParams.leftMargin = (int) (16 * density);
-                    progressParams.rightMargin = (int) (16 * density);
+                    progressParams.leftMargin = (int) (8 * density);
+                    progressParams.rightMargin = (int) (8 * density);
 
                     timeAndControlsContainer.setLayoutParams(timeAndControlsParams);
                     exoProgress.setLayoutParams(progressParams);
@@ -5480,7 +5467,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                         playersControlBarView.setTranslationY(60f * density);
                     }
 
-                    // Align timeAndControls (24dp) with exoProgress (24dp)
+                    // Align timeAndControls (24dp) with exoProgress (16dp container margin + 8dp internal padding = 24dp track)
                     timeAndControlsParams.topMargin = (int) (2 * density);
                     timeAndControlsParams.bottomMargin = (int) (2 * density);
                     timeAndControlsParams.leftMargin = (int) (24 * density);
@@ -5488,8 +5475,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
                     progressParams.topMargin = (int) (2 * density);
                     progressParams.bottomMargin = (int) (14 * density);
-                    progressParams.leftMargin = (int) (24 * density);
-                    progressParams.rightMargin = (int) (24 * density);
+                    progressParams.leftMargin = (int) (16 * density);
+                    progressParams.rightMargin = (int) (16 * density);
 
                     timeAndControlsContainer.setLayoutParams(timeAndControlsParams);
                     exoProgress.setLayoutParams(progressParams);

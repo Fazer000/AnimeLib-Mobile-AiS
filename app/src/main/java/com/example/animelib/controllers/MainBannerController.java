@@ -25,10 +25,12 @@ public class MainBannerController {
     private View btnBannerSelectOther;
 
     private final Handler urlBannerHandler = new Handler(Looper.getMainLooper());
+    private final Activity activity;
     private Runnable urlBannerRunnable;
     private BannerCallback callback;
 
     public MainBannerController(Activity activity, BannerCallback callback) {
+        this.activity = activity;
         this.callback = callback;
         initViews(activity);
     }
@@ -58,6 +60,7 @@ public class MainBannerController {
 
         if (btnBannerSelectCis != null) {
             btnBannerSelectCis.setOnClickListener(v -> {
+                com.example.animelib.util.SiteUtils.setSavedRegionOther(activity, false);
                 String siteKey = com.example.animelib.util.SiteUtils.getSiteKey(lastUrl);
                 String targetUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion(siteKey, false);
                 selectDomainFromBanner(targetUrl);
@@ -66,6 +69,7 @@ public class MainBannerController {
 
         if (btnBannerSelectOther != null) {
             btnBannerSelectOther.setOnClickListener(v -> {
+                com.example.animelib.util.SiteUtils.setSavedRegionOther(activity, true);
                 String siteKey = com.example.animelib.util.SiteUtils.getSiteKey(lastUrl);
                 String targetUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion(siteKey, true);
                 selectDomainFromBanner(targetUrl);
@@ -88,7 +92,7 @@ public class MainBannerController {
 
     public void updateBannerSelectionUI(String currentUrl) {
         if (urlTopBanner == null) return;
-        boolean isCis = !com.example.animelib.util.SiteUtils.isOtherRegion(currentUrl);
+        boolean isCis = !com.example.animelib.util.SiteUtils.isOtherRegion(currentUrl, activity);
 
         View bannerPillCis = urlTopBanner.findViewById(R.id.bannerPillCis);
         View bannerIndicatorOther = urlTopBanner.findViewById(R.id.bannerIndicatorOther);
@@ -100,7 +104,7 @@ public class MainBannerController {
 
         if (btnBannerSelectOther != null) {
             btnBannerSelectOther.setBackgroundResource(!isCis ? R.drawable.card_resize_selected : R.drawable.card_resize_unselected);
-            if (bannerIndicatorOther != null) bannerIndicatorOther.setVisibility(!isCis ? View.GONE : View.VISIBLE);
+            if (bannerIndicatorOther != null) bannerIndicatorOther.setVisibility(!isCis ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -123,19 +127,19 @@ public class MainBannerController {
         urlTopBanner.post(() -> {
             int height = urlTopBanner.getHeight();
             if (height <= 0) {
-                height = (int) (120 * urlTopBanner.getResources().getDisplayMetrics().density);
+                height = (int) (50 * urlTopBanner.getResources().getDisplayMetrics().density);
             }
-            urlTopBanner.setTranslationY(-height - 100f);
+            urlTopBanner.setTranslationY(-height - 50f);
             urlTopBanner.animate()
                     .translationY(0f)
                     .alpha(1.0f)
-                    .setDuration(450)
+                    .setDuration(400)
                     .setInterpolator(new DecelerateInterpolator(1.5f))
                     .start();
         });
 
         urlBannerRunnable = this::hideUrlTopBannerAnimated;
-        urlBannerHandler.postDelayed(urlBannerRunnable, 7000);
+        urlBannerHandler.postDelayed(urlBannerRunnable, 5000);
     }
 
     public void hideUrlTopBannerAnimated() {

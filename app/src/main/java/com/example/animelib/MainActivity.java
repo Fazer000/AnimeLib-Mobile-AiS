@@ -559,7 +559,7 @@ public class MainActivity extends AppCompatActivity {
                 currentUrl = databaseManager.getSiteUrl();
             }
 
-            boolean isOtherRegion = com.example.animelib.util.SiteUtils.isOtherRegion(currentUrl);
+            boolean isOtherRegion = com.example.animelib.util.SiteUtils.isOtherRegion(currentUrl, this);
 
             String animeUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion("animelib", isOtherRegion);
             String mangaUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion("mangalib", isOtherRegion);
@@ -584,10 +584,11 @@ public class MainActivity extends AppCompatActivity {
                     this,
                     filteredSites,
                     site -> {
+                        boolean isSelectedOther = com.example.animelib.util.SiteUtils.isOtherRegion(site.getUrl(), this);
+                        com.example.animelib.util.SiteUtils.setSavedRegionOther(this, isSelectedOther);
                         viewModel.saveSettings(site.getUrl());
                         databaseManager.saveSiteUrl(site.getUrl());
                         loadUrl(site.getUrl());
-                        CustomToast.showInfo(this, "Переход на " + site.getName());
                     }
                 );
             bottomSheet.setOnDismissListener(dialog -> {

@@ -85,19 +85,6 @@ public class PlayerDownloadController {
                 if (callback != null) {
                     callback.safeRunOnUiThread(() -> {
                         resetDownloadUi(playersManager);
-                        if (!wasCancelled) {
-                            if (totalDownloaded > 0) {
-                                Toast.makeText(activity,
-                                        "Скачивание завершено: " + totalDownloaded + " успешно, " + errorCount + " с ошибкой",
-                                        Toast.LENGTH_LONG).show();
-                            } else if (errorCount > 0) {
-                                Toast.makeText(activity,
-                                        "Ошибка скачивания серий (" + errorCount + " ошибок)",
-                                        Toast.LENGTH_LONG).show();
-                            }
-                        } else {
-                            Toast.makeText(activity, "Скачивание отменено", Toast.LENGTH_SHORT).show();
-                        }
                     });
                 }
             }
@@ -107,7 +94,6 @@ public class PlayerDownloadController {
                 if (callback != null) {
                     callback.safeRunOnUiThread(() -> {
                         resetDownloadUi(playersManager);
-                        Toast.makeText(activity, "Ошибка скачивания: " + message, Toast.LENGTH_SHORT).show();
                     });
                 }
             }
@@ -185,7 +171,6 @@ public class PlayerDownloadController {
         if (episodesManager == null || callback == null) return;
         List<EpisodesListResponse.EpisodeItem> episodeList = episodesManager.getEpisodes();
         if (episodeList == null || episodeList.isEmpty()) {
-            Toast.makeText(activity, "Список серий не загружен", Toast.LENGTH_SHORT).show();
             return;
         }
 

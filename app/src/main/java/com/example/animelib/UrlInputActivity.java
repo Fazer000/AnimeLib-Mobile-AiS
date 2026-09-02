@@ -39,6 +39,7 @@ public class UrlInputActivity extends AppCompatActivity {
     private String urlCis = URL_CIS;
     private String urlOther = URL_OTHER;
     private String selectedUrl = URL_CIS;
+    private boolean selectedIsOther = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,12 +94,12 @@ public class UrlInputActivity extends AppCompatActivity {
             }
 
             String siteKey = SiteUtils.getSiteKey(currentUrl);
-            boolean isOther = SiteUtils.isOtherRegion(currentUrl);
+            selectedIsOther = SiteUtils.isOtherRegion(currentUrl, this);
 
             urlCis = SiteUtils.getUrlForSiteAndRegion(siteKey, false);
             urlOther = SiteUtils.getUrlForSiteAndRegion(siteKey, true);
 
-            selectedUrl = isOther ? urlOther : urlCis;
+            selectedUrl = selectedIsOther ? urlOther : urlCis;
 
             runOnUiThread(() -> {
                 if (tvCisBadge != null) {
@@ -117,6 +118,7 @@ public class UrlInputActivity extends AppCompatActivity {
     private void setupListeners() {
         if (cardCis != null) {
             cardCis.setOnClickListener(v -> {
+                selectedIsOther = false;
                 selectedUrl = urlCis;
                 updateSelectionUi();
             });
@@ -124,6 +126,7 @@ public class UrlInputActivity extends AppCompatActivity {
 
         if (cardOther != null) {
             cardOther.setOnClickListener(v -> {
+                selectedIsOther = true;
                 selectedUrl = urlOther;
                 updateSelectionUi();
             });
@@ -138,7 +141,7 @@ public class UrlInputActivity extends AppCompatActivity {
         int secondaryColor = getThemeColor(R.attr.secondaryColor);
         int borderColor = getThemeColor(R.attr.borderColor);
 
-        boolean isCis = selectedUrl != null && selectedUrl.equals(urlCis);
+        boolean isCis = !selectedIsOther;
         int strokeWidthPx = Math.max(1, Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 0.5f, getResources().getDisplayMetrics())));
 
         if (cardCis != null && cardOther != null) {
@@ -174,17 +177,17 @@ public class UrlInputActivity extends AppCompatActivity {
 
     private void saveUrl() {
         try {
+            SiteUtils.setSavedRegionOther(this, selectedIsOther);
             viewModel.saveSettings(selectedUrl);
             databaseManager.saveSiteUrl(selectedUrl);
 
-            Log.d("UrlInputActivity", "Region domain saved: " + selectedUrl);
+            Log.d("UrlInputActivity", "Region domain saved: " + selectedUrl + ", selectedIsOther=" + selectedIsOther);
 
             Intent resultIntent = new Intent();
             resultIntent.putExtra("site_url", selectedUrl);
             setResult(RESULT_OK, resultIntent);
 
-            boolean isOther = SiteUtils.isOtherRegion(selectedUrl);
-            CustomToast.showSuccess(this, "Сервер сохранен: " + (isOther ? "Остальные страны" : "СНГ"));
+            CustomToast.showSuccess(this, "Сервер сохранен: " + (selectedIsOther ? "Остальные страны" : "СНГ"));
             finish();
 
         } catch (Exception e) {

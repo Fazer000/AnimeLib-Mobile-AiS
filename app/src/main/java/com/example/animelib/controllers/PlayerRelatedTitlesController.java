@@ -53,9 +53,11 @@ public class PlayerRelatedTitlesController {
     private View portraitRelatedTitlesContainer;
     private RecyclerView portraitRelatedTitlesRecyclerView;
     private View portraitRelatedLoadingIndicator;
+    private View portraitRelatedSkeletonContainer;
     private View portraitRelatedErrorContainer;
     private View btnRetryPortraitRelated;
-    private View btnRefreshPortraitRelated;
+
+    private final List<com.example.animelib.util.SkeletonHelper.SkeletonShimmerDrawable> activeShimmers = new ArrayList<>();
 
     private String lastAnimeId;
     private String lastAnimeUrl;
@@ -140,13 +142,13 @@ public class PlayerRelatedTitlesController {
 
         // Setup Portrait RecyclerView and controls
         if (portraitRelatedTitlesContainer != null) {
+            portraitRelatedSkeletonContainer = portraitRelatedTitlesContainer.findViewById(R.id.portraitRelatedSkeletonContainer);
             portraitRelatedLoadingIndicator = portraitRelatedTitlesContainer.findViewById(R.id.portraitRelatedLoadingIndicator);
             portraitRelatedErrorContainer = portraitRelatedTitlesContainer.findViewById(R.id.portraitRelatedErrorContainer);
             btnRetryPortraitRelated = portraitRelatedTitlesContainer.findViewById(R.id.btnRetryPortraitRelated);
-            btnRefreshPortraitRelated = portraitRelatedTitlesContainer.findViewById(R.id.btnRefreshPortraitRelated);
 
             View.OnClickListener retryListener = v -> {
-                if (lastAnimeId != null) {
+                if (lastAnimeId != null || lastAnimeUrl != null) {
                     CustomToast.showInfo(context, "Повторная загрузка связанного...");
                     loadRelatedTitles(lastAnimeId, lastAnimeUrl);
                 }
@@ -155,9 +157,6 @@ public class PlayerRelatedTitlesController {
             if (btnRetryPortraitRelated != null) {
                 btnRetryPortraitRelated.setOnClickListener(retryListener);
             }
-            if (btnRefreshPortraitRelated != null) {
-                btnRefreshPortraitRelated.setOnClickListener(retryListener);
-            }
         }
 
         if (portraitRelatedTitlesRecyclerView != null) {
@@ -165,6 +164,38 @@ public class PlayerRelatedTitlesController {
             portraitRelatedTitlesAdapter = new HorizontalRelatedTitlesAdapter(new ArrayList<>(), this::onRelatedTitleSelected);
             portraitRelatedTitlesRecyclerView.setAdapter(portraitRelatedTitlesAdapter);
         }
+    }
+
+    private void startSkeletonShimmer() {
+        stopSkeletonShimmer();
+        if (portraitRelatedSkeletonContainer == null) return;
+
+        Context context = callback != null ? callback.getContext() : null;
+        if (context == null) return;
+
+        boolean isDark = CustomToast.isDarkTheme(context);
+
+        int[] viewIds = new int[]{
+                R.id.skCover1, R.id.skTextType1, R.id.skTextTitle1, R.id.skTextSubTitle1, R.id.skTextStatus1,
+                R.id.skCover2, R.id.skTextType2, R.id.skTextTitle2, R.id.skTextSubTitle2, R.id.skTextStatus2
+        };
+
+        for (int id : viewIds) {
+            View v = portraitRelatedSkeletonContainer.findViewById(id);
+            if (v != null) {
+                com.example.animelib.util.SkeletonHelper.SkeletonShimmerDrawable shimmer =
+                        new com.example.animelib.util.SkeletonHelper.SkeletonShimmerDrawable(8f, isDark);
+                v.setBackground(shimmer);
+                activeShimmers.add(shimmer);
+            }
+        }
+    }
+
+    private void stopSkeletonShimmer() {
+        for (com.example.animelib.util.SkeletonHelper.SkeletonShimmerDrawable shimmer : activeShimmers) {
+            shimmer.stopAnimation();
+        }
+        activeShimmers.clear();
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -302,8 +333,12 @@ public class PlayerRelatedTitlesController {
         if (portraitRelatedTitlesContainer != null) {
             portraitRelatedTitlesContainer.setVisibility(View.VISIBLE);
         }
+        if (portraitRelatedSkeletonContainer != null) {
+            portraitRelatedSkeletonContainer.setVisibility(View.VISIBLE);
+            startSkeletonShimmer();
+        }
         if (portraitRelatedLoadingIndicator != null) {
-            portraitRelatedLoadingIndicator.setVisibility(View.VISIBLE);
+            portraitRelatedLoadingIndicator.setVisibility(View.GONE);
         }
         if (portraitRelatedErrorContainer != null) {
             portraitRelatedErrorContainer.setVisibility(View.GONE);
@@ -314,6 +349,10 @@ public class PlayerRelatedTitlesController {
 
         ApiService apiService = callback != null ? callback.getApiService() : null;
         if (apiService == null) {
+            if (portraitRelatedSkeletonContainer != null) {
+                stopSkeletonShimmer();
+                portraitRelatedSkeletonContainer.setVisibility(View.GONE);
+            }
             if (portraitRelatedLoadingIndicator != null) {
                 portraitRelatedLoadingIndicator.setVisibility(View.GONE);
             }
@@ -328,6 +367,10 @@ public class PlayerRelatedTitlesController {
             public void onRelatedTitlesReceived(RelatedTitlesResponse response) {
                 if (callback != null) {
                     callback.safeRunOnUiThread(() -> {
+                        if (portraitRelatedSkeletonContainer != null) {
+                            stopSkeletonShimmer();
+                            portraitRelatedSkeletonContainer.setVisibility(View.GONE);
+                        }
                         if (portraitRelatedLoadingIndicator != null) {
                             portraitRelatedLoadingIndicator.setVisibility(View.GONE);
                         }
@@ -355,6 +398,10 @@ public class PlayerRelatedTitlesController {
                 Log.e(TAG, "Error loading related titles: " + error);
                 if (callback != null) {
                     callback.safeRunOnUiThread(() -> {
+                        if (portraitRelatedSkeletonContainer != null) {
+                            stopSkeletonShimmer();
+                            portraitRelatedSkeletonContainer.setVisibility(View.GONE);
+                        }
                         if (portraitRelatedLoadingIndicator != null) {
                             portraitRelatedLoadingIndicator.setVisibility(View.GONE);
                         }

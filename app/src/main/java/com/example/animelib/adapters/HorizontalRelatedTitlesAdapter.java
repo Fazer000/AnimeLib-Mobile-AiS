@@ -170,7 +170,7 @@ public class HorizontalRelatedTitlesAdapter extends RecyclerView.Adapter<Horizon
             }
         }
 
-        boolean isOtherCountries = com.example.animelib.util.SiteUtils.isOtherRegion(mainSiteUrl);
+        boolean isOtherCountries = com.example.animelib.util.SiteUtils.isOtherRegion(mainSiteUrl, context);
 
         String baseUrl;
         if (isManga) {
