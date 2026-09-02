@@ -43,7 +43,15 @@
         android:clipToPadding="false"
         android:visibility="gone">
 
-        <!-- Secondary Ambient Player View (blurred edge glow) -->
+        <!-- Live Real-Time Texture View Sampler (Zero-lag Ambilight) -->
+        <ImageView
+            android:id="@+id/ambientImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+            android:importantForAccessibility="no" />
+
+        <!-- Secondary Ambient Player View (blurred edge glow fallback) -->
         <androidx.media3.ui.PlayerView
             android:id="@+id/ambientPlayerView"
             android:layout_width="match_parent"
