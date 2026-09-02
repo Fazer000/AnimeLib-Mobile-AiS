@@ -539,6 +539,65 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void showSiteSelectionBottomSheet() {
+        try {
+            String currentUrl = null;
+            if (webView != null) {
+                currentUrl = webView.getUrl();
+            }
+            if (currentUrl == null || currentUrl.isEmpty()) {
+                currentUrl = databaseManager.getSiteUrl();
+            }
+
+            String savedSiteUrl = databaseManager.getSiteUrl();
+            boolean isOtherRegion = savedSiteUrl != null && savedSiteUrl.contains("animelib.org") && !savedSiteUrl.contains("v5.animelib.org");
+
+            String animeUrl = isOtherRegion ? "https://animelib.org" : "https://v5.animelib.org";
+            String mangaUrl = isOtherRegion ? "https://mangalib.org" : "https://mangalib.me";
+            String ranobeUrl = isOtherRegion ? "https://ranobelib.org" : "https://ranobelib.me";
+
+            String lowerUrl = currentUrl != null ? currentUrl.toLowerCase() : "";
+
+            String currentKey = "";
+            if (lowerUrl.contains("animelib")) {
+                currentKey = "animelib";
+            } else if (lowerUrl.contains("mangalib")) {
+                currentKey = "mangalib";
+            } else if (lowerUrl.contains("ranobelib")) {
+                currentKey = "ranobelib";
+            }
+
+            java.util.List<com.example.animelib.models.SiteOption> allSites = new java.util.ArrayList<>();
+            allSites.add(new com.example.animelib.models.SiteOption("animelib", "AnimeLib", animeUrl, R.drawable.ic_site_animelib));
+            allSites.add(new com.example.animelib.models.SiteOption("mangalib", "MangaLib", mangaUrl, R.drawable.ic_site_mangalib));
+            allSites.add(new com.example.animelib.models.SiteOption("ranobelib", "RanobeLib", ranobeUrl, R.drawable.ic_site_ranobelib));
+
+            java.util.List<com.example.animelib.models.SiteOption> filteredSites = new java.util.ArrayList<>();
+            for (com.example.animelib.models.SiteOption option : allSites) {
+                if (!option.getKey().equalsIgnoreCase(currentKey)) {
+                    filteredSites.add(option);
+                }
+            }
+
+            com.example.animelib.ui.SiteSelectionBottomSheet bottomSheet =
+                new com.example.animelib.ui.SiteSelectionBottomSheet(
+                    this,
+                    filteredSites,
+                    site -> {
+                        viewModel.saveSettings(site.getUrl());
+                        databaseManager.saveSiteUrl(site.getUrl());
+                        loadUrl(site.getUrl());
+                        CustomToast.showInfo(this, "Переход на " + site.getName());
+                    }
+                );
+            bottomSheet.show();
+
+            Log.d("MainActivity", "Site selection bottom sheet shown, currentKey=" + currentKey + ", isOtherRegion=" + isOtherRegion);
+        } catch (Exception e) {
+            Log.e("MainActivity", "Error showing site selection bottom sheet", e);
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

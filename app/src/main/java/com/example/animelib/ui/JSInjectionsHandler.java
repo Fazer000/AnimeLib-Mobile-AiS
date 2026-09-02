@@ -64,6 +64,7 @@ public class JSInjectionsHandler {
         loadAndExecuteJS(webView, "js/carousel-fix.js", "Carousel scroll fix");
         loadAndExecuteJS(webView, "js/debug-info.js", "Debug info");
         loadAndExecuteJS(webView, "js/button-checker.js", "Button checker");
+        loadAndExecuteJS(webView, "js/site-logo-long-press.js", "Site logo long press listener");
 
     }
 
@@ -80,6 +81,7 @@ public class JSInjectionsHandler {
         loadAndExecuteJS(webView, "js/downloaded-button-listener.js", "Downloaded button listener");
         loadAndExecuteJS(webView, "js/carousel-fix.js", "Carousel scroll fix");
         loadAndExecuteJS(webView, "js/auth-handler.js", "Auth handler");
+        loadAndExecuteJS(webView, "js/site-logo-long-press.js", "Site logo long press listener");
     }
 
     /**
@@ -165,6 +167,21 @@ public class JSInjectionsHandler {
                 });
             } else {
                 Log.e(TAG, "Context is not an Activity, cannot show theme dialog");
+            }
+        }
+
+        @JavascriptInterface
+        public void onSiteLogoLongPressed() {
+            android.app.Activity activity = getActivityFromContext(context);
+            if (activity != null) {
+                activity.runOnUiThread(() -> {
+                    Log.d("PlayerHandler", "Site logo long pressed, showing site selection BS");
+                    if (activity instanceof com.example.animelib.MainActivity) {
+                        ((com.example.animelib.MainActivity) activity).showSiteSelectionBottomSheet();
+                    }
+                });
+            } else {
+                Log.e(TAG, "Context is not an Activity, cannot show site selection bottom sheet");
             }
         }
         
