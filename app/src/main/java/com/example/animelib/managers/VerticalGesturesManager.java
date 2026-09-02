@@ -118,6 +118,7 @@ public class VerticalGesturesManager {
     }
     
     private boolean handleDown(MotionEvent event) {
+        initializeScreenDimensions();
         dragStartY = event.getRawY();
         dragStartX = event.getRawX();
         isDragging = false;
@@ -204,49 +205,29 @@ public class VerticalGesturesManager {
     }
     
     /**
-     * Определяет тип панели/жеста на основе координат и направления свайпа
+     * Определяет тип панели/жеста на основе координат
+     * Левая зона 30% — Яркость (на всю высоту)
+     * Правая зона 30% — Громкость (на всю высоту)
+     * Центральная зона 40% — Эпизоды (на всю высоту)
      */
     private PanelType detectPanelType(float deltaY) {
-        boolean isEpisodesOpen = callback.isEpisodesOpen();
-        
-        if (isEpisodesOpen) {
-            Log.d(TAG, "→ EPISODES (already open)");
-            return PanelType.EPISODES;
+        // Левая зона: 0%..30% ширины экрана — Яркость
+        if (dragStartX <= screenWidth * 0.30f) {
+            Log.d(TAG, "→ BRIGHTNESS (left 30% zone)");
+            initBrightnessGesture();
+            return PanelType.BRIGHTNESS;
         }
 
-        if (deltaY < 0) {
-            // Свайп ВВЕРХ
-            // Если жест начинается в самых верхних углах (верхние 30% экрана и 25% по краям) — яркость / громкость
-            if (dragStartY < screenHeight * 0.30f) {
-                if (dragStartX <= screenWidth * 0.25f) {
-                    Log.d(TAG, "→ BRIGHTNESS (top left swipe UP)");
-                    initBrightnessGesture();
-                    return PanelType.BRIGHTNESS;
-                }
-                if (dragStartX >= screenWidth * 0.75f) {
-                    Log.d(TAG, "→ VOLUME (top right swipe UP)");
-                    initVolumeGesture();
-                    return PanelType.VOLUME;
-                }
-            }
-            // ВСЕ остальные свайпы ВВЕРХ (любое место нижних 70% экрана) открывают эпизоды!
-            Log.d(TAG, "→ EPISODES (swipe UP to open episodes)");
-            return PanelType.EPISODES;
-        } else if (deltaY > 0) {
-            // Свайп ВНИЗ — регулирует яркость (слева) или громкость (справа)
-            if (dragStartX <= screenWidth * 0.35f) {
-                Log.d(TAG, "→ BRIGHTNESS (left side swipe DOWN)");
-                initBrightnessGesture();
-                return PanelType.BRIGHTNESS;
-            }
-            if (dragStartX >= screenWidth * 0.65f) {
-                Log.d(TAG, "→ VOLUME (right side swipe DOWN)");
-                initVolumeGesture();
-                return PanelType.VOLUME;
-            }
+        // Правая зона: 70%..100% ширины экрана — Громкость
+        if (dragStartX >= screenWidth * 0.70f) {
+            Log.d(TAG, "→ VOLUME (right 30% zone)");
+            initVolumeGesture();
+            return PanelType.VOLUME;
         }
 
-        return PanelType.NONE;
+        // Центральная зона: 30%..70% ширины экрана (40% по центру) — Эпизоды
+        Log.d(TAG, "→ EPISODES (center 40% zone)");
+        return PanelType.EPISODES;
     }
 
     private void initBrightnessGesture() {
