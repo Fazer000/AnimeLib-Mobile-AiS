@@ -59,10 +59,10 @@ public class VerticalGesturesManager {
     private int maxVolume = 15;
     
     // Пороги
-    private static final float OPEN_THRESHOLD = 0.5f; // 50% для открытия
-    private static final float DRAG_SENSITIVITY = 0.20f; // 20% высоты экрана - чувствительность для эпизодов
+    private static final float OPEN_THRESHOLD = 0.25f; // 25% движения достаточно для открытия
+    private static final float DRAG_SENSITIVITY = 0.30f; // 30% высоты экрана - чувствительность для эпизодов
     private static final float RELATED_INFO_DRAG_SENSITIVITY = 0.6f;
-    private static final float MIN_DRAG_DISTANCE = 20f; // Минимальное расстояние для начала drag
+    private static final float MIN_DRAG_DISTANCE = 10f; // Мгновенный подхват драга
     
     private boolean isPortraitMode = false;
     
@@ -86,7 +86,7 @@ public class VerticalGesturesManager {
     private void initializeScreenDimensions() {
         screenHeight = context.getResources().getDisplayMetrics().heightPixels;
         screenWidth = context.getResources().getDisplayMetrics().widthPixels;
-        bottomZoneHeight = (int) (screenHeight * 0.18f); // 18% высоты экрана снизу для эпизодов (уменьшено)
+        bottomZoneHeight = (int) (screenHeight * 0.40f); // 40% высоты экрана снизу для эпизодов
         
         Log.d(TAG, "Screen: " + screenWidth + "x" + screenHeight + ", bottomZone: " + bottomZoneHeight + "px");
     }
@@ -143,7 +143,7 @@ public class VerticalGesturesManager {
                 return false;
             }
             
-            if (absDeltaX > absDeltaY * 0.7f) {
+            if (absDeltaX > absDeltaY * 1.2f) {
                 Log.d(TAG, "Too much horizontal movement, ignoring: deltaX=" + deltaX + ", deltaY=" + deltaY);
                 return false;
             }
@@ -214,30 +214,25 @@ public class VerticalGesturesManager {
             return PanelType.EPISODES;
         }
 
-        // Проверяем, находится ли начальная точка в уменьшенной нижней драг-зоне эпизодов
-        boolean isInBottomDragZone = dragStartY >= (screenHeight - bottomZoneHeight);
-        
-        if (isInBottomDragZone && deltaY < 0) {
-            // Свайп вверх из нижней зоны открывает эпизоды
-            Log.d(TAG, "→ EPISODES (opening from bottom zone)");
+        // Проверяем, начинается ли жест в нижней 40% зоне экрана
+        boolean isInBottom40Percent = dragStartY >= (screenHeight - bottomZoneHeight);
+
+        if (isInBottom40Percent && deltaY < 0) {
+            // Свайп ВВЕРХ из нижней 40% зоны вытягивает панель эпизодов
+            Log.d(TAG, "→ EPISODES (swipe UP from bottom 40%)");
             return PanelType.EPISODES;
         }
 
-        // Вне нижней зоны (или не открытие эпизодов): определяем боковые жесты (Яркость слева, Громкость справа)
-        if (dragStartX <= screenWidth * 0.40f) {
-            Log.d(TAG, "→ BRIGHTNESS (left side vertical drag)");
+        // В верхних 60% экрана (а также при свайпе вниз) — регулировка яркости (слева 50%) и громкости (справа 50%)
+        if (dragStartX < screenWidth * 0.50f) {
+            Log.d(TAG, "→ BRIGHTNESS (left 50% gesture)");
             initBrightnessGesture();
             return PanelType.BRIGHTNESS;
-        }
-
-        if (dragStartX >= screenWidth * 0.60f) {
-            Log.d(TAG, "→ VOLUME (right side vertical drag)");
+        } else {
+            Log.d(TAG, "→ VOLUME (right 50% gesture)");
             initVolumeGesture();
             return PanelType.VOLUME;
         }
-
-        // В центральной зоне ничего не открываем (верхняя шторка отключена)
-        return PanelType.NONE;
     }
 
     private void initBrightnessGesture() {
