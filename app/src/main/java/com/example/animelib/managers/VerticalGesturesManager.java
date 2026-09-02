@@ -86,7 +86,7 @@ public class VerticalGesturesManager {
     private void initializeScreenDimensions() {
         screenHeight = context.getResources().getDisplayMetrics().heightPixels;
         screenWidth = context.getResources().getDisplayMetrics().widthPixels;
-        bottomZoneHeight = (int) (screenHeight * 0.40f); // 40% высоты экрана снизу для эпизодов
+        bottomZoneHeight = (int) (screenHeight * 0.45f); // 45% высоты экрана снизу для легкого открытия эпизодов
         
         Log.d(TAG, "Screen: " + screenWidth + "x" + screenHeight + ", bottomZone: " + bottomZoneHeight + "px");
     }
@@ -214,25 +214,39 @@ public class VerticalGesturesManager {
             return PanelType.EPISODES;
         }
 
-        // Проверяем, начинается ли жест в нижней 40% зоне экрана
-        boolean isInBottom40Percent = dragStartY >= (screenHeight - bottomZoneHeight);
-
-        if (isInBottom40Percent && deltaY < 0) {
-            // Свайп ВВЕРХ из нижней 40% зоны вытягивает панель эпизодов
-            Log.d(TAG, "→ EPISODES (swipe UP from bottom 40%)");
+        if (deltaY < 0) {
+            // Свайп ВВЕРХ
+            // Если жест начинается в самых верхних углах (верхние 30% экрана и 25% по краям) — яркость / громкость
+            if (dragStartY < screenHeight * 0.30f) {
+                if (dragStartX <= screenWidth * 0.25f) {
+                    Log.d(TAG, "→ BRIGHTNESS (top left swipe UP)");
+                    initBrightnessGesture();
+                    return PanelType.BRIGHTNESS;
+                }
+                if (dragStartX >= screenWidth * 0.75f) {
+                    Log.d(TAG, "→ VOLUME (top right swipe UP)");
+                    initVolumeGesture();
+                    return PanelType.VOLUME;
+                }
+            }
+            // ВСЕ остальные свайпы ВВЕРХ (любое место нижних 70% экрана) открывают эпизоды!
+            Log.d(TAG, "→ EPISODES (swipe UP to open episodes)");
             return PanelType.EPISODES;
+        } else if (deltaY > 0) {
+            // Свайп ВНИЗ — регулирует яркость (слева) или громкость (справа)
+            if (dragStartX <= screenWidth * 0.35f) {
+                Log.d(TAG, "→ BRIGHTNESS (left side swipe DOWN)");
+                initBrightnessGesture();
+                return PanelType.BRIGHTNESS;
+            }
+            if (dragStartX >= screenWidth * 0.65f) {
+                Log.d(TAG, "→ VOLUME (right side swipe DOWN)");
+                initVolumeGesture();
+                return PanelType.VOLUME;
+            }
         }
 
-        // В верхних 60% экрана (а также при свайпе вниз) — регулировка яркости (слева 50%) и громкости (справа 50%)
-        if (dragStartX < screenWidth * 0.50f) {
-            Log.d(TAG, "→ BRIGHTNESS (left 50% gesture)");
-            initBrightnessGesture();
-            return PanelType.BRIGHTNESS;
-        } else {
-            Log.d(TAG, "→ VOLUME (right 50% gesture)");
-            initVolumeGesture();
-            return PanelType.VOLUME;
-        }
+        return PanelType.NONE;
     }
 
     private void initBrightnessGesture() {
