@@ -4,37 +4,90 @@
 
     console.log('[AnimeLIB] Setting up site logo long-press handler');
 
-    // 1. Inject CSS rule to permanently hide and neutralize the site's native sites-list popup
+    // Clean up native sites-list popup, overlays, and body locks
+    window.animelibKillSitesPopup = function() {
+        try {
+            var popups = document.querySelectorAll('[data-name="sites-list"], .popup[data-name="sites-list"]');
+            popups.forEach(function(popup) {
+                var closeBtn = popup.querySelector('.popup-close');
+                if (closeBtn) {
+                    try { closeBtn.click(); } catch(e) {}
+                }
+                var root = popup.closest('.popup-root, .popup-wrapper');
+                if (root) {
+                    root.remove();
+                } else {
+                    popup.remove();
+                }
+            });
+        } catch(e) {}
+
+        try {
+            var overlays = document.querySelectorAll('.popup-overlay');
+            overlays.forEach(function(ov) {
+                if (!ov.closest('.popup') || ov.closest('[data-name="sites-list"]')) {
+                    ov.remove();
+                }
+            });
+        } catch(e) {}
+
+        try {
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, bubbles: true }));
+        } catch(e) {}
+
+        try {
+            if (document.body) {
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('position');
+                document.body.style.removeProperty('pointer-events');
+                document.body.style.removeProperty('touch-action');
+                document.body.classList.remove('is-hidden', 'is-locked', 'popup-open', 'modal-open', 'noscroll', 'overflow-hidden');
+            }
+            if (document.documentElement) {
+                document.documentElement.style.removeProperty('overflow');
+                document.documentElement.style.removeProperty('position');
+                document.documentElement.style.removeProperty('pointer-events');
+                document.documentElement.classList.remove('is-locked', 'popup-open', 'modal-open', 'noscroll', 'overflow-hidden');
+            }
+        } catch(e) {}
+    };
+
+    // 1. Inject CSS rule to hide site's native sites-list popup and its root container
     function injectHideStyle() {
         var styleId = 'animelib-prevent-native-sites-popup';
         if (!document.getElementById(styleId)) {
             var hideStyle = document.createElement('style');
             hideStyle.id = styleId;
-            hideStyle.innerHTML = '[data-name="sites-list"], .popup[data-name="sites-list"] { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }';
+            hideStyle.innerHTML = `
+                .popup-root:has([data-name="sites-list"]),
+                [data-name="sites-list"],
+                .popup[data-name="sites-list"] {
+                    display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
+                    z-index: -9999 !important;
+                }
+            `;
             if (document.head || document.documentElement) {
                 (document.head || document.documentElement).appendChild(hideStyle);
             }
         }
     }
     injectHideStyle();
-    document.addEventListener('DOMContentLoaded', injectHideStyle);
-
-    // 2. Observer to auto-close any native sites-list popup if created by site JS
-    function closeNativeSitesPopup() {
-        var popups = document.querySelectorAll('[data-name="sites-list"]');
-        popups.forEach(function(popup) {
-            popup.classList.add('is-hidden');
-            popup.style.setProperty('display', 'none', 'important');
-            popup.style.setProperty('visibility', 'hidden', 'important');
-            var closeBtn = popup.querySelector('.popup-close');
-            if (closeBtn) {
-                try { closeBtn.click(); } catch(err) {}
-            }
-        });
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectHideStyle);
     }
 
+    // 2. Observer to auto-close and clean up any native sites-list popup created by site JS
     try {
-        var observer = new MutationObserver(closeNativeSitesPopup);
+        var observer = new MutationObserver(function() {
+            if (document.querySelector('[data-name="sites-list"]')) {
+                window.animelibKillSitesPopup();
+            }
+        });
         observer.observe(document.body || document.documentElement, {
             childList: true,
             subtree: true,
@@ -43,11 +96,12 @@
         });
     } catch(e) {}
 
-    closeNativeSitesPopup();
+    window.animelibKillSitesPopup();
 
     var longPressTimer = null;
     var isLongPressed = false;
-    var suppressUntil = 0;
+    var suppressNextClickEl = null;
+    var suppressNextClickUntil = 0;
     var startX = 0;
     var startY = 0;
     var LONG_PRESS_DURATION = 300; // ms
@@ -56,24 +110,20 @@
     function getTargetLogoAnchor(target) {
         if (!target || target.nodeType !== 1) return null;
 
-        // 1. Explicit bottom menu home item or data attribute
         var homeItem = target.closest('[data-bottom-menu-name="home"], [data-nav="home"]');
         if (homeItem) return homeItem;
 
-        // 2. Class names matching site logo or header logo
         var logoEl = target.closest('.site-logo, .header__logo, .header-logo, [class*="site-logo"], [class*="header__logo"]');
         if (logoEl) {
             var anchor = logoEl.closest('a');
             return anchor || logoEl;
         }
 
-        // 3. Anchor containing logo class or SVG inside header or top bar
         var vpAnchor = target.closest('a.vp_j');
         if (vpAnchor && vpAnchor.querySelector('.site-logo, [class*="logo"], svg, img')) {
             return vpAnchor;
         }
 
-        // 4. Any anchor pointing to home ("/" or "/ru" or "/ru/") inside header or nav or bottom menu
         var anchor = target.closest('a');
         if (anchor) {
             var href = anchor.getAttribute('href');
@@ -108,11 +158,6 @@
         var logoEl = getTargetLogoAnchor(e.target);
         if (!logoEl) return;
 
-        if (Date.now() < suppressUntil) {
-            closeNativeSitesPopup();
-            return blockEvent(e);
-        }
-
         cancelTimer();
         isLongPressed = false;
         activeLogoEl = logoEl;
@@ -123,10 +168,11 @@
 
         longPressTimer = setTimeout(function() {
             isLongPressed = true;
-            suppressUntil = Date.now() + 2500;
+            suppressNextClickEl = activeLogoEl;
+            suppressNextClickUntil = Date.now() + 1500;
             console.log('[AnimeLIB] Site logo long press triggered!');
 
-            closeNativeSitesPopup();
+            window.animelibKillSitesPopup();
 
             try {
                 if (navigator.vibrate) navigator.vibrate(40);
@@ -153,9 +199,9 @@
 
     function handleEnd(e) {
         cancelTimer();
-        if (isLongPressed || Date.now() < suppressUntil) {
+        if (isLongPressed) {
             isLongPressed = false;
-            closeNativeSitesPopup();
+            window.animelibKillSitesPopup();
             return blockEvent(e);
         }
     }
@@ -164,14 +210,20 @@
         if (e.type === 'contextmenu') {
             var logoEl = getTargetLogoAnchor(e.target);
             if (logoEl) {
-                closeNativeSitesPopup();
+                window.animelibKillSitesPopup();
                 return blockEvent(e);
             }
         }
 
-        if (isLongPressed || Date.now() < suppressUntil) {
-            closeNativeSitesPopup();
-            return blockEvent(e);
+        if (e.type === 'click' || e.type === 'auxclick') {
+            if (suppressNextClickEl && Date.now() < suppressNextClickUntil) {
+                var clickedLogo = getTargetLogoAnchor(e.target);
+                if (clickedLogo && (clickedLogo === suppressNextClickEl || suppressNextClickEl.contains(e.target) || e.target.contains(suppressNextClickEl))) {
+                    suppressNextClickEl = null;
+                    window.animelibKillSitesPopup();
+                    return blockEvent(e);
+                }
+            }
         }
     }
 

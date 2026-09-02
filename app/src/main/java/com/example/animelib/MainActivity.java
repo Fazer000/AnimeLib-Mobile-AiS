@@ -315,6 +315,16 @@ public class MainActivity extends AppCompatActivity {
         }
         isUrlInputShowing = true;
         Intent intent = new Intent(this, UrlInputActivity.class);
+        String currentUrl = null;
+        if (webView != null && webView.getUrl() != null && !webView.getUrl().isEmpty()) {
+            currentUrl = webView.getUrl();
+        }
+        if (currentUrl == null || currentUrl.isEmpty()) {
+            currentUrl = databaseManager.getSiteUrl();
+        }
+        if (currentUrl != null && !currentUrl.isEmpty()) {
+            intent.putExtra("current_url", currentUrl);
+        }
         startActivityForResult(intent, REQUEST_URL_INPUT);
     }
 
@@ -549,23 +559,13 @@ public class MainActivity extends AppCompatActivity {
                 currentUrl = databaseManager.getSiteUrl();
             }
 
-            String savedSiteUrl = databaseManager.getSiteUrl();
-            boolean isOtherRegion = savedSiteUrl != null && savedSiteUrl.contains("animelib.org") && !savedSiteUrl.contains("v5.animelib.org");
+            boolean isOtherRegion = com.example.animelib.util.SiteUtils.isOtherRegion(currentUrl);
 
-            String animeUrl = isOtherRegion ? "https://animelib.org" : "https://v5.animelib.org";
-            String mangaUrl = isOtherRegion ? "https://mangalib.org" : "https://mangalib.me";
-            String ranobeUrl = isOtherRegion ? "https://ranobelib.org" : "https://ranobelib.me";
+            String animeUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion("animelib", isOtherRegion);
+            String mangaUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion("mangalib", isOtherRegion);
+            String ranobeUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion("ranobelib", isOtherRegion);
 
-            String lowerUrl = currentUrl != null ? currentUrl.toLowerCase() : "";
-
-            String currentKey = "";
-            if (lowerUrl.contains("animelib")) {
-                currentKey = "animelib";
-            } else if (lowerUrl.contains("mangalib")) {
-                currentKey = "mangalib";
-            } else if (lowerUrl.contains("ranobelib")) {
-                currentKey = "ranobelib";
-            }
+            String currentKey = com.example.animelib.util.SiteUtils.getSiteKey(currentUrl);
 
             java.util.List<com.example.animelib.models.SiteOption> allSites = new java.util.ArrayList<>();
             allSites.add(new com.example.animelib.models.SiteOption("animelib", "AnimeLib", animeUrl, R.drawable.ic_site_animelib));
@@ -590,7 +590,15 @@ public class MainActivity extends AppCompatActivity {
                         CustomToast.showInfo(this, "Переход на " + site.getName());
                     }
                 );
+            bottomSheet.setOnDismissListener(dialog -> {
+                if (webView != null) {
+                    webView.post(() -> webView.evaluateJavascript("if (window.animelibKillSitesPopup) window.animelibKillSitesPopup();", null));
+                }
+            });
             bottomSheet.show();
+            if (webView != null) {
+                webView.post(() -> webView.evaluateJavascript("if (window.animelibKillSitesPopup) window.animelibKillSitesPopup();", null));
+            }
 
             Log.d("MainActivity", "Site selection bottom sheet shown, currentKey=" + currentKey + ", isOtherRegion=" + isOtherRegion);
         } catch (Exception e) {

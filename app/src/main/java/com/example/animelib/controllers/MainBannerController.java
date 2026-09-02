@@ -33,6 +33,8 @@ public class MainBannerController {
         initViews(activity);
     }
 
+    private String lastUrl = null;
+
     private void initViews(Activity activity) {
         urlTopBanner = activity.findViewById(R.id.urlTopBanner);
         tvCurrentUrlBanner = activity.findViewById(R.id.tvCurrentUrlBanner);
@@ -55,11 +57,19 @@ public class MainBannerController {
         }
 
         if (btnBannerSelectCis != null) {
-            btnBannerSelectCis.setOnClickListener(v -> selectDomainFromBanner("https://v5.animelib.org"));
+            btnBannerSelectCis.setOnClickListener(v -> {
+                String siteKey = com.example.animelib.util.SiteUtils.getSiteKey(lastUrl);
+                String targetUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion(siteKey, false);
+                selectDomainFromBanner(targetUrl);
+            });
         }
 
         if (btnBannerSelectOther != null) {
-            btnBannerSelectOther.setOnClickListener(v -> selectDomainFromBanner("https://animelib.org"));
+            btnBannerSelectOther.setOnClickListener(v -> {
+                String siteKey = com.example.animelib.util.SiteUtils.getSiteKey(lastUrl);
+                String targetUrl = com.example.animelib.util.SiteUtils.getUrlForSiteAndRegion(siteKey, true);
+                selectDomainFromBanner(targetUrl);
+            });
         }
     }
 
@@ -78,7 +88,7 @@ public class MainBannerController {
 
     public void updateBannerSelectionUI(String currentUrl) {
         if (urlTopBanner == null) return;
-        boolean isCis = currentUrl != null && currentUrl.contains("v5.animelib.org");
+        boolean isCis = !com.example.animelib.util.SiteUtils.isOtherRegion(currentUrl);
 
         View bannerPillCis = urlTopBanner.findViewById(R.id.bannerPillCis);
         View bannerIndicatorOther = urlTopBanner.findViewById(R.id.bannerIndicatorOther);
@@ -96,6 +106,7 @@ public class MainBannerController {
 
     public void showUrlTopBannerAnimated(String url) {
         if (urlTopBanner == null) return;
+        this.lastUrl = url;
 
         if (tvCurrentUrlBanner != null && url != null && !url.trim().isEmpty()) {
             tvCurrentUrlBanner.setText("Текущий адрес: " + url);

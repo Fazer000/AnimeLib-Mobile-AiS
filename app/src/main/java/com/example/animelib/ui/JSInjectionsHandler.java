@@ -13,6 +13,8 @@ import com.example.animelib.VideoPlayerActivity;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Класс для обработки нажатий кнопок плеера в WebView.
@@ -23,6 +25,7 @@ public class JSInjectionsHandler {
     private static final String JS_INTERFACE_NAME = "AndroidInterface";
     
     private final Context context;
+    private final Map<String, String> jsCache = new ConcurrentHashMap<>();
 
     public interface OnPlayerButtonClickListener {
         void onPlayerButtonClicked(String buttonHref);
@@ -91,26 +94,30 @@ public class JSInjectionsHandler {
         loadAndExecuteJS(webView, "js/remove-bottom-menu.js", "Remove bottom menu");
     }
 
+    private String getJSFromAsset(String assetPath) {
+        if (jsCache.containsKey(assetPath)) {
+            return jsCache.get(assetPath);
+        }
+        try (InputStream inputStream = context.getAssets().open(assetPath)) {
+            byte[] buffer = new byte[inputStream.available()];
+            inputStream.read(buffer);
+            String jsCode = new String(buffer, StandardCharsets.UTF_8);
+            jsCache.put(assetPath, jsCode);
+            return jsCode;
+        } catch (IOException e) {
+            Log.e(TAG, "Failed to load JS file: " + assetPath, e);
+            return null;
+        }
+    }
+
     /**
      * Загружает и выполняет JavaScript файл из assets
      */
     private void loadAndExecuteJS(WebView webView, String assetPath, String description) {
         if (webView == null) return;
-        try {
-            InputStream inputStream = context.getAssets().open(assetPath);
-            byte[] buffer = new byte[inputStream.available()];
-            inputStream.read(buffer);
-            inputStream.close();
-            
-            String jsCode = new String(buffer, StandardCharsets.UTF_8);
-            
-            webView.evaluateJavascript(jsCode, value -> {
-                Log.d(TAG, description + " result: " + value);
-            });
-            
-            Log.d(TAG, "Loaded and executed: " + assetPath);
-        } catch (IOException e) {
-            Log.e(TAG, "Failed to load JS file: " + assetPath, e);
+        String jsCode = getJSFromAsset(assetPath);
+        if (jsCode != null && !jsCode.isEmpty()) {
+            webView.evaluateJavascript(jsCode, null);
         }
     }
     

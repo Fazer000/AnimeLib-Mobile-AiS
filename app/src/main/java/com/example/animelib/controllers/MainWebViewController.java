@@ -239,8 +239,7 @@ public class MainWebViewController {
                     return true;
                 }
 
-                view.loadUrl(url, headers);
-                return true;
+                return false;
             }
 
             @Override
@@ -300,7 +299,9 @@ public class MainWebViewController {
                 );
 
                 if (!isEmbedOrPlayer && url != null && !"about:blank".equals(url)) {
-                    showDomainChangeSpinner();
+                    if (isFirstLoad || (newDomain != null && currentDomain != null && !currentDomain.equalsIgnoreCase(newDomain))) {
+                        showDomainChangeSpinner();
+                    }
                 }
 
                 currentDomain = newDomain;
@@ -585,13 +586,7 @@ public class MainWebViewController {
     }
 
     private String getRandomUserAgent() {
-        String[] userAgents = {
-                "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
-                "Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
-                "Mozilla/5.0 (Linux; Android 12; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
-                "Mozilla/5.0 (Linux; Android 11; M2007J20CG) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
-        };
-        return userAgents[new Random().nextInt(userAgents.length)];
+        return "Mozilla/5.0 (Linux; Android 13; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36";
     }
 
     private Map<String, String> getStringStringMap() {
@@ -599,8 +594,6 @@ public class MainWebViewController {
         headers.put("X-Requested-With", "XMLHttpRequest");
         headers.put("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8");
         headers.put("Accept-Language", "ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7");
-        headers.put("Cache-Control", "no-cache");
-        headers.put("Pragma", "no-cache");
         return headers;
     }
 
