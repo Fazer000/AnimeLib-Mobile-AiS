@@ -366,6 +366,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private ImageView ivPortraitVoiceoverChevron;
     private ImageButton portraitBookmarkButton;
     private ImageButton portraitDownloadButton;
+    private View portraitStatusDropdownButton;
+    private ImageView ivPortraitStatusBookmarkIcon;
+    private TextView tvPortraitStatus;
+    private Object currentWatchStatusId = null;
     private RecyclerView portraitEpisodesRecyclerView;
     private TextView tvPortraitAnimeTitle;
     private TextView tvPortraitEpisodeTitle;
@@ -524,6 +528,12 @@ public class VideoPlayerActivity extends AppCompatActivity {
         commentsManager = playerCommentsController.getCommentsManager();
 
         episodesManager = new EpisodesManager(this, apiService);
+        episodesManager.setOnBookmarkLoadedListener(bookmarkData -> {
+            if (bookmarkData != null) {
+                currentWatchStatusId = bookmarkData.getStatus();
+                updatePortraitWatchStatusUI(currentWatchStatusId);
+            }
+        });
 
         episodesManager.setPlayerControlsCallback(shouldAutoHide -> {
             shouldAutoHideControls = shouldAutoHide;
@@ -1753,6 +1763,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
         ivPortraitVoiceoverChevron = findViewById(R.id.ivPortraitVoiceoverChevron);
         portraitBookmarkButton = findViewById(R.id.portraitBookmarkButton);
         portraitDownloadButton = findViewById(R.id.portraitDownloadButton);
+        portraitStatusDropdownButton = findViewById(R.id.portraitStatusDropdownButton);
+        ivPortraitStatusBookmarkIcon = findViewById(R.id.ivPortraitStatusBookmarkIcon);
+        tvPortraitStatus = findViewById(R.id.tvPortraitStatus);
         portraitEpisodesRecyclerView = findViewById(R.id.portraitEpisodesRecyclerView);
         tvPortraitAnimeTitle = findViewById(R.id.tvPortraitAnimeTitle);
         tvPortraitEpisodeTitle = findViewById(R.id.tvPortraitEpisodeTitle);
@@ -1795,6 +1808,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     }
                 });
             });
+        }
+
+        if (portraitStatusDropdownButton != null) {
+            portraitStatusDropdownButton.setOnClickListener(v -> showWatchStatusBottomSheet());
         }
 
         if (portraitBookmarkButton != null) {
@@ -4240,6 +4257,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
         // Это позволит правильно определить эпизод из закладки
         Log.d("VideoPlayer", "Loading episodes first, then players will be loaded for correct episode");
         loadEpisodes(currentAnimeId);
+        fetchAndApplyWatchStatus();
     }
 
     private void showPlayerSelectionDialogWithAutoSelect(List<EpisodeResponse.PlayerData> players) {
@@ -5017,6 +5035,102 @@ public class VideoPlayerActivity extends AppCompatActivity {
             },
             true // Показываем Toast при успехе для ручного добавления
         );
+    }
+
+    public void updatePortraitWatchStatusUI(Object statusId) {
+        this.currentWatchStatusId = statusId;
+        com.example.animelib.models.WatchStatusItem item = com.example.animelib.managers.WatchStatusManager.getStatusById(statusId);
+        if (tvPortraitStatus == null) return;
+
+        if (item != null) {
+            tvPortraitStatus.setText(item.getLabel());
+            try {
+                int color = android.graphics.Color.parseColor(item.getColorHex());
+                tvPortraitStatus.setTextColor(color);
+                if (ivPortraitStatusBookmarkIcon != null) {
+                    ivPortraitStatusBookmarkIcon.setImageTintList(android.content.res.ColorStateList.valueOf(color));
+                }
+            } catch (Exception e) {
+                Log.e("VideoPlayer", "Error parsing status color: " + item.getColorHex(), e);
+            }
+        } else {
+            tvPortraitStatus.setText("Добавить в список");
+            int defaultColor = androidx.core.content.ContextCompat.getColor(this, R.color.primary_text_color);
+            tvPortraitStatus.setTextColor(defaultColor);
+            if (ivPortraitStatusBookmarkIcon != null) {
+                ivPortraitStatusBookmarkIcon.setImageTintList(android.content.res.ColorStateList.valueOf(defaultColor));
+            }
+        }
+    }
+
+    public void fetchAndApplyWatchStatus() {
+        if (isOfflineMode) return;
+        String animeUrl = getIntent().getStringExtra("anime_url");
+        if (animeUrl == null || animeUrl.isEmpty()) {
+            animeUrl = this.animeUrl;
+        }
+        String mediaSlug = com.example.animelib.api.ApiService.extractMediaSlugFromUrl(animeUrl);
+        if (mediaSlug == null && animeUrl != null) {
+            mediaSlug = apiService.extractAnimeSlug(animeUrl);
+        }
+        if (mediaSlug != null && !mediaSlug.isEmpty()) {
+            apiService.fetchAnimeBookmark(mediaSlug, new com.example.animelib.api.ApiService.AnimeBookmarkCallback() {
+                @Override
+                public void onBookmarkReceived(com.example.animelib.models.AnimeBookmarkResponse response) {
+                    if (response != null && response.getData() != null) {
+                        int status = response.getData().getStatus();
+                        if (status > 0) {
+                            runOnUiThread(() -> updatePortraitWatchStatusUI(status));
+                        }
+                    }
+                }
+
+                @Override
+                public void onError(String error) {
+                    Log.d("VideoPlayer", "Error fetching watch status: " + error);
+                }
+            });
+        }
+    }
+
+    public void showWatchStatusBottomSheet() {
+        if (isOfflineMode) {
+            CustomToast.showInfo(this, "Смена статуса недоступна в офлайн режиме");
+            return;
+        }
+
+        String animeUrl = getIntent().getStringExtra("anime_url");
+        if (animeUrl == null || animeUrl.isEmpty()) {
+            animeUrl = this.animeUrl;
+        }
+        String mediaSlug = com.example.animelib.api.ApiService.extractMediaSlugFromUrl(animeUrl);
+        if (mediaSlug == null && animeUrl != null) {
+            mediaSlug = apiService.extractAnimeSlug(animeUrl);
+        }
+
+        if (mediaSlug == null || mediaSlug.isEmpty()) {
+            CustomToast.showWarning(this, "Не удалось определить аниме для обновления статуса");
+            return;
+        }
+
+        final String finalMediaSlug = mediaSlug;
+
+        com.example.animelib.ui.WatchStatusBottomSheet bottomSheet =
+                new com.example.animelib.ui.WatchStatusBottomSheet(this, currentWatchStatusId, item -> {
+                    updatePortraitWatchStatusUI(item.getId());
+                    apiService.updateWatchStatus(finalMediaSlug, item.getId(), new com.example.animelib.api.ApiService.BookmarkCallback() {
+                        @Override
+                        public void onSuccess(String message) {
+                            CustomToast.showSuccess(VideoPlayerActivity.this, "Статус изменен: " + item.getLabel());
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            CustomToast.showWarning(VideoPlayerActivity.this, "Ошибка: " + error);
+                        }
+                    });
+                });
+        bottomSheet.show();
     }
 
     @Override

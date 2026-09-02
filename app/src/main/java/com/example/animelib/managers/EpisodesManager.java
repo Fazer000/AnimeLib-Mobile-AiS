@@ -558,6 +558,9 @@ public class EpisodesManager {
                             
                             // Обновляем RecyclerView с информацией о закладке
                             updateEpisodesRecyclerView();
+                            if (bookmarkLoadedListener != null) {
+                                bookmarkLoadedListener.onBookmarkLoaded(animeBookmark);
+                            }
                         }
                     });
                 }
@@ -788,6 +791,20 @@ public class EpisodesManager {
         return bookmarkManager;
     }
     
+    public interface OnBookmarkLoadedListener {
+        void onBookmarkLoaded(com.example.animelib.models.AnimeBookmarkResponse.BookmarkData bookmarkData);
+    }
+
+    private OnBookmarkLoadedListener bookmarkLoadedListener;
+
+    public void setOnBookmarkLoadedListener(OnBookmarkLoadedListener listener) {
+        this.bookmarkLoadedListener = listener;
+    }
+
+    public com.example.animelib.models.AnimeBookmarkResponse.BookmarkData getAnimeBookmark() {
+        return animeBookmark;
+    }
+
     /**
      * Обновляет закладку в адаптере
      */
@@ -798,6 +815,9 @@ public class EpisodesManager {
         }
         if (portraitEpisodesAdapter != null) {
             portraitEpisodesAdapter.setAnimeBookmark(bookmark);
+        }
+        if (bookmarkLoadedListener != null) {
+            bookmarkLoadedListener.onBookmarkLoaded(bookmark);
         }
     }
 

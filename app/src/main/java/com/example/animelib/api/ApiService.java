@@ -1545,6 +1545,97 @@ public class ApiService {
     }
     
     /**
+     * Обновляет статус просмотра аниме (POST https://hapi.hentaicdn.org/api/bookmarks)
+     * @param mediaSlug Слаг медиа (например: "26610--nijusseiki-denki-mokuroku-eureka-evrika-anime")
+     * @param statusId ID статуса (например: 21, 22, 23, 24, 25, 26, 27 или "other")
+     * @param callback Колбэк для результата операции
+     */
+    public void updateWatchStatus(String mediaSlug, Object statusId, BookmarkCallback callback) {
+        if (mediaSlug == null || mediaSlug.trim().isEmpty()) {
+            Log.e("ApiService", "updateWatchStatus: mediaSlug is null or empty");
+            if (callback != null) {
+                safeRunOnUiThread(() -> callback.onError("Слаг аниме не определен"));
+            }
+            return;
+        }
+
+        Log.d("ApiService", "Updating watch status - mediaSlug: " + mediaSlug + ", statusId: " + statusId);
+
+        safeExecute(() -> {
+            try {
+                com.google.gson.JsonObject requestBody = new com.google.gson.JsonObject();
+                requestBody.addProperty("media_type", "anime");
+                requestBody.addProperty("media_slug", mediaSlug);
+
+                com.google.gson.JsonObject bookmark = new com.google.gson.JsonObject();
+                if (statusId instanceof Number) {
+                    bookmark.addProperty("status", ((Number) statusId).intValue());
+                } else if (statusId instanceof String) {
+                    try {
+                        int parsedInt = Integer.parseInt((String) statusId);
+                        bookmark.addProperty("status", parsedInt);
+                    } catch (NumberFormatException e) {
+                        bookmark.addProperty("status", (String) statusId);
+                    }
+                } else if (statusId != null) {
+                    bookmark.addProperty("status", statusId.toString());
+                }
+                requestBody.add("bookmark", bookmark);
+                requestBody.add("meta", new com.google.gson.JsonObject());
+
+                String jsonString = gson.toJson(requestBody);
+                Log.d("ApiService", "updateWatchStatus request body: " + jsonString);
+
+                okhttp3.RequestBody body = okhttp3.RequestBody.create(
+                        jsonString,
+                        okhttp3.MediaType.get("application/json; charset=utf-8")
+                );
+
+                Request request = buildApiRequest("https://api.cdnlibs.org/api/bookmarks")
+                        .post(body)
+                        .build();
+
+                httpClient.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                        Log.e("ApiService", "updateWatchStatus request failed", e);
+                        if (callback != null) {
+                            safeRunOnUiThread(() -> callback.onError("Ошибка сети: " + e.getMessage()));
+                        }
+                    }
+
+                    @Override
+                    public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                        try (response) {
+                            String responseBody = response.body() != null ? response.body().string() : "";
+                            Log.d("ApiService", "updateWatchStatus response (" + response.code() + "): " + responseBody);
+                            if (response.isSuccessful()) {
+                                if (callback != null) {
+                                    safeRunOnUiThread(() -> callback.onSuccess("Статус обновлен"));
+                                }
+                            } else {
+                                if (callback != null) {
+                                    safeRunOnUiThread(() -> callback.onError("Ошибка при обновлении статуса: " + response.code()));
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.e("ApiService", "Error reading updateWatchStatus response", e);
+                            if (callback != null) {
+                                safeRunOnUiThread(() -> callback.onError("Ошибка обработки ответа"));
+                            }
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                Log.e("ApiService", "Unexpected error in updateWatchStatus", e);
+                if (callback != null) {
+                    safeRunOnUiThread(() -> callback.onError("Неожиданная ошибка: " + e.getMessage()));
+                }
+            }
+        });
+    }
+
+    /**
      * Создает JSON объект для запроса добавления закладки
      */
     private com.google.gson.JsonObject createBookmarkRequestBody(String mediaSlug, int episodeId, int teamId, 
