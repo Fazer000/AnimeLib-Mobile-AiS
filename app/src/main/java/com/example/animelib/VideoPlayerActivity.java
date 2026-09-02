@@ -160,6 +160,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
     private String currentVideoUrl;
     private String animeUrl;
+    private boolean isNavigatingToAnimePage = false;
     private Map<String, String> videoQualities;
 
     private ExecutorService executor;
@@ -5617,6 +5618,118 @@ public class VideoPlayerActivity extends AppCompatActivity {
             playerDialogsController.dismissErrorDialog();
             playerDialogsController.dismissSettingsBottomSheet();
         }
+    }
+
+    private String getAnimePageUrl() {
+        if (isOfflineMode) {
+            return null;
+        }
+
+        String rawUrl = animeUrl;
+        if (rawUrl == null || rawUrl.isEmpty()) {
+            if (getIntent() != null) {
+                rawUrl = getIntent().getStringExtra(EXTRA_ANIME_URL);
+                if (rawUrl == null || rawUrl.isEmpty()) {
+                    rawUrl = getIntent().getStringExtra("anime_url");
+                }
+            }
+        }
+
+        String slug = null;
+        if (rawUrl != null && !rawUrl.isEmpty()) {
+            slug = ApiService.extractMediaSlugFromUrl(rawUrl);
+            if (slug == null && apiService != null) {
+                slug = apiService.extractAnimeSlug(rawUrl);
+            }
+        }
+
+        if (slug == null && currentAnimeInfo != null && currentAnimeInfo.getData() != null) {
+            String slugUrl = currentAnimeInfo.getData().getSlug_url();
+            if (slugUrl != null && !slugUrl.isEmpty()) {
+                slug = ApiService.extractMediaSlugFromUrl(slugUrl);
+                if (slug == null && apiService != null) {
+                    slug = apiService.extractAnimeSlug(slugUrl);
+                }
+                if (slug == null) {
+                    slug = slugUrl;
+                }
+            }
+        }
+
+        if (slug == null && currentAnimeId != null && !currentAnimeId.isEmpty()) {
+            slug = currentAnimeId;
+        }
+
+        if (slug == null) {
+            if (rawUrl != null && !rawUrl.isEmpty() && !rawUrl.contains("api.cdnlibs.org")) {
+                slug = rawUrl;
+            } else {
+                return null;
+            }
+        }
+
+        if (slug.contains("?")) {
+            slug = slug.substring(0, slug.indexOf("?"));
+        }
+        if (slug.contains("#")) {
+            slug = slug.substring(0, slug.indexOf("#"));
+        }
+        if (slug.endsWith("/watch")) {
+            slug = slug.substring(0, slug.length() - "/watch".length());
+        } else if (slug.endsWith("/watch/")) {
+            slug = slug.substring(0, slug.length() - "/watch/".length());
+        }
+        if (slug.endsWith("/")) {
+            slug = slug.substring(0, slug.length() - 1);
+        }
+
+        if (slug.startsWith("http://") || slug.startsWith("https://")) {
+            return slug;
+        }
+
+        String baseSiteUrl = databaseManager != null ? databaseManager.getSiteUrl() : null;
+        if (baseSiteUrl == null || baseSiteUrl.isEmpty()) {
+            baseSiteUrl = "https://animelib.org";
+        }
+        if (!baseSiteUrl.startsWith("http://") && !baseSiteUrl.startsWith("https://")) {
+            baseSiteUrl = "https://" + baseSiteUrl;
+        }
+        if (baseSiteUrl.endsWith("/")) {
+            baseSiteUrl = baseSiteUrl.substring(0, baseSiteUrl.length() - 1);
+        }
+
+        if (slug.startsWith("/")) {
+            return baseSiteUrl + slug;
+        }
+
+        return baseSiteUrl + "/ru/anime/" + slug;
+    }
+
+    private void navigateToAnimePageInWebView() {
+        if (isOfflineMode || isNavigatingToAnimePage) {
+            return;
+        }
+        isNavigatingToAnimePage = true;
+        try {
+            String animePageUrl = getAnimePageUrl();
+            if (animePageUrl != null && !animePageUrl.isEmpty()) {
+                Log.d("VideoPlayer", "Navigating to anime page in WebView on player exit: " + animePageUrl);
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.putExtra("EXTRA_OPEN_URL", animePageUrl);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
+            }
+        } catch (Exception e) {
+            Log.e("VideoPlayer", "Error navigating to anime page in WebView on exit", e);
+        }
+    }
+
+    @Override
+    public void finish() {
+        if (!isOfflineMode && !isNavigatingToAnimePage) {
+            navigateToAnimePageInWebView();
+        }
+        super.finish();
     }
 
     @Override

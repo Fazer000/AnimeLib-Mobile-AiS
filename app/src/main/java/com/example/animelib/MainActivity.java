@@ -232,8 +232,37 @@ public class MainActivity extends AppCompatActivity {
         outState.putBoolean("isUrlInputShowing", isUrlInputShowing);
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        if (intent != null && intent.hasExtra("EXTRA_OPEN_URL")) {
+            String openUrl = intent.getStringExtra("EXTRA_OPEN_URL");
+            intent.removeExtra("EXTRA_OPEN_URL");
+            if (openUrl != null && !openUrl.trim().isEmpty()) {
+                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    getSupportFragmentManager().popBackStackImmediate(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                }
+                loadUrl(openUrl.trim());
+            }
+        }
+    }
+
     private void checkAndLoadUrl() {
         if (viewModel == null) return;
+
+        if (getIntent() != null && getIntent().hasExtra("EXTRA_OPEN_URL")) {
+            String openUrl = getIntent().getStringExtra("EXTRA_OPEN_URL");
+            getIntent().removeExtra("EXTRA_OPEN_URL");
+            if (openUrl != null && !openUrl.trim().isEmpty()) {
+                if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                    getSupportFragmentManager().popBackStackImmediate(null, androidx.fragment.app.FragmentManager.POP_BACK_STACK_INCLUSIVE);
+                }
+                loadUrl(openUrl.trim());
+                checkApiForToast();
+                return;
+            }
+        }
 
         viewModel.getSettings().observe(this, appSettings -> {
             String siteUrl = null;
@@ -458,18 +487,17 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            com.example.animelib.dialogs.CustomSelectDialog dialog =
-                new com.example.animelib.dialogs.CustomSelectDialog(this);
+            com.example.animelib.ui.CustomSelectBottomSheet bottomSheet =
+                new com.example.animelib.ui.CustomSelectBottomSheet(
+                    this,
+                    dialogData.options,
+                    dialogData.values,
+                    dialogData.currentValue,
+                    (value, text) -> updateSelectButton(dialogData.selectId, value, text)
+                );
+            bottomSheet.show();
 
-            dialog.show(
-                dialogData.title,
-                dialogData.options,
-                dialogData.values,
-                dialogData.currentValue,
-                (value, text) -> updateSelectButton(dialogData.selectId, value, text)
-            );
-
-            Log.d("MainActivity", "Custom select dialog shown for: " + dialogData.selectId);
+            Log.d("MainActivity", "Custom select bottom sheet shown for: " + dialogData.selectId);
 
         } catch (Exception e) {
             Log.e("MainActivity", "Error showing custom select dialog", e);
