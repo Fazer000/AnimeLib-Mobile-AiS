@@ -479,24 +479,6 @@ public class VideoPlayerActivity extends AppCompatActivity {
         playerContainer = findViewById(R.id.playerContainer);
         if (playerContainer != null) {
             playerContainer.setBackgroundColor(android.graphics.Color.TRANSPARENT);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                ViewOutlineProvider outlineProvider = new ViewOutlineProvider() {
-                    @Override
-                    public void getOutline(View view, Outline outline) {
-                        if (currentCornerRadiusPx > 0) {
-                            outline.setRoundRect(0, 0, view.getWidth(), view.getHeight(), currentCornerRadiusPx);
-                        } else {
-                            outline.setRect(0, 0, view.getWidth(), view.getHeight());
-                        }
-                    }
-                };
-                playerContainer.setOutlineProvider(outlineProvider);
-                playerContainer.setClipToOutline(true);
-                if (playerView != null) {
-                    playerView.setOutlineProvider(outlineProvider);
-                    playerView.setClipToOutline(true);
-                }
-            }
             playerContainer.addOnLayoutChangeListener((v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
                 if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
                     boolean isPortrait = getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT;

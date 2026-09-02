@@ -441,7 +441,7 @@ public class PlayerPanelsController {
         playerContainer.setTranslationX(translationX);
         playerContainer.setTranslationY(translationY);
 
-        float maxRadiusPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 16f, activity.getResources().getDisplayMetrics());
+        float maxRadiusPx = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20f, activity.getResources().getDisplayMetrics());
         float cornerRadiusPx = (currentScale > 0) ? (maxRadiusPx * openProgress / currentScale) : 0f;
         callback.onOutlineValuesChanged(0f, 0f, 0f, 0f, cornerRadiusPx);
 

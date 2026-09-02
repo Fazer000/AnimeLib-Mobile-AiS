@@ -45,10 +45,12 @@ import com.example.animelib.util.MediaCacheManager;
 public class AmbientLightManager {
     private static final String TAG = "AmbientLightManager";
     
-    // Интервал проверки рассинхрона (1.5 секунды)
-    private static final long DRIFT_SYNC_INTERVAL_MS = 1500;
-    // Порог рассинхрона для подгонки кадра (800 мс)
-    private static final long DRIFT_THRESHOLD_MS = 800;
+    // Интервал проверки рассинхрона (250 мс для высокой точности)
+    private static final long DRIFT_SYNC_INTERVAL_MS = 250;
+    // Порог жесткого перехода seekTo при сильном сдвиге (800 мс)
+    private static final long HARD_SEEK_THRESHOLD_MS = 800;
+    // Порог плавной микро-подгонки скорости (30 мс)
+    private static final long SOFT_DRIFT_THRESHOLD_MS = 30;
 
     private final Context context;
     private final PlayerView mainPlayerView;
@@ -508,30 +510,64 @@ public class AmbientLightManager {
     }
 
     /**
-     * Безопасный мониторинг и устранение возможного рассинхрона
+     * Безопасный мониторинг и устранение возможного рассинхрона.
+     * Использует динамическую подгонку скорости воспроизведения (micro-speed scaling)
+     * для устранения небольших задержек без рывков и перезапросов потока.
      */
     private void checkAndSyncDrift() {
         if (!isEnabled || isSuspended || isFrozen || mainPlayer == null || ambientPlayer == null || isErrorState) return;
         try {
-            if (!mainPlayer.isPlaying() || mainPlayer.getPlaybackState() == Player.STATE_BUFFERING) {
-                if (ambientPlayer.isPlaying()) {
+            boolean mainIsPlaying = mainPlayer.isPlaying();
+            boolean ambientIsPlaying = ambientPlayer.isPlaying();
+
+            if (!mainIsPlaying || mainPlayer.getPlaybackState() == Player.STATE_BUFFERING) {
+                if (ambientIsPlaying) {
                     ambientPlayer.pause();
                 }
                 return;
             }
 
+            if (!ambientIsPlaying && mainIsPlaying && ambientPlayer.getPlaybackState() == Player.STATE_READY) {
+                ambientPlayer.play();
+            }
+
             long mainPos = mainPlayer.getCurrentPosition();
             long ambientPos = ambientPlayer.getCurrentPosition();
-            long driftMs = Math.abs(mainPos - ambientPos);
+            long diffMs = mainPos - ambientPos; // положителен, если подсветка отстает
+            long absDiffMs = Math.abs(diffMs);
 
-            if (driftMs > DRIFT_THRESHOLD_MS) {
+            PlaybackParameters mainParams = mainPlayer.getPlaybackParameters();
+            float baseSpeed = mainParams != null ? mainParams.speed : 1.0f;
+
+            if (absDiffMs > HARD_SEEK_THRESHOLD_MS) {
+                // Сильное отставание (>800мс): скачок seekTo с защитой от частых вызовов
                 long now = android.os.SystemClock.elapsedRealtime();
-                if (now - lastSyncSeekTimeMs > 1000) {
+                if (now - lastSyncSeekTimeMs > 2000) {
                     lastSyncSeekTimeMs = now;
                     ambientPlayer.seekTo(mainPos);
+                    ambientPlayer.setPlaybackParameters(new PlaybackParameters(baseSpeed));
                     if (!ambientPlayer.isPlaying()) {
                         ambientPlayer.play();
                     }
+                }
+            } else if (absDiffMs > SOFT_DRIFT_THRESHOLD_MS) {
+                // Небольшой рассинхрон (30мс - 800мс): бесшовное выравнивание за счет временного изм. скорости
+                float correctionFactor;
+                if (diffMs > 0) {
+                    // Подсветка отстает -> ускоряем фоновый плеер
+                    correctionFactor = (absDiffMs > 300) ? 1.15f : 1.05f;
+                } else {
+                    // Подсветка спешит -> слегка замедляем фоновый плеер
+                    correctionFactor = (absDiffMs > 300) ? 0.85f : 0.95f;
+                }
+                float targetSpeed = Math.max(0.5f, Math.min(2.0f, baseSpeed * correctionFactor));
+                if (Math.abs(ambientPlayer.getPlaybackParameters().speed - targetSpeed) > 0.01f) {
+                    ambientPlayer.setPlaybackParameters(new PlaybackParameters(targetSpeed));
+                }
+            } else {
+                // Полная синхронизация (отклонение <30мс): сброс на стандартную скорость
+                if (Math.abs(ambientPlayer.getPlaybackParameters().speed - baseSpeed) > 0.01f) {
+                    ambientPlayer.setPlaybackParameters(new PlaybackParameters(baseSpeed));
                 }
             }
         } catch (Exception e) {

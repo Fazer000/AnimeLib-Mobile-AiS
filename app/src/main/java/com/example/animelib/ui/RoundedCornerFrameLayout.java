@@ -8,6 +8,7 @@ import android.graphics.RectF;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.widget.FrameLayout;
 
@@ -23,6 +24,7 @@ public class RoundedCornerFrameLayout extends FrameLayout {
     private float cornerRadiusPx = 0f;
     private final Path clipPath = new Path();
     private final RectF rectF = new RectF();
+    private ViewOutlineProvider outlineProvider;
 
     public RoundedCornerFrameLayout(@NonNull Context context) {
         super(context);
@@ -41,7 +43,7 @@ public class RoundedCornerFrameLayout extends FrameLayout {
 
     private void init() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            setOutlineProvider(new ViewOutlineProvider() {
+            outlineProvider = new ViewOutlineProvider() {
                 @Override
                 public void getOutline(View view, Outline outline) {
                     if (cornerRadiusPx > 0.5f) {
@@ -50,7 +52,8 @@ public class RoundedCornerFrameLayout extends FrameLayout {
                         outline.setRect(0, 0, view.getWidth(), view.getHeight());
                     }
                 }
-            });
+            };
+            setOutlineProvider(outlineProvider);
             setClipToOutline(true);
         }
     }
@@ -61,8 +64,22 @@ public class RoundedCornerFrameLayout extends FrameLayout {
             this.cornerRadiusPx = newRadius;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 invalidateOutline();
+                applyOutlineToChildren(this);
             }
             invalidate();
+        }
+    }
+
+    private void applyOutlineToChildren(ViewGroup viewGroup) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) return;
+        for (int i = 0; i < viewGroup.getChildCount(); i++) {
+            View child = viewGroup.getChildAt(i);
+            child.setOutlineProvider(outlineProvider);
+            child.setClipToOutline(cornerRadiusPx > 0.5f);
+            child.invalidateOutline();
+            if (child instanceof ViewGroup) {
+                applyOutlineToChildren((ViewGroup) child);
+            }
         }
     }
 
