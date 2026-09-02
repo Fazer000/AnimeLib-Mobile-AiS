@@ -55,6 +55,7 @@ import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.graphics.Bitmap;
@@ -244,11 +245,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private GesturesManager gesturesManager;
     private VerticalGesturesManager verticalGesturesManager;
 
-    // Brightness and Volume gesture indicators
-    private View brightnessIndicator;
-    private TextView brightnessText;
-    private View volumeIndicator;
-    private TextView volumeText;
+    // Unified gesture indicator plaque (Brightness & Volume)
+    private View gestureIndicatorPlaque;
+    private ImageView gestureIndicatorIcon;
+    private ProgressBar gestureIndicatorProgress;
+    private TextView gestureIndicatorText;
     private final Handler gestureIndicatorHandler = new Handler(Looper.getMainLooper());
     private Runnable hideGestureIndicatorsRunnable;
     
@@ -1433,10 +1434,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
         TextView holdSpeedToast = findViewById(R.id.holdSpeedToast);
         View skipIndicatorLeft = findViewById(R.id.skipIndicatorLeft);
         View skipIndicatorRight = findViewById(R.id.skipIndicatorRight);
-        this.brightnessIndicator = findViewById(R.id.brightnessIndicator);
-        this.brightnessText = findViewById(R.id.brightnessText);
-        this.volumeIndicator = findViewById(R.id.volumeIndicator);
-        this.volumeText = findViewById(R.id.volumeText);
+        this.gestureIndicatorPlaque = findViewById(R.id.gestureIndicatorPlaque);
+        this.gestureIndicatorIcon = findViewById(R.id.gestureIndicatorIcon);
+        this.gestureIndicatorProgress = findViewById(R.id.gestureIndicatorProgress);
+        this.gestureIndicatorText = findViewById(R.id.gestureIndicatorText);
         
         // Comments components
         View commentsPanel = findViewById(R.id.commentsPanel);
@@ -2694,13 +2695,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
             @Override
             public void onBrightnessChanged(float brightness) {
                 int percent = Math.round(brightness * 100f);
-                showGestureIndicator(brightnessIndicator, volumeIndicator, brightnessText, percent + "%");
+                showGestureIndicator(R.drawable.ic_brightness, percent);
             }
 
             @Override
             public void onVolumeChanged(int currentVolume, int maxVolume) {
                 int percent = maxVolume > 0 ? Math.round((float) currentVolume / maxVolume * 100f) : 0;
-                showGestureIndicator(volumeIndicator, brightnessIndicator, volumeText, percent + "%");
+                showGestureIndicator(R.drawable.ic_volume, percent);
             }
 
             @Override
@@ -2710,34 +2711,42 @@ public class VideoPlayerActivity extends AppCompatActivity {
         });
     }
     
-    private void showGestureIndicator(View indicatorToShow, View indicatorToHide, TextView textView, String text) {
+    private void showGestureIndicator(int iconResId, int percent) {
         if (gestureIndicatorHandler != null && hideGestureIndicatorsRunnable != null) {
             gestureIndicatorHandler.removeCallbacks(hideGestureIndicatorsRunnable);
         }
         
-        if (indicatorToHide != null && indicatorToHide.getVisibility() == View.VISIBLE) {
-            indicatorToHide.animate().cancel();
-            indicatorToHide.setVisibility(View.GONE);
+        if (gestureIndicatorIcon != null) {
+            gestureIndicatorIcon.setImageResource(iconResId);
+        }
+        if (gestureIndicatorProgress != null) {
+            gestureIndicatorProgress.setProgress(percent);
+        }
+        if (gestureIndicatorText != null) {
+            gestureIndicatorText.setText(percent + "%");
         }
         
-        if (textView != null) {
-            textView.setText(text);
-        }
-        
-        if (indicatorToShow != null) {
-            if (indicatorToShow.getVisibility() != View.VISIBLE || indicatorToShow.getAlpha() < 0.95f) {
-                indicatorToShow.animate().cancel();
-                indicatorToShow.setVisibility(View.VISIBLE);
-                indicatorToShow.setAlpha(0f);
-                indicatorToShow.setScaleX(0.75f);
-                indicatorToShow.setScaleY(0.75f);
-                indicatorToShow.animate()
+        if (gestureIndicatorPlaque != null) {
+            if (gestureIndicatorPlaque.getVisibility() != View.VISIBLE) {
+                gestureIndicatorPlaque.animate().cancel();
+                gestureIndicatorPlaque.setVisibility(View.VISIBLE);
+                gestureIndicatorPlaque.setAlpha(0f);
+                gestureIndicatorPlaque.setScaleX(0.85f);
+                gestureIndicatorPlaque.setScaleY(0.85f);
+                gestureIndicatorPlaque.animate()
                         .alpha(1.0f)
                         .scaleX(1.0f)
                         .scaleY(1.0f)
-                        .setDuration(180)
-                        .setInterpolator(new android.view.animation.OvershootInterpolator(1.2f))
+                        .setDuration(150)
+                        .setInterpolator(new android.view.animation.OvershootInterpolator(1.1f))
                         .start();
+            } else {
+                if (gestureIndicatorPlaque.getAlpha() < 1.0f) {
+                    gestureIndicatorPlaque.animate().cancel();
+                    gestureIndicatorPlaque.setAlpha(1.0f);
+                    gestureIndicatorPlaque.setScaleX(1.0f);
+                    gestureIndicatorPlaque.setScaleY(1.0f);
+                }
             }
         }
     }
@@ -2745,30 +2754,27 @@ public class VideoPlayerActivity extends AppCompatActivity {
     private void scheduleHideGestureIndicators() {
         if (gestureIndicatorHandler != null) {
             if (hideGestureIndicatorsRunnable == null) {
-                hideGestureIndicatorsRunnable = () -> {
-                    hideGestureIndicatorWithAnimation(brightnessIndicator);
-                    hideGestureIndicatorWithAnimation(volumeIndicator);
-                };
+                hideGestureIndicatorsRunnable = this::hideGestureIndicatorWithAnimation;
             }
             gestureIndicatorHandler.removeCallbacks(hideGestureIndicatorsRunnable);
             gestureIndicatorHandler.postDelayed(hideGestureIndicatorsRunnable, 800);
         }
     }
 
-    private void hideGestureIndicatorWithAnimation(View indicator) {
-        if (indicator != null && indicator.getVisibility() == View.VISIBLE) {
-            indicator.animate().cancel();
-            indicator.animate()
+    private void hideGestureIndicatorWithAnimation() {
+        if (gestureIndicatorPlaque != null && gestureIndicatorPlaque.getVisibility() == View.VISIBLE) {
+            gestureIndicatorPlaque.animate().cancel();
+            gestureIndicatorPlaque.animate()
                     .alpha(0f)
-                    .scaleX(0.75f)
-                    .scaleY(0.75f)
-                    .setDuration(220)
+                    .scaleX(0.85f)
+                    .scaleY(0.85f)
+                    .setDuration(180)
                     .setInterpolator(new android.view.animation.AccelerateInterpolator())
                     .withEndAction(() -> {
-                        indicator.setVisibility(View.GONE);
-                        indicator.setAlpha(1.0f);
-                        indicator.setScaleX(1.0f);
-                        indicator.setScaleY(1.0f);
+                        gestureIndicatorPlaque.setVisibility(View.GONE);
+                        gestureIndicatorPlaque.setAlpha(1.0f);
+                        gestureIndicatorPlaque.setScaleX(1.0f);
+                        gestureIndicatorPlaque.setScaleY(1.0f);
                     })
                     .start();
         }
