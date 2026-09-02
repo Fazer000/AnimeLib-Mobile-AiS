@@ -3193,6 +3193,19 @@ public class VideoPlayerActivity extends AppCompatActivity {
         return false;
     }
 
+    public boolean isPlayingDownloadedVideo() {
+        if (isOfflineMode) {
+            return true;
+        }
+        if (isDownloadedQuality(preferredQuality)) {
+            return true;
+        }
+        if (currentVideoUrl != null && (currentVideoUrl.startsWith("file:") || currentVideoUrl.startsWith("/"))) {
+            return true;
+        }
+        return false;
+    }
+
     private void showSettingsDialog() {
         if (playerDialogsController == null) return;
 
@@ -3200,6 +3213,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
             @Override
             public boolean isOfflineMode() {
                 return VideoPlayerActivity.this.isOfflineMode;
+            }
+
+            @Override
+            public boolean isPlayingDownloadedVideo() {
+                return VideoPlayerActivity.this.isPlayingDownloadedVideo();
             }
 
             @Override
@@ -3469,6 +3487,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
 
             @Override
             public void onVideoDomainChanged(String domain) {
+                if (isPlayingDownloadedVideo()) {
+                    com.example.animelib.util.CustomToast.showWarning(VideoPlayerActivity.this, "Смена сервера недоступна для скачанного видео");
+                    return;
+                }
                 if (!Objects.equals(currentVideoDomain, domain)) {
                     currentVideoDomain = domain;
                     Log.d("VideoPlayer", "Selected video server domain: " + domain);

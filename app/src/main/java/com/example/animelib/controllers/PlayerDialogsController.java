@@ -245,6 +245,9 @@ public class PlayerDialogsController {
         void onSubtitleStyleSettingsChanged(float textSize, int textColor, int bgColor, int edgeType, int edgeColor);
         String getCurrentVideoDomain();
         void onVideoDomainChanged(String domain);
+        default boolean isPlayingDownloadedVideo() {
+            return isOfflineMode();
+        }
     }
 
     public void showSettingsDialog(SettingsDataProvider provider) {
@@ -276,6 +279,7 @@ public class PlayerDialogsController {
                 provider::onThemeChanged);
 
         dialog.setOfflineMode(provider.isOfflineMode());
+        dialog.setDownloadedVideo(provider.isPlayingDownloadedVideo());
 
         float[] filters = provider.getVideoFilters();
         if (filters != null && filters.length >= 5) {
