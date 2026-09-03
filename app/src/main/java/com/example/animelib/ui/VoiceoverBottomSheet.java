@@ -204,13 +204,18 @@ public class VoiceoverBottomSheet extends FlexibleBottomSheetDialog {
         if (tabLayout != null) {
             new TabLayoutMediator(tabLayout, viewPager, (tab, position) -> {
                 if (position == 0) {
-                    int count = animelibPlayers != null ? animelibPlayers.size() : 0;
-                    tab.setText("AnimeLib" + (count > 0 ? " (" + count + ")" : ""));
+                    tab.setText("AnimeLib");
                 } else if (position == 1) {
-                    int count = kodikPlayers != null ? kodikPlayers.size() : 0;
-                    tab.setText("Kodik" + (count > 0 ? " (" + count + ")" : ""));
+                    tab.setText("Kodik");
                 }
             }).attach();
+
+            for (int i = 0; i < tabLayout.getTabCount(); i++) {
+                com.google.android.material.tabs.TabLayout.Tab tab = tabLayout.getTabAt(i);
+                if (tab != null && tab.view != null) {
+                    tab.view.setClipToOutline(true);
+                }
+            }
         }
 
         int targetPage = "kodik".equals(activeTab) ? 1 : 0;

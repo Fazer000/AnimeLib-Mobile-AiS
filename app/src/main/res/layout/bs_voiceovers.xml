@@ -98,7 +98,9 @@
             app:tabIndicatorGravity="stretch"
             app:tabIndicatorHeight="38dp"
             app:tabMode="fixed"
-            app:tabRippleColor="@color/purple_alpha_25"
+            app:tabRippleColor="@null"
+            app:tabBackground="@drawable/bg_segmented_tab_ripple"
+            app:tabUnboundedRipple="false"
             app:tabSelectedTextColor="@color/white_color"
             app:tabTextColor="@color/primary_text_color" />
     </FrameLayout>

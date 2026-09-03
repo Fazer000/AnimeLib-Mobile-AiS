@@ -866,6 +866,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
             }
 
             @Override
+            public Object getCurrentWatchStatusId() {
+                return currentWatchStatusId;
+            }
+
+            @Override
             public void saveLatestViewOnExit() {
                 VideoPlayerActivity.this.saveLatestViewOnExit();
             }
@@ -5023,6 +5028,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             currentPlayer,
             currentEpisode,
             currentPosition,
+            currentWatchStatusId,
             new BookmarkManager.BookmarkAddCallback() {
                 @Override
                 public void onBookmarkAdded(int episodeId) {

@@ -152,13 +152,18 @@ public class PlayersManager {
                 if (tabLayout != null) {
                     new TabLayoutMediator(tabLayout, sidePanelViewPager, (tab, position) -> {
                         if (position == 0) {
-                            int count = animelibPlayers != null ? animelibPlayers.size() : 0;
-                            tab.setText("AnimeLib" + (count > 0 ? " (" + count + ")" : ""));
+                            tab.setText("AnimeLib");
                         } else if (position == 1) {
-                            int count = kodikPlayers != null ? kodikPlayers.size() : 0;
-                            tab.setText("Kodik" + (count > 0 ? " (" + count + ")" : ""));
+                            tab.setText("Kodik");
                         }
                     }).attach();
+
+                    for (int i = 0; i < tabLayout.getTabCount(); i++) {
+                        TabLayout.Tab tab = tabLayout.getTabAt(i);
+                        if (tab != null && tab.view != null) {
+                            tab.view.setClipToOutline(true);
+                        }
+                    }
                 }
 
                 if (etSearch != null) {

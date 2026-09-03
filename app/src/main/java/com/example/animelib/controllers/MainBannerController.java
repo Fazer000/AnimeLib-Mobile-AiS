@@ -19,7 +19,6 @@ public class MainBannerController {
 
     private View urlTopBanner;
     private TextView tvCurrentUrlBanner;
-    private View btnChangeUrlBanner;
     private View btnCloseUrlBanner;
     private View btnBannerSelectCis;
     private View btnBannerSelectOther;
@@ -40,19 +39,9 @@ public class MainBannerController {
     private void initViews(Activity activity) {
         urlTopBanner = activity.findViewById(R.id.urlTopBanner);
         tvCurrentUrlBanner = activity.findViewById(R.id.tvCurrentUrlBanner);
-        btnChangeUrlBanner = activity.findViewById(R.id.btnChangeUrlBanner);
         btnCloseUrlBanner = activity.findViewById(R.id.btnCloseUrlBanner);
         btnBannerSelectCis = activity.findViewById(R.id.btnBannerSelectCis);
         btnBannerSelectOther = activity.findViewById(R.id.btnBannerSelectOther);
-
-        if (btnChangeUrlBanner != null) {
-            btnChangeUrlBanner.setOnClickListener(v -> {
-                hideUrlTopBannerAnimated();
-                if (callback != null) {
-                    callback.onChangeUrlRequested();
-                }
-            });
-        }
 
         if (btnCloseUrlBanner != null) {
             btnCloseUrlBanner.setOnClickListener(v -> hideUrlTopBannerAnimated());

@@ -48,6 +48,7 @@ public class PlayerProgressController {
         PlayersManager getPlayersManager();
         ImageView getBookmarkButton();
         ImageView getPortraitBookmarkButton();
+        Object getCurrentWatchStatusId();
         void saveLatestViewOnExit();
         void safeRunOnUiThread(Runnable runnable);
     }
@@ -169,11 +170,14 @@ public class PlayerProgressController {
         String mediaSlug = (animeUrl != null && !animeUrl.isEmpty()) ? ApiService.extractMediaSlugFromUrl(animeUrl) : null;
         if (mediaSlug == null) return;
 
+        Object statusId = callback.getCurrentWatchStatusId();
+
         em.getBookmarkManager().addBookmark(
                 mediaSlug,
                 currentPlayer,
                 currentEpisode,
                 currentPosition,
+                statusId,
                 new BookmarkManager.BookmarkAddCallback() {
                     @Override
                     public void onBookmarkAdded(int episodeId) {

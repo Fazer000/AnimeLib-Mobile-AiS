@@ -131,26 +131,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <View
-        android:layout_width="1dp"
-        android:layout_height="16dp"
-        android:layout_marginHorizontal="6dp"
-        android:background="?attr/borderColor" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnChangeUrlBanner"
-        style="@style/Widget.Material3.Button.TextButton"
-        android:layout_width="wrap_content"
-        android:layout_height="28dp"
-        android:text="Все"
-        android:textColor="?attr/secondaryColor"
-        android:textSize="11sp"
-        android:fontFamily="@font/open_sans_semibold"
-        android:paddingHorizontal="4dp"
-        android:insetTop="0dp"
-        android:insetBottom="0dp"
-        android:minWidth="0dp"
-        android:minHeight="0dp" />
 
     <ImageButton
         android:id="@+id/btnCloseUrlBanner"

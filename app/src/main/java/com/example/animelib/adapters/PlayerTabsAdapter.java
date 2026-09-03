@@ -175,7 +175,7 @@ public class PlayerTabsAdapter extends RecyclerView.Adapter<PlayerTabsAdapter.Pl
     }
 
     private boolean hasSubtitles(EpisodeResponse.PlayerData p) {
-        return p != null && p.getSubtitles() != null && !p.getSubtitles().isEmpty();
+        return p != null && p.isSubtitles();
     }
 
     private List<EpisodeResponse.PlayerData> filterAndSortPlayers(List<EpisodeResponse.PlayerData> originalList) {

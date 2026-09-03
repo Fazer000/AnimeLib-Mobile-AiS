@@ -1450,10 +1450,14 @@ public class ApiService {
      * Добавляет серию в закладки (Синхронно)
      */
     public boolean addBookmarkSync(String mediaSlug, int episodeId, int teamId, int episodeNumber, String currentTimecode) {
+        return addBookmarkSync(mediaSlug, episodeId, teamId, episodeNumber, currentTimecode, null);
+    }
+
+    public boolean addBookmarkSync(String mediaSlug, int episodeId, int teamId, int episodeNumber, String currentTimecode, Object statusId) {
         if (mediaSlug == null || mediaSlug.isEmpty()) return false;
         try {
             com.google.gson.JsonObject requestBody = createBookmarkRequestBody(
-                    mediaSlug, episodeId, teamId, episodeNumber, currentTimecode
+                    mediaSlug, episodeId, teamId, episodeNumber, currentTimecode, statusId
             );
             String jsonString = gson.toJson(requestBody);
             okhttp3.RequestBody body = okhttp3.RequestBody.create(jsonString, okhttp3.MediaType.get("application/json; charset=utf-8"));
@@ -1482,18 +1486,24 @@ public class ApiService {
      */
     public void addBookmark(String mediaSlug, int episodeId, int teamId, int episodeNumber, 
                            String currentTimecode, BookmarkCallback callback) {
+        addBookmark(mediaSlug, episodeId, teamId, episodeNumber, currentTimecode, null, callback);
+    }
+
+    public void addBookmark(String mediaSlug, int episodeId, int teamId, int episodeNumber, 
+                           String currentTimecode, Object statusId, BookmarkCallback callback) {
         
         Log.d("ApiService", "Adding bookmark - mediaSlug: " + mediaSlug + 
                    ", episodeId: " + episodeId + 
                    ", teamId: " + teamId + 
                    ", episodeNumber: " + episodeNumber + 
-                   ", timecode: " + currentTimecode);
+                   ", timecode: " + currentTimecode +
+                   ", statusId: " + statusId);
         
         safeExecute(() -> {
             try {
                 // Создаем JSON объект для запроса
                 com.google.gson.JsonObject requestBody = createBookmarkRequestBody(
-                    mediaSlug, episodeId, teamId, episodeNumber, currentTimecode
+                    mediaSlug, episodeId, teamId, episodeNumber, currentTimecode, statusId
                 );
                 
                 String jsonString = gson.toJson(requestBody);
@@ -1639,7 +1649,7 @@ public class ApiService {
      * Создает JSON объект для запроса добавления закладки
      */
     private com.google.gson.JsonObject createBookmarkRequestBody(String mediaSlug, int episodeId, int teamId, 
-                                               int episodeNumber, String currentTimecode) {
+                                               int episodeNumber, String currentTimecode, Object statusId) {
         
         com.google.gson.JsonObject requestBody = new com.google.gson.JsonObject();
         requestBody.addProperty("media_type", "anime");
@@ -1648,7 +1658,22 @@ public class ApiService {
         // Создаем объект bookmark
         com.google.gson.JsonObject bookmark = new com.google.gson.JsonObject();
         bookmark.addProperty("item_id", episodeId);
-        bookmark.addProperty("status", 21);
+        
+        if (statusId instanceof Number) {
+            bookmark.addProperty("status", ((Number) statusId).intValue());
+        } else if (statusId instanceof String) {
+            try {
+                int parsedInt = Integer.parseInt((String) statusId);
+                bookmark.addProperty("status", parsedInt);
+            } catch (NumberFormatException e) {
+                bookmark.addProperty("status", (String) statusId);
+            }
+        } else if (statusId != null) {
+            bookmark.addProperty("status", statusId.toString());
+        } else {
+            bookmark.addProperty("status", 21);
+        }
+        
         bookmark.addProperty("progress", currentTimecode);
         requestBody.add("bookmark", bookmark);
         
