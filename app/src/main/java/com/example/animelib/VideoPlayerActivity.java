@@ -1750,8 +1750,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 }
             }
             if (tvPortraitEpisodeTitle != null) {
-                String epTitle = (epNum != null && !epNum.isEmpty() ? (epNum + " серия") : "") + (!cleanName.isEmpty() ? (", " + cleanName) : "");
-                SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, epTitle);
+                if (!cleanName.isEmpty()) {
+                    SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, cleanName);
+                    tvPortraitEpisodeTitle.setVisibility(View.VISIBLE);
+                } else {
+                    SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, "");
+                    tvPortraitEpisodeTitle.setVisibility(View.GONE);
+                }
             }
 
             if (playerAnimeInfoController != null) {
@@ -1955,14 +1960,24 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 if (curEp != null) {
                     String num = curEp.getNumber() != null ? curEp.getNumber().trim() : "";
                     String name = cleanEpisodeName(curEp.getName(), num);
-                    String epTitle = (!num.isEmpty() ? (num + " серия") : "") + (!name.isEmpty() ? (", " + name) : "");
-                    SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, epTitle);
+                    if (!name.isEmpty()) {
+                        SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, name);
+                        tvPortraitEpisodeTitle.setVisibility(View.VISIBLE);
+                    } else {
+                        SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, "");
+                        tvPortraitEpisodeTitle.setVisibility(View.GONE);
+                    }
                 } else if (isOfflineMode) {
                     String epNum = getIntent() != null ? getIntent().getStringExtra("EXTRA_EPISODE_NUMBER") : null;
                     String epName = getIntent() != null ? getIntent().getStringExtra("EXTRA_EPISODE_TITLE") : null;
                     String cleanName = cleanEpisodeName(epName, epNum);
-                    String epTitle = (epNum != null && !epNum.isEmpty() ? (epNum + " серия") : "") + (!cleanName.isEmpty() ? (", " + cleanName) : "");
-                    SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, epTitle);
+                    if (!cleanName.isEmpty()) {
+                        SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, cleanName);
+                        tvPortraitEpisodeTitle.setVisibility(View.VISIBLE);
+                    } else {
+                        SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, "");
+                        tvPortraitEpisodeTitle.setVisibility(View.GONE);
+                    }
                 } else {
                     SkeletonHelper.showSkeleton(tvPortraitEpisodeTitle, 120);
                 }
@@ -3629,8 +3644,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
             EpisodesListResponse.EpisodeItem curEp = episodesManager != null ? episodesManager.getCurrentEpisode() : null;
             String epNum = curEp != null && curEp.getNumber() != null ? curEp.getNumber() : (getIntent() != null ? getIntent().getStringExtra("EXTRA_EPISODE_NUMBER") : null);
             String cleanName = cleanEpisodeName(episodeTitle, epNum);
-            String epTitle = (epNum != null && !epNum.isEmpty() ? (epNum + " серия") : "") + (!cleanName.isEmpty() ? (", " + cleanName) : "");
-            SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, epTitle);
+            if (!cleanName.isEmpty()) {
+                SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, cleanName);
+                tvPortraitEpisodeTitle.setVisibility(View.VISIBLE);
+            } else {
+                SkeletonHelper.hideSkeleton(tvPortraitEpisodeTitle, "");
+                tvPortraitEpisodeTitle.setVisibility(View.GONE);
+            }
         }
 
         Uri videoUri = Uri.fromFile(file);

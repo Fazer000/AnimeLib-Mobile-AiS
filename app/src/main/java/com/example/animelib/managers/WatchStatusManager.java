@@ -15,7 +15,7 @@ public class WatchStatusManager {
             new WatchStatusItem("Любимые", 25, "#ff6666"),
             new WatchStatusItem("Пересматриваю", 26, "#ff6666"),
             new WatchStatusItem("Отложено", 27, "#ff6666"),
-            new WatchStatusItem("Другое", "other", "#888888")
+            new WatchStatusItem("Другое", 28, "#888888")
     );
 
     public static WatchStatusItem getStatusById(Object id) {
@@ -29,8 +29,12 @@ public class WatchStatusManager {
                     return item;
                 }
             }
-            if (id instanceof String && item.getId() instanceof String) {
-                if (((String) id).equalsIgnoreCase((String) item.getId())) {
+            if (id instanceof String) {
+                String strId = (String) id;
+                if (item.getId() instanceof String && strId.equalsIgnoreCase((String) item.getId())) {
+                    return item;
+                }
+                if ("other".equalsIgnoreCase(strId) && Integer.valueOf(28).equals(item.getId())) {
                     return item;
                 }
             }
