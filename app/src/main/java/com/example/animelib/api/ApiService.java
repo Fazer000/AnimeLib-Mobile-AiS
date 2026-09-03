@@ -336,7 +336,7 @@ public class ApiService {
     public void fetchAnimeInfo(String animeSlugOrId, AnimeInfoCallback callback) {
         safeExecute(() -> {
             try {
-                String apiUrl = "https://api.cdnlibs.org/api/anime/" + animeSlugOrId + "?fields[]=rate&fields[]=rate_avg&fields[]=releaseDate&fields[]=episodes&fields[]=episodes_count&fields[]=close_view&fields[]=userRating";
+                String apiUrl = "https://api.cdnlibs.org/api/anime/" + animeSlugOrId + "?fields[]=background&fields[]=eng_name&fields[]=otherNames&fields[]=summary&fields[]=releaseDate&fields[]=type_id&fields[]=caution&fields[]=views&fields[]=close_view&fields[]=rate_avg&fields[]=rate&fields[]=genres&fields[]=tags&fields[]=teams&fields[]=authors&fields[]=publisher&fields[]=userRating&fields[]=anime_status_id&fields[]=episodes&fields[]=episodes_count&fields[]=shiki_rate";
                 Request request = buildApiRequest(apiUrl).build();
 
                 httpClient.newCall(request).enqueue(new Callback() {
@@ -357,7 +357,8 @@ public class ApiService {
                             AnimeInfoResponse info = gson.fromJson(body, AnimeInfoResponse.class);
                             callback.onAnimeInfoReceived(info);
                         } catch (Exception ex) {
-                            callback.onError("Ошибка парсинга");
+                            Log.e("ApiService", "Failed to parse anime info JSON: " + ex.getMessage(), ex);
+                            callback.onError("Ошибка парсинга: " + ex.getMessage());
                         }
                     }
                 });

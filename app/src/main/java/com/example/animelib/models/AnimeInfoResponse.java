@@ -23,6 +23,14 @@ public class AnimeInfoResponse {
         private ItemsCount items_count;
         private String shikimori_href;
         private double shiki_rate;
+        private com.google.gson.JsonElement summary;
+        private java.util.List<String> otherNames;
+        private java.util.List<TagOrGenre> genres;
+        private java.util.List<TagOrGenre> tags;
+        private java.util.List<TagOrGenre> authors;
+        private java.util.List<TagOrGenre> publisher;
+        private com.google.gson.JsonElement views;
+        private Background background;
 
         public int getId() { return id; }
         public String getName() { return name; }
@@ -39,6 +47,107 @@ public class AnimeInfoResponse {
         public ItemsCount getItems_count() { return items_count; }
         public String getShikimori_href() { return shikimori_href; }
         public double getShiki_rate() { return shiki_rate; }
+        public com.google.gson.JsonElement getSummaryElement() { return summary; }
+        
+        public String getSummaryText() {
+            if (summary == null || summary.isJsonNull()) return "";
+            if (summary.isJsonPrimitive()) {
+                return summary.getAsString();
+            }
+            if (summary.isJsonObject()) {
+                StringBuilder sb = new StringBuilder();
+                extractContentText(summary.getAsJsonObject(), sb);
+                return sb.toString().trim();
+            }
+            return "";
+        }
+
+        private void extractContentText(com.google.gson.JsonElement element, StringBuilder sb) {
+            if (element == null || element.isJsonNull()) return;
+            if (element.isJsonObject()) {
+                com.google.gson.JsonObject obj = element.getAsJsonObject();
+                String type = obj.has("type") && obj.get("type").isJsonPrimitive() ? obj.get("type").getAsString() : "";
+                if ("text".equals(type) && obj.has("text") && obj.get("text").isJsonPrimitive()) {
+                    sb.append(obj.get("text").getAsString());
+                }
+                if (obj.has("content") && obj.get("content").isJsonArray()) {
+                    for (com.google.gson.JsonElement child : obj.getAsJsonArray("content")) {
+                        extractContentText(child, sb);
+                    }
+                    if ("paragraph".equals(type)) {
+                        sb.append("\n\n");
+                    }
+                }
+            } else if (element.isJsonArray()) {
+                for (com.google.gson.JsonElement item : element.getAsJsonArray()) {
+                    extractContentText(item, sb);
+                }
+            }
+        }
+
+        public java.util.List<String> getOtherNames() { return otherNames; }
+        public java.util.List<TagOrGenre> getGenres() { return genres; }
+        public java.util.List<TagOrGenre> getTags() { return tags; }
+        public java.util.List<TagOrGenre> getAuthors() { return authors; }
+        public java.util.List<TagOrGenre> getPublisher() { return publisher; }
+        public Background getBackground() { return background; }
+
+        public String getFormattedViews() {
+            if (views == null || views.isJsonNull()) return "";
+            if (views.isJsonPrimitive()) {
+                try {
+                    long v = views.getAsLong();
+                    if (v <= 0) return "";
+                    if (v >= 1000000) {
+                        return String.format(java.util.Locale.US, "%.1fM просмотров", v / 1000000.0);
+                    } else if (v >= 1000) {
+                        return String.format(java.util.Locale.US, "%.1fK просмотров", v / 1000.0);
+                    }
+                    return v + " просмотров";
+                } catch (Exception ignored) {
+                    return views.getAsString();
+                }
+            }
+            if (views.isJsonObject()) {
+                com.google.gson.JsonObject obj = views.getAsJsonObject();
+                if (obj.has("short") && obj.get("short").isJsonPrimitive()) {
+                    return obj.get("short").getAsString() + " просмотров";
+                }
+                if (obj.has("formated") && obj.get("formated").isJsonPrimitive()) {
+                    return obj.get("formated").getAsString() + " просмотров";
+                }
+                if (obj.has("total") && obj.get("total").isJsonPrimitive()) {
+                    try {
+                        long v = obj.get("total").getAsLong();
+                        if (v >= 1000000) {
+                            return String.format(java.util.Locale.US, "%.1fM просмотров", v / 1000000.0);
+                        } else if (v >= 1000) {
+                            return String.format(java.util.Locale.US, "%.1fK просмотров", v / 1000.0);
+                        }
+                        return v + " просмотров";
+                    } catch (Exception ignored) {}
+                }
+            }
+            return "";
+        }
+    }
+
+    public static class Background {
+        private String filename;
+        private String url;
+
+        public String getFilename() { return filename; }
+        public String getUrl() { return url; }
+    }
+
+    public static class TagOrGenre {
+        private int id;
+        private String name;
+        private String russian;
+
+        public int getId() { return id; }
+        public String getName() { return name != null ? name : (russian != null ? russian : ""); }
+        public String getRussian() { return russian != null ? russian : name; }
     }
 
     public static class Cover {
