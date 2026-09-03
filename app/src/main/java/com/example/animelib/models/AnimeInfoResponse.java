@@ -144,10 +144,54 @@ public class AnimeInfoResponse {
         private int id;
         private String name;
         private String russian;
+        private Cover cover;
+        private com.google.gson.JsonElement avatar;
+        private com.google.gson.JsonElement image;
+        private com.google.gson.JsonElement picture;
 
         public int getId() { return id; }
         public String getName() { return name != null ? name : (russian != null ? russian : ""); }
         public String getRussian() { return russian != null ? russian : name; }
+
+        public String getAvatarUrl() {
+            if (cover != null && cover.getDefaultUrl() != null && !cover.getDefaultUrl().isEmpty()) {
+                return cover.getDefaultUrl();
+            }
+            if (cover != null && cover.getThumbnail() != null && !cover.getThumbnail().isEmpty()) {
+                return cover.getThumbnail();
+            }
+            if (cover != null && cover.getMd() != null && !cover.getMd().isEmpty()) {
+                return cover.getMd();
+            }
+            String url = parseJsonUrl(avatar);
+            if (url != null && !url.isEmpty()) return url;
+            url = parseJsonUrl(image);
+            if (url != null && !url.isEmpty()) return url;
+            url = parseJsonUrl(picture);
+            if (url != null && !url.isEmpty()) return url;
+            return "";
+        }
+
+        private String parseJsonUrl(com.google.gson.JsonElement elem) {
+            if (elem == null || elem.isJsonNull()) return "";
+            if (elem.isJsonPrimitive()) return elem.getAsString();
+            if (elem.isJsonObject()) {
+                com.google.gson.JsonObject obj = elem.getAsJsonObject();
+                if (obj.has("default") && obj.get("default").isJsonPrimitive()) {
+                    return obj.get("default").getAsString();
+                }
+                if (obj.has("thumbnail") && obj.get("thumbnail").isJsonPrimitive()) {
+                    return obj.get("thumbnail").getAsString();
+                }
+                if (obj.has("url") && obj.get("url").isJsonPrimitive()) {
+                    return obj.get("url").getAsString();
+                }
+                if (obj.has("md") && obj.get("md").isJsonPrimitive()) {
+                    return obj.get("md").getAsString();
+                }
+            }
+            return "";
+        }
     }
 
     public static class Cover {

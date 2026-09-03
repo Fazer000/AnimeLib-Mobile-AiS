@@ -315,7 +315,7 @@ public class PlayerAnimeInfoController {
 
             if (data.getAuthors() != null && !data.getAuthors().isEmpty()) {
                 for (AnimeInfoResponse.TagOrGenre author : data.getAuthors()) {
-                    View card = createAuthorCardView(context, author.getName(), "Автор");
+                    View card = createAuthorCardView(context, author.getName(), "Автор", author.getAvatarUrl());
                     llPortraitAuthorsContainer.addView(card);
                     hasAuthors = true;
                 }
@@ -323,7 +323,7 @@ public class PlayerAnimeInfoController {
 
             if (data.getPublisher() != null && !data.getPublisher().isEmpty()) {
                 for (AnimeInfoResponse.TagOrGenre pub : data.getPublisher()) {
-                    View card = createAuthorCardView(context, pub.getName(), "Издатель");
+                    View card = createAuthorCardView(context, pub.getName(), "Издатель", pub.getAvatarUrl());
                     llPortraitAuthorsContainer.addView(card);
                     hasAuthors = true;
                 }
@@ -383,7 +383,7 @@ public class PlayerAnimeInfoController {
         }
     }
 
-    private View createAuthorCardView(Context context, String name, String role) {
+    private View createAuthorCardView(Context context, String name, String role, String avatarUrl) {
         LinearLayout card = new LinearLayout(context);
         card.setOrientation(LinearLayout.HORIZONTAL);
         card.setGravity(android.view.Gravity.CENTER_VERTICAL);
@@ -398,11 +398,18 @@ public class PlayerAnimeInfoController {
         card.setLayoutParams(params);
 
         ImageView icon = new ImageView(context);
-        icon.setImageResource(R.drawable.ic_avatar_placeholder);
-        int iconSize = dpToPx(context, 20);
+        icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        int iconSize = dpToPx(context, 22);
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(iconSize, iconSize);
         iconParams.setMarginEnd(dpToPx(context, 6));
         icon.setLayoutParams(iconParams);
+
+        if (!TextUtils.isEmpty(avatarUrl)) {
+            ImageLoader.getInstance().loadInto(icon, avatarUrl, R.drawable.ic_avatar_placeholder);
+        } else {
+            icon.setImageResource(R.drawable.ic_avatar_placeholder);
+        }
+
         card.addView(icon);
 
         LinearLayout textCol = new LinearLayout(context);
@@ -428,20 +435,22 @@ public class PlayerAnimeInfoController {
     private com.google.android.material.chip.Chip createAgeChip(Context context, String text) {
         com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(context);
         chip.setText(text);
-        chip.setTextSize(11.5f);
+        chip.setTextSize(13f);
         chip.setTextColor(android.graphics.Color.parseColor("#FF5252"));
         chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#2A181C")));
         chip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4D2026")));
         chip.setChipStrokeWidth(dpToPx(context, 1));
         chip.setEnsureMinTouchTargetSize(false);
-        chip.setChipMinHeight(dpToPx(context, 28));
+        chip.setChipStartPadding(dpToPx(context, 6));
+        chip.setChipEndPadding(dpToPx(context, 6));
+        chip.setChipMinHeight(dpToPx(context, 26));
         return chip;
     }
 
     private com.google.android.material.chip.Chip createTagChip(Context context, String text, boolean isGenre) {
         com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(context);
         chip.setText(text);
-        chip.setTextSize(11.5f);
+        chip.setTextSize(13f);
         if (isGenre) {
             chip.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.purple_primary));
             chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(
@@ -458,7 +467,9 @@ public class PlayerAnimeInfoController {
             chip.setChipStrokeWidth(dpToPx(context, 1));
         }
         chip.setEnsureMinTouchTargetSize(false);
-        chip.setChipMinHeight(dpToPx(context, 28));
+        chip.setChipStartPadding(dpToPx(context, 6));
+        chip.setChipEndPadding(dpToPx(context, 6));
+        chip.setChipMinHeight(dpToPx(context, 26));
         return chip;
     }
 
