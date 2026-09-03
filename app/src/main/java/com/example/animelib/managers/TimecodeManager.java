@@ -81,6 +81,9 @@ public class TimecodeManager {
                             currentPositionSeconds <= timecode.getTo()) {
                             long seekPosition = timecode.getTo() * 1000L; // Конвертируем секунды в миллисекунды
                             player.seekTo(seekPosition);
+                            if (timebarSegmentsView != null) {
+                                timebarSegmentsView.setProgress(seekPosition, player.getBufferedPosition(), player.getDuration());
+                            }
                             Log.d(TAG, "Skipping segment: " + timecode.getType() + " from " + timecode.getFrom() + "s to " + timecode.getTo() + "s at " + seekPosition + "ms");
                             break;
                         }
@@ -126,30 +129,40 @@ public class TimecodeManager {
             playerListener = new Player.Listener() {
                 @Override
                 public void onPositionDiscontinuity(Player.PositionInfo oldPosition, Player.PositionInfo newPosition, int reason) {
+                    updateProgress();
                     updateTimecodeButtonsVisibility();
                 }
                 
                 @Override
                 public void onIsPlayingChanged(boolean isPlaying) {
-                    if (isPlaying) {
-                        startPeriodicUpdate();
-                    } else {
-                        stopPeriodicUpdate();
-                    }
+                    updateProgress();
                     updateTimecodeButtonsVisibility();
                 }
 
                 @Override
                 public void onPlaybackStateChanged(int state) {
+                    updateProgress();
                     if (state == Player.STATE_READY) {
                         updateTimecodeSegmentsOnBar();
                     }
+                }
+
+                @Override
+                public void onEvents(Player player, Player.Events events) {
+                    updateProgress();
                 }
             };
             player.addListener(playerListener);
         }
 
         updateTimecodeSegmentsOnBar();
+        startPeriodicUpdate();
+    }
+    
+    public void updateProgress() {
+        if (player != null && timebarSegmentsView != null && !isScrubbing) {
+            timebarSegmentsView.setProgress(player.getCurrentPosition(), player.getBufferedPosition(), player.getDuration());
+        }
     }
     
     /**
@@ -290,11 +303,12 @@ public class TimecodeManager {
         updateRunnable = new Runnable() {
             @Override
             public void run() {
-                if (player != null && timebarSegmentsView != null && !isScrubbing) {
-                    timebarSegmentsView.setProgress(player.getCurrentPosition(), player.getBufferedPosition(), player.getDuration());
-                }
+                updateProgress();
                 updateTimecodeButtonsVisibility();
-                updateHandler.postDelayed(this, 100);
+                if (updateHandler != null) {
+                    boolean playing = player != null && player.isPlaying();
+                    updateHandler.postDelayed(this, playing ? 100 : 200);
+                }
             }
         };
         updateHandler.post(updateRunnable);

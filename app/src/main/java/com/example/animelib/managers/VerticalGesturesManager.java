@@ -206,27 +206,27 @@ public class VerticalGesturesManager {
     
     /**
      * Определяет тип панели/жеста на основе координат
-     * Левая зона 30% — Яркость (на всю высоту)
-     * Правая зона 30% — Громкость (на всю высоту)
-     * Центральная зона 40% — Эпизоды (на всю высоту)
+     * Левая зона 25% — Яркость (на всю высоту)
+     * Правая зона 25% — Громкость (на всю высоту)
+     * Центральная зона 50% — Эпизоды (на всю высоту)
      */
     private PanelType detectPanelType(float deltaY) {
-        // Левая зона: 0%..30% ширины экрана — Яркость
-        if (dragStartX <= screenWidth * 0.30f) {
-            Log.d(TAG, "→ BRIGHTNESS (left 30% zone)");
+        // Левая зона: 0%..25% ширины экрана — Яркость
+        if (dragStartX <= screenWidth * 0.25f) {
+            Log.d(TAG, "→ BRIGHTNESS (left 25% zone)");
             initBrightnessGesture();
             return PanelType.BRIGHTNESS;
         }
 
-        // Правая зона: 70%..100% ширины экрана — Громкость
-        if (dragStartX >= screenWidth * 0.70f) {
-            Log.d(TAG, "→ VOLUME (right 30% zone)");
+        // Правая зона: 75%..100% ширины экрана — Громкость
+        if (dragStartX >= screenWidth * 0.75f) {
+            Log.d(TAG, "→ VOLUME (right 25% zone)");
             initVolumeGesture();
             return PanelType.VOLUME;
         }
 
-        // Центральная зона: 30%..70% ширины экрана (40% по центру) — Эпизоды
-        Log.d(TAG, "→ EPISODES (center 40% zone)");
+        // Центральная зона: 25%..75% ширины экрана (50% по центру) — Эпизоды
+        Log.d(TAG, "→ EPISODES (center 50% zone)");
         return PanelType.EPISODES;
     }
 

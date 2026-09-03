@@ -1,12 +1,16 @@
 package com.example.animelib.managers;
 
 import android.content.Context;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -124,6 +128,11 @@ public class PlayersManager {
             tabLayout = slidingMenuPanel.findViewById(R.id.tabLayout);
             sidePanelViewPager = slidingMenuPanel.findViewById(R.id.viewPager);
 
+            EditText etSearch = slidingMenuPanel.findViewById(R.id.etSearchVoiceovers);
+            ImageButton btnClear = slidingMenuPanel.findViewById(R.id.btnClearVoiceoversSearch);
+            View btnSort = slidingMenuPanel.findViewById(R.id.btnSortVoiceovers);
+            TextView tvSortText = slidingMenuPanel.findViewById(R.id.tvSortVoiceovers);
+
             if (sidePanelViewPager != null) {
                 // Изначально отключаем свайпы по ViewPager2, чтобы drag панели не сдвигал табы
                 sidePanelViewPager.setUserInputEnabled(false);
@@ -136,14 +145,53 @@ public class PlayersManager {
                 );
                 sidePanelViewPager.setAdapter(sidePanelTabsAdapter);
 
+                if (tvSortText != null) {
+                    tvSortText.setText(com.example.animelib.util.VoiceoverSortHelper.getSortLabel(sidePanelTabsAdapter.getSortType()));
+                }
+
                 if (tabLayout != null) {
                     new TabLayoutMediator(tabLayout, sidePanelViewPager, (tab, position) -> {
                         if (position == 0) {
-                            tab.setText("AnimeLib");
+                            int count = animelibPlayers != null ? animelibPlayers.size() : 0;
+                            tab.setText("AnimeLib" + (count > 0 ? " (" + count + ")" : ""));
                         } else if (position == 1) {
-                            tab.setText("Kodik");
+                            int count = kodikPlayers != null ? kodikPlayers.size() : 0;
+                            tab.setText("Kodik" + (count > 0 ? " (" + count + ")" : ""));
                         }
                     }).attach();
+                }
+
+                if (etSearch != null) {
+                    etSearch.addTextChangedListener(new TextWatcher() {
+                        @Override
+                        public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+                        @Override
+                        public void onTextChanged(CharSequence s, int start, int before, int count) {
+                            String q = s.toString();
+                            if (btnClear != null) {
+                                btnClear.setVisibility(q.trim().isEmpty() ? View.GONE : View.VISIBLE);
+                            }
+                            if (sidePanelTabsAdapter != null) {
+                                sidePanelTabsAdapter.setFilterQuery(q);
+                            }
+                        }
+
+                        @Override
+                        public void afterTextChanged(Editable s) {}
+                    });
+                }
+
+                if (btnClear != null && etSearch != null) {
+                    btnClear.setOnClickListener(v -> etSearch.setText(""));
+                }
+
+                if (btnSort != null) {
+                    btnSort.setOnClickListener(v -> {
+                        if (sidePanelTabsAdapter != null && context != null) {
+                            com.example.animelib.util.VoiceoverSortHelper.showSortPopup(btnSort, context, sidePanelTabsAdapter);
+                        }
+                    });
                 }
 
                 sidePanelViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {

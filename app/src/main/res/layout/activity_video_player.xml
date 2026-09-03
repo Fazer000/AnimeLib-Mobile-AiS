@@ -254,8 +254,9 @@
 
                 <TextView
                     android:id="@+id/gestureIndicatorText"
-                    android:layout_width="wrap_content"
+                    android:layout_width="42dp"
                     android:layout_height="wrap_content"
+                    android:gravity="center_vertical|end"
                     android:text="100%"
                     android:textColor="@color/player_item_inactive_text"
                     android:textSize="13sp"
