@@ -218,6 +218,7 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
         LinearLayout autoPlayOption = view.findViewById(R.id.autoPlayOption);
         LinearLayout skipDurationOption = view.findViewById(R.id.skipDurationOption);
         LinearLayout themeOption = view.findViewById(R.id.themeOption);
+        LinearLayout faqOption = view.findViewById(R.id.faqOption);
         LinearLayout resizeModeOption = view.findViewById(R.id.resizeModeOption);
 
         TextView currentQualityText = view.findViewById(R.id.currentQualityText);
@@ -366,6 +367,14 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
             dismiss();
             showThemeDialog();
         });
+
+        // FAQ option click
+        if (faqOption != null) {
+            faqOption.setOnClickListener(v -> {
+                dismiss();
+                showFaqDialog();
+            });
+        }
 
         // Resize mode option click
         if (resizeModeOption != null) {
@@ -833,6 +842,12 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
         // Show main settings when back button is pressed
         bottomSheet.setOnBackPressedListener(this::show);
 
+        bottomSheet.show();
+    }
+
+    private void showFaqDialog() {
+        FaqBottomSheet bottomSheet = new FaqBottomSheet(getContext());
+        bottomSheet.setOnBackPressedListener(this::show);
         bottomSheet.show();
     }
 
