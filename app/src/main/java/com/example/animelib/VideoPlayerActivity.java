@@ -3026,6 +3026,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
         String animeSlug = apiService.extractAnimeSlug(animeUrl);
         if (animeSlug == null) return;
 
+        if (playerAnimeInfoController != null) {
+            playerAnimeInfoController.showSkeletons();
+        }
+
         apiService.fetchAnimeInfo(animeSlug, new ApiService.AnimeInfoCallback() {
             @Override
             public void onAnimeInfoReceived(AnimeInfoResponse response) {
@@ -3035,6 +3039,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
             @Override
             public void onError(String errorMessage) {
                 Log.e("VideoPlayer", "Failed to load anime info: " + errorMessage);
+                runOnUiThread(() -> {
+                    if (playerAnimeInfoController != null) {
+                        playerAnimeInfoController.showError(() -> loadAnimeInfoForPlaceholder());
+                    }
+                });
             }
         });
     }
@@ -4605,6 +4614,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
             public void onError(String error) {
                 safeRunOnUiThread(() -> {
                     SkeletonHelper.hideSkeleton(animeTitleView, "Аниме");
+                    if (playerAnimeInfoController != null && currentAnimeInfo == null) {
+                        playerAnimeInfoController.showError(() -> updateAnimeInfoHeaderFull());
+                    }
                 });
                 Log.w("VideoPlayer", "Failed to load anime title: " + error);
             }

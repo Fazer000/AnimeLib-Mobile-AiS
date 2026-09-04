@@ -4,6 +4,7 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -45,9 +46,21 @@ public class PlayerAnimeInfoController {
     private TextView tvPortraitInfoStatus;
     private TextView tvPortraitInfoEpisodes;
     private TextView tvPortraitInfoReleaseDate;
+    private HorizontalScrollView hsvPortraitAuthors;
     private LinearLayout llPortraitAuthorsContainer;
     private TextView tvPortraitInfoSummary;
     private com.google.android.material.chip.ChipGroup cgPortraitInfoTagsAndGenres;
+
+    // Error & Retry views
+    private View portraitInfoContentLayout;
+    private View portraitInfoErrorLayout;
+    private View btnRetryPortraitAnimeInfo;
+
+    private View animeInfoContentLayout;
+    private View animeInfoErrorLayout;
+    private View btnRetryAnimeInfoPlaceholder;
+
+    private Runnable onRetryListener;
 
     private boolean hasShownInitialAnimeInfo = false;
     private String currentPosterUrl = "";
@@ -80,9 +93,33 @@ public class PlayerAnimeInfoController {
         tvPortraitInfoStatus = rootView.findViewById(R.id.tvPortraitInfoStatus);
         tvPortraitInfoEpisodes = rootView.findViewById(R.id.tvPortraitInfoEpisodes);
         tvPortraitInfoReleaseDate = rootView.findViewById(R.id.tvPortraitInfoReleaseDate);
+        hsvPortraitAuthors = rootView.findViewById(R.id.hsvPortraitAuthors);
         llPortraitAuthorsContainer = rootView.findViewById(R.id.llPortraitAuthorsContainer);
         tvPortraitInfoSummary = rootView.findViewById(R.id.tvPortraitInfoSummary);
         cgPortraitInfoTagsAndGenres = rootView.findViewById(R.id.cgPortraitInfoTagsAndGenres);
+
+        // Error & Retry layouts
+        portraitInfoContentLayout = rootView.findViewById(R.id.portraitInfoContentLayout);
+        portraitInfoErrorLayout = rootView.findViewById(R.id.portraitInfoErrorLayout);
+        btnRetryPortraitAnimeInfo = rootView.findViewById(R.id.btnRetryPortraitAnimeInfo);
+
+        animeInfoContentLayout = rootView.findViewById(R.id.animeInfoContentLayout);
+        animeInfoErrorLayout = rootView.findViewById(R.id.animeInfoErrorLayout);
+        btnRetryAnimeInfoPlaceholder = rootView.findViewById(R.id.btnRetryAnimeInfoPlaceholder);
+
+        View.OnClickListener retryClickListener = v -> {
+            if (onRetryListener != null) {
+                showSkeletons();
+                onRetryListener.run();
+            }
+        };
+
+        if (btnRetryPortraitAnimeInfo != null) {
+            btnRetryPortraitAnimeInfo.setOnClickListener(retryClickListener);
+        }
+        if (btnRetryAnimeInfoPlaceholder != null) {
+            btnRetryAnimeInfoPlaceholder.setOnClickListener(retryClickListener);
+        }
 
         if (portraitTitleContainer != null) {
             portraitTitleContainer.setOnClickListener(v -> togglePortraitInfoExpanded());
@@ -94,7 +131,31 @@ public class PlayerAnimeInfoController {
         }
     }
 
+    public void setOnRetryListener(Runnable listener) {
+        this.onRetryListener = listener;
+    }
+
+    public void showError(Runnable retryAction) {
+        if (retryAction != null) {
+            this.onRetryListener = retryAction;
+        }
+
+        hideSkeletons(null);
+
+        if (portraitInfoContentLayout != null) portraitInfoContentLayout.setVisibility(View.GONE);
+        if (portraitInfoErrorLayout != null) portraitInfoErrorLayout.setVisibility(View.VISIBLE);
+
+        if (animeInfoContentLayout != null) animeInfoContentLayout.setVisibility(View.GONE);
+        if (animeInfoErrorLayout != null) animeInfoErrorLayout.setVisibility(View.VISIBLE);
+    }
+
     public void showSkeletons() {
+        if (portraitInfoErrorLayout != null) portraitInfoErrorLayout.setVisibility(View.GONE);
+        if (portraitInfoContentLayout != null) portraitInfoContentLayout.setVisibility(View.VISIBLE);
+
+        if (animeInfoErrorLayout != null) animeInfoErrorLayout.setVisibility(View.GONE);
+        if (animeInfoContentLayout != null) animeInfoContentLayout.setVisibility(View.VISIBLE);
+
         if (animeInfoTitle != null) SkeletonHelper.showSkeleton(animeInfoTitle, 200);
         if (animeInfoOriginalTitle != null) SkeletonHelper.showSkeleton(animeInfoOriginalTitle, 140);
         if (animeInfoRating != null) SkeletonHelper.showSkeleton(animeInfoRating, 40);
@@ -121,6 +182,12 @@ public class PlayerAnimeInfoController {
     }
 
     public void displayAnimeInfo(Context context, AnimeInfoResponse animeInfo) {
+        if (portraitInfoErrorLayout != null) portraitInfoErrorLayout.setVisibility(View.GONE);
+        if (portraitInfoContentLayout != null) portraitInfoContentLayout.setVisibility(View.VISIBLE);
+
+        if (animeInfoErrorLayout != null) animeInfoErrorLayout.setVisibility(View.GONE);
+        if (animeInfoContentLayout != null) animeInfoContentLayout.setVisibility(View.VISIBLE);
+
         if (animeInfo == null || animeInfo.getData() == null) {
             Log.e(TAG, "displayAnimeInfo: animeInfo or data is null");
             return;
@@ -329,7 +396,11 @@ public class PlayerAnimeInfoController {
                 }
             }
 
-            llPortraitAuthorsContainer.setVisibility(hasAuthors ? View.VISIBLE : View.GONE);
+            if (hsvPortraitAuthors != null) {
+                hsvPortraitAuthors.setVisibility(hasAuthors ? View.VISIBLE : View.GONE);
+            } else {
+                llPortraitAuthorsContainer.setVisibility(hasAuthors ? View.VISIBLE : View.GONE);
+            }
         }
 
         // 6. Summary / Synopsis
@@ -435,22 +506,24 @@ public class PlayerAnimeInfoController {
     private com.google.android.material.chip.Chip createAgeChip(Context context, String text) {
         com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(context);
         chip.setText(text);
-        chip.setTextSize(13f);
+        chip.setTextSize(12.5f);
         chip.setTextColor(android.graphics.Color.parseColor("#FF5252"));
         chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#2A181C")));
         chip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4D2026")));
         chip.setChipStrokeWidth(dpToPx(context, 1));
         chip.setEnsureMinTouchTargetSize(false);
-        chip.setChipStartPadding(dpToPx(context, 6));
-        chip.setChipEndPadding(dpToPx(context, 6));
-        chip.setChipMinHeight(dpToPx(context, 26));
+        chip.setChipStartPadding(dpToPx(context, 4));
+        chip.setChipEndPadding(dpToPx(context, 4));
+        chip.setTextStartPadding(dpToPx(context, 2));
+        chip.setTextEndPadding(dpToPx(context, 2));
+        chip.setChipMinHeight(dpToPx(context, 24));
         return chip;
     }
 
     private com.google.android.material.chip.Chip createTagChip(Context context, String text, boolean isGenre) {
         com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(context);
         chip.setText(text);
-        chip.setTextSize(13f);
+        chip.setTextSize(12.5f);
         if (isGenre) {
             chip.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.purple_primary));
             chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(
@@ -467,9 +540,11 @@ public class PlayerAnimeInfoController {
             chip.setChipStrokeWidth(dpToPx(context, 1));
         }
         chip.setEnsureMinTouchTargetSize(false);
-        chip.setChipStartPadding(dpToPx(context, 6));
-        chip.setChipEndPadding(dpToPx(context, 6));
-        chip.setChipMinHeight(dpToPx(context, 26));
+        chip.setChipStartPadding(dpToPx(context, 4));
+        chip.setChipEndPadding(dpToPx(context, 4));
+        chip.setTextStartPadding(dpToPx(context, 2));
+        chip.setTextEndPadding(dpToPx(context, 2));
+        chip.setChipMinHeight(dpToPx(context, 24));
         return chip;
     }
 

@@ -296,6 +296,14 @@
                     </LinearLayout>
                 </RelativeLayout>
 
+                <!-- Оболочка основного контента инфо -->
+                <LinearLayout
+                    android:id="@+id/portraitInfoContentLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+
                 <!-- 1. Постер по центру с оверлей-рейт бейджем внизу -->
                 <FrameLayout
                     android:layout_width="wrap_content"
@@ -466,14 +474,23 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- 5. Карточки Авторов / Издателя (Контейнер динамических карточек) -->
-                <LinearLayout
-                    android:id="@+id/llPortraitAuthorsContainer"
+                <!-- 5. Карточки Авторов / Издателя (Горизонтальная карусель) -->
+                <HorizontalScrollView
+                    android:id="@+id/hsvPortraitAuthors"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
+                    android:scrollbars="none"
+                    android:overScrollMode="never"
+                    android:clipToPadding="false"
                     android:visibility="gone"
-                    android:layout_marginBottom="14dp" />
+                    android:layout_marginBottom="14dp">
+
+                    <LinearLayout
+                        android:id="@+id/llPortraitAuthorsContainer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
 
                 <!-- 6. Описание -->
                 <LinearLayout
@@ -499,8 +516,48 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone"
-                app:chipSpacingHorizontal="6dp"
-                app:chipSpacingVertical="4dp" />
+                app:chipSpacingHorizontal="4dp"
+                app:chipSpacingVertical="3dp" />
+
+                </LinearLayout>
+
+                <!-- Ошибка загрузки инфо в портретном режиме -->
+                <LinearLayout
+                    android:id="@+id/portraitInfoErrorLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:paddingVertical="20dp"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/ic_exclamation_mark"
+                        app:tint="@color/secondary_text_color"
+                        android:layout_marginBottom="10dp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Не удалось загрузить информацию о тайтле"
+                        android:textColor="@color/secondary_text_color"
+                        android:textSize="14sp"
+                        android:gravity="center" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnRetryPortraitAnimeInfo"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="Повторить"
+                        android:textColor="@color/purple_primary"
+                        app:icon="@drawable/ic_refresh"
+                        app:iconTint="@color/purple_primary"
+                        app:strokeColor="@color/purple_primary" />
+                </LinearLayout>
 
         </LinearLayout>
 
