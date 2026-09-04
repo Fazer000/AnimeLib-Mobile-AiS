@@ -468,12 +468,18 @@ public class PlayerAnimeInfoController {
         params.setMarginEnd(dpToPx(context, 8));
         card.setLayoutParams(params);
 
-        ImageView icon = new ImageView(context);
+        com.google.android.material.imageview.ShapeableImageView icon = new com.google.android.material.imageview.ShapeableImageView(context);
         icon.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        int iconSize = dpToPx(context, 22);
+        int iconSize = dpToPx(context, 26);
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(iconSize, iconSize);
-        iconParams.setMarginEnd(dpToPx(context, 6));
+        iconParams.setMarginEnd(dpToPx(context, 8));
         icon.setLayoutParams(iconParams);
+        icon.setShapeAppearanceModel(
+                icon.getShapeAppearanceModel()
+                        .toBuilder()
+                        .setAllCornerSizes(dpToPx(context, 6f))
+                        .build()
+        );
 
         if (!TextUtils.isEmpty(avatarUrl)) {
             ImageLoader.getInstance().loadInto(icon, avatarUrl, R.drawable.ic_avatar_placeholder);
@@ -506,24 +512,25 @@ public class PlayerAnimeInfoController {
     private com.google.android.material.chip.Chip createAgeChip(Context context, String text) {
         com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(context);
         chip.setText(text);
-        chip.setTextSize(12.5f);
+        chip.setTextSize(12f);
         chip.setTextColor(android.graphics.Color.parseColor("#FF5252"));
         chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#2A181C")));
         chip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4D2026")));
         chip.setChipStrokeWidth(dpToPx(context, 0.5f));
         chip.setEnsureMinTouchTargetSize(false);
-        chip.setChipStartPadding(dpToPx(context, 4));
-        chip.setChipEndPadding(dpToPx(context, 4));
-        chip.setTextStartPadding(dpToPx(context, 2));
-        chip.setTextEndPadding(dpToPx(context, 2));
-        chip.setChipMinHeight(dpToPx(context, 24));
+        chip.setChipStartPadding(dpToPx(context, 6));
+        chip.setChipEndPadding(dpToPx(context, 6));
+        chip.setTextStartPadding(dpToPx(context, 1));
+        chip.setTextEndPadding(dpToPx(context, 1));
+        chip.setChipMinHeight(dpToPx(context, 20));
+        chip.setPadding(0, 0, 0, 0);
         return chip;
     }
 
     private com.google.android.material.chip.Chip createTagChip(Context context, String text, boolean isGenre) {
         com.google.android.material.chip.Chip chip = new com.google.android.material.chip.Chip(context);
         chip.setText(text);
-        chip.setTextSize(12.5f);
+        chip.setTextSize(12f);
         if (isGenre) {
             chip.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.purple_primary));
             chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(
@@ -540,11 +547,12 @@ public class PlayerAnimeInfoController {
             chip.setChipStrokeWidth(dpToPx(context, 0.5f));
         }
         chip.setEnsureMinTouchTargetSize(false);
-        chip.setChipStartPadding(dpToPx(context, 4));
-        chip.setChipEndPadding(dpToPx(context, 4));
-        chip.setTextStartPadding(dpToPx(context, 2));
-        chip.setTextEndPadding(dpToPx(context, 2));
-        chip.setChipMinHeight(dpToPx(context, 24));
+        chip.setChipStartPadding(dpToPx(context, 6));
+        chip.setChipEndPadding(dpToPx(context, 6));
+        chip.setTextStartPadding(dpToPx(context, 1));
+        chip.setTextEndPadding(dpToPx(context, 1));
+        chip.setChipMinHeight(dpToPx(context, 20));
+        chip.setPadding(0, 0, 0, 0);
         return chip;
     }
 

@@ -474,7 +474,9 @@
                             android:layout_marginTop="2dp"
                             android:textColor="@color/primary_text_color"
                             android:textSize="12.5sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:maxLines="1"
+                            android:ellipsize="end" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -523,8 +525,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:visibility="gone"
-                app:chipSpacingHorizontal="4dp"
-                app:chipSpacingVertical="3dp" />
+                app:chipSpacingHorizontal="6dp"
+                app:chipSpacingVertical="6dp" />
 
                 </LinearLayout>
 

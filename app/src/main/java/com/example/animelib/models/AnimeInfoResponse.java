@@ -41,7 +41,83 @@ public class AnimeInfoResponse {
         public Type getType() { return type; }
         public Status getStatus() { return status; }
         public String getReleaseDate() { return releaseDate; }
-        public String getReleaseDateString() { return releaseDateString; }
+        
+        public String getReleaseDateString() {
+            String res = releaseDateString;
+            if (res == null || res.trim().isEmpty()) {
+                if (releaseDate != null && !releaseDate.trim().isEmpty()) {
+                    res = parseIsoDate(releaseDate);
+                }
+            }
+            if (res == null || res.trim().isEmpty()) {
+                return "—";
+            }
+
+            res = res.replaceAll("(?i)\\s*г\\.?$", "");
+
+            return res.replace("января", "янв")
+                      .replace("январь", "янв")
+                      .replace("февраля", "фев")
+                      .replace("февраль", "фев")
+                      .replace("марта", "мар")
+                      .replace("март", "мар")
+                      .replace("апреля", "апр")
+                      .replace("апрель", "апр")
+                      .replace("июня", "июн")
+                      .replace("июнь", "июн")
+                      .replace("июля", "июл")
+                      .replace("июль", "июл")
+                      .replace("августа", "авг")
+                      .replace("август", "авг")
+                      .replace("сентября", "сент")
+                      .replace("сентябрь", "сент")
+                      .replace("октября", "окт")
+                      .replace("октябрь", "окт")
+                      .replace("ноября", "нояб")
+                      .replace("ноябрь", "нояб")
+                      .replace("декабря", "дек")
+                      .replace("декабрь", "дек");
+        }
+
+        private String parseIsoDate(String raw) {
+            if (raw == null) return "";
+            String[] parts = raw.split("-");
+            if (parts.length == 3) {
+                String year = parts[0];
+                String month = getShortMonthName(parts[1]);
+                String day = parts[2];
+                try {
+                    int d = Integer.parseInt(day);
+                    day = String.valueOf(d);
+                } catch (Exception ignored) {}
+                return day + " " + month + " " + year;
+            } else if (parts.length == 2) {
+                String year = parts[0];
+                String month = getShortMonthName(parts[1]);
+                return month + " " + year;
+            } else if (parts.length == 1) {
+                return parts[0];
+            }
+            return raw;
+        }
+
+        private String getShortMonthName(String mStr) {
+            switch (mStr) {
+                case "01": return "янв";
+                case "02": return "фев";
+                case "03": return "мар";
+                case "04": return "апр";
+                case "05": return "мая";
+                case "06": return "июн";
+                case "07": return "июл";
+                case "08": return "авг";
+                case "09": return "сент";
+                case "10": return "окт";
+                case "11": return "нояб";
+                case "12": return "дек";
+                default: return "";
+            }
+        }
         public Rating getRating() { return rating; }
         public AgeRestriction getAgeRestriction() { return ageRestriction; }
         public ItemsCount getItems_count() { return items_count; }
