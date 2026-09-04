@@ -3,5 +3,5 @@
     android:shape="rectangle">
     <solid android:color="@color/comment_input_bg" />
     <corners android:radius="12dp" />
-    <stroke android:width="1dp" android:color="@color/comment_input_stroke" />
+    <stroke android:width="0.5dp" android:color="@color/comment_input_stroke" />
 </shape>

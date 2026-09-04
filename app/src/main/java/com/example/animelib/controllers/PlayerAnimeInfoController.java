@@ -510,7 +510,7 @@ public class PlayerAnimeInfoController {
         chip.setTextColor(android.graphics.Color.parseColor("#FF5252"));
         chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#2A181C")));
         chip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(android.graphics.Color.parseColor("#4D2026")));
-        chip.setChipStrokeWidth(dpToPx(context, 1));
+        chip.setChipStrokeWidth(dpToPx(context, 0.5f));
         chip.setEnsureMinTouchTargetSize(false);
         chip.setChipStartPadding(dpToPx(context, 4));
         chip.setChipEndPadding(dpToPx(context, 4));
@@ -530,14 +530,14 @@ public class PlayerAnimeInfoController {
                     androidx.core.content.ContextCompat.getColor(context, R.color.purple_alpha_10)));
             chip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(
                     androidx.core.content.ContextCompat.getColor(context, R.color.purple_alpha_25)));
-            chip.setChipStrokeWidth(dpToPx(context, 1));
+            chip.setChipStrokeWidth(dpToPx(context, 0.5f));
         } else {
             chip.setTextColor(androidx.core.content.ContextCompat.getColor(context, R.color.accent_text_color));
             chip.setChipBackgroundColor(android.content.res.ColorStateList.valueOf(
                     androidx.core.content.ContextCompat.getColor(context, R.color.chip_unselected_bg)));
             chip.setChipStrokeColor(android.content.res.ColorStateList.valueOf(
                     androidx.core.content.ContextCompat.getColor(context, R.color.chip_unselected_stroke)));
-            chip.setChipStrokeWidth(dpToPx(context, 1));
+            chip.setChipStrokeWidth(dpToPx(context, 0.5f));
         }
         chip.setEnsureMinTouchTargetSize(false);
         chip.setChipStartPadding(dpToPx(context, 4));
@@ -546,6 +546,10 @@ public class PlayerAnimeInfoController {
         chip.setTextEndPadding(dpToPx(context, 2));
         chip.setChipMinHeight(dpToPx(context, 24));
         return chip;
+    }
+
+    private float dpToPx(Context context, float dp) {
+        return dp * context.getResources().getDisplayMetrics().density;
     }
 
     private int dpToPx(Context context, int dp) {

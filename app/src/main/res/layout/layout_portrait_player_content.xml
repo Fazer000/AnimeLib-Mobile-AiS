@@ -241,7 +241,6 @@
             android:id="@+id/portraitExpandedAnimeInfoContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
             android:layout_marginBottom="16dp"
             android:orientation="vertical"
             android:gravity="center_horizontal"
@@ -252,6 +251,7 @@
                     android:id="@+id/btnPortraitCloseExpanded"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:layout_marginBottom="12dp"
                     android:background="@drawable/card_ripple_effect"
                     android:clickable="true"
@@ -308,6 +308,7 @@
                 <FrameLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:layout_marginBottom="12dp">
 
                     <com.google.android.material.card.MaterialCardView
@@ -350,6 +351,7 @@
                     android:id="@+id/tvPortraitInfoTitle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:gravity="center"
                     android:textColor="@color/primary_text_color"
                     android:textSize="19sp"
@@ -360,6 +362,7 @@
                     android:id="@+id/tvPortraitInfoEngName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:gravity="center"
                     android:textColor="@color/accent_text_color"
                     android:textSize="13.5sp"
@@ -371,6 +374,7 @@
                     android:id="@+id/llPortraitMetadataGrid"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:orientation="horizontal"
                     android:paddingVertical="10dp"
                     android:paddingHorizontal="4dp"
@@ -482,6 +486,7 @@
                     android:scrollbars="none"
                     android:overScrollMode="never"
                     android:clipToPadding="false"
+                    android:paddingHorizontal="16dp"
                     android:visibility="gone"
                     android:layout_marginBottom="14dp">
 
@@ -497,6 +502,7 @@
                     android:id="@+id/llPortraitSummarySection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:orientation="vertical"
                     android:layout_marginBottom="12dp">
 
@@ -515,6 +521,7 @@
                 android:id="@+id/cgPortraitInfoTagsAndGenres"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
                 android:visibility="gone"
                 app:chipSpacingHorizontal="4dp"
                 app:chipSpacingVertical="3dp" />
@@ -526,6 +533,7 @@
                     android:id="@+id/portraitInfoErrorLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="16dp"
                     android:gravity="center"
                     android:orientation="vertical"
                     android:paddingVertical="20dp"
