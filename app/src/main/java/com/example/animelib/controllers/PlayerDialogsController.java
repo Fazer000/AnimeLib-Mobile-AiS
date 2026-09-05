@@ -14,6 +14,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.example.animelib.R;
 import com.example.animelib.managers.PlayersManager;
 import com.example.animelib.models.EpisodeResponse;
+import com.example.animelib.settings.BugReportBottomSheet;
 import com.example.animelib.settings.SettingsBottomSheet;
 import com.example.animelib.ui.DownloadsActivity;
 import com.example.animelib.ui.TitleWebViewBottomSheet;
@@ -138,6 +139,15 @@ public class PlayerDialogsController {
 
             if (logTv != null) {
                 logTv.setText(fullLogString);
+            }
+
+            MaterialButton reportBugBtn = dialogView.findViewById(R.id.reportBugButton);
+            if (reportBugBtn != null) {
+                reportBugBtn.setOnClickListener(v -> {
+                    dismissErrorDialog();
+                    BugReportBottomSheet bugReportBottomSheet = new BugReportBottomSheet(activity, title, fullLogString);
+                    bugReportBottomSheet.show();
+                });
             }
 
             if (copyLogBtn != null) {

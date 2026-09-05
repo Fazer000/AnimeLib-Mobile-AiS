@@ -76,7 +76,7 @@ public class PlayerEpisodesController {
     }
 
     public long getStartPosition() {
-        return bookmarkTimecode > 0 ? bookmarkTimecode : savedPlayerPosition;
+        return savedPlayerPosition > 0 ? savedPlayerPosition : bookmarkTimecode;
     }
 
     public void resetBookmarkAndPositionState() {

@@ -3140,12 +3140,15 @@ public class VideoPlayerActivity extends AppCompatActivity {
         }
 
         if (player != null) {
-            if (playerEpisodesController != null) {
-                playerEpisodesController.setSavedPlayerPosition(player.getCurrentPosition());
-            } else {
-                savedPlayerPosition = player.getCurrentPosition();
+            long currentPos = player.getCurrentPosition();
+            if (currentPos > 0) {
+                if (playerEpisodesController != null) {
+                    playerEpisodesController.setSavedPlayerPosition(currentPos);
+                } else {
+                    savedPlayerPosition = currentPos;
+                }
             }
-            Log.d("VideoPlayer", "Saved player position before switching to: " + playerData.getPlayer());
+            Log.d("VideoPlayer", "Saved player position before switching to: " + playerData.getPlayer() + " (pos: " + currentPos + "ms)");
         }
 
         stopCurrentPlayback();
@@ -3196,7 +3199,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                         playerDialogsController.updateSettingsQualities(newQualities, preferredQuality);
                     }
                     
-                    long startPosition = playerEpisodesController != null ? playerEpisodesController.getStartPosition() : (bookmarkTimecode > 0 ? bookmarkTimecode : savedPlayerPosition);
+                    long startPosition = playerEpisodesController != null ? playerEpisodesController.getStartPosition() : (savedPlayerPosition > 0 ? savedPlayerPosition : bookmarkTimecode);
                     Log.d("VideoPlayer", "Starting player with position: " + startPosition + "ms");
                     
                     if (playerData.getPlayer() != null && "animelib".equalsIgnoreCase(playerData.getPlayer())) {
@@ -3209,7 +3212,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 });
             });
         } else {
-            long startPosition = playerEpisodesController != null ? playerEpisodesController.getStartPosition() : (bookmarkTimecode > 0 ? bookmarkTimecode : savedPlayerPosition);
+            long startPosition = playerEpisodesController != null ? playerEpisodesController.getStartPosition() : (savedPlayerPosition > 0 ? savedPlayerPosition : bookmarkTimecode);
             Log.d("VideoPlayer", "Starting player with position: " + startPosition + "ms (no qualities available)");
             
             if (playerData.getPlayer() != null && "animelib".equalsIgnoreCase(playerData.getPlayer())) {

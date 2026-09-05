@@ -219,6 +219,7 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
         LinearLayout skipDurationOption = view.findViewById(R.id.skipDurationOption);
         LinearLayout themeOption = view.findViewById(R.id.themeOption);
         LinearLayout faqOption = view.findViewById(R.id.faqOption);
+        LinearLayout bugReportOption = view.findViewById(R.id.bugReportOption);
         LinearLayout resizeModeOption = view.findViewById(R.id.resizeModeOption);
 
         TextView currentQualityText = view.findViewById(R.id.currentQualityText);
@@ -373,6 +374,14 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
             faqOption.setOnClickListener(v -> {
                 dismiss();
                 showFaqDialog();
+            });
+        }
+
+        // Bug Report option click
+        if (bugReportOption != null) {
+            bugReportOption.setOnClickListener(v -> {
+                dismiss();
+                showBugReportDialog();
             });
         }
 
@@ -847,6 +856,12 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
 
     private void showFaqDialog() {
         FaqBottomSheet bottomSheet = new FaqBottomSheet(getContext());
+        bottomSheet.setOnBackPressedListener(this::show);
+        bottomSheet.show();
+    }
+
+    private void showBugReportDialog() {
+        BugReportBottomSheet bottomSheet = new BugReportBottomSheet(getContext());
         bottomSheet.setOnBackPressedListener(this::show);
         bottomSheet.show();
     }
