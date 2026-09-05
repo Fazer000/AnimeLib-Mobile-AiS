@@ -500,30 +500,5 @@
 
         </LinearLayout>
 
-        <!-- Bug Report Footer Button -->
-        <LinearLayout
-            android:id="@+id/faqReportBugContainer"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:layout_marginTop="16dp"
-            android:orientation="vertical">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnFaqReportBug"
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:text="Сообщить об ошибке на GitHub"
-                android:textColor="#FFFFFF"
-                android:textSize="14.5sp"
-                android:fontFamily="@font/open_sans_bold"
-                app:icon="@drawable/ic_github"
-                app:iconGravity="textStart"
-                app:iconTint="#FFFFFF"
-                app:iconSize="20dp"
-                android:backgroundTint="@color/purple_primary"
-                app:cornerRadius="12dp" />
-        </LinearLayout>
-
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

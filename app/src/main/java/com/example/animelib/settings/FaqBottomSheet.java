@@ -77,20 +77,6 @@ public class FaqBottomSheet extends FlexibleBottomSheetDialog {
             });
         }
 
-        View btnFaqReportBug = view.findViewById(R.id.btnFaqReportBug);
-        if (btnFaqReportBug != null) {
-            btnFaqReportBug.setOnClickListener(v -> {
-                dismiss();
-                BugReportBottomSheet bugReportBottomSheet = new BugReportBottomSheet(getContext());
-                bugReportBottomSheet.setOnBackPressedListener(() -> {
-                    FaqBottomSheet newFaq = new FaqBottomSheet(getContext());
-                    newFaq.setOnBackPressedListener(onBackPressedListener);
-                    newFaq.show();
-                });
-                bugReportBottomSheet.show();
-            });
-        }
-
         setCancelable(true);
         setCanceledOnTouchOutside(true);
     }
