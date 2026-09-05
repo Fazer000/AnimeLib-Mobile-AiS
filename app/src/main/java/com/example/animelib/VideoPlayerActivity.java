@@ -316,7 +316,7 @@ public class VideoPlayerActivity extends AppCompatActivity {
             if (player != null && !isFinishing()) {
                 updatePlayPauseAndLoadingState(false);
                 if (player.getPlayWhenReady() && player.getPlaybackState() != Player.STATE_ENDED) {
-                    bufferingMonitorHandler.postDelayed(this, 300);
+                    bufferingMonitorHandler.postDelayed(this, 800);
                 }
             }
         }
@@ -3666,7 +3666,13 @@ public class VideoPlayerActivity extends AppCompatActivity {
         if (player == null) {
             com.example.animelib.util.SurroundRenderersFactory rf = new com.example.animelib.util.SurroundRenderersFactory(
                     getPlayerContext(), playerAudioController != null ? playerAudioController.getSurroundAudioProcessor() : null);
+            DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
+                    .setBufferDurationsMs(15_000, 50_000, 1_500, 2_500)
+                    .setBackBuffer(10_000, true)
+                    .setPrioritizeTimeOverSizeThresholds(true)
+                    .build();
             player = new androidx.media3.exoplayer.ExoPlayer.Builder(getPlayerContext(), rf)
+                    .setLoadControl(loadControl)
                     .setSeekBackIncrementMs(10000)
                     .setSeekForwardIncrementMs(10000)
                     .build();

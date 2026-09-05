@@ -211,6 +211,13 @@ public class VerticalGesturesManager {
      * Центральная зона 50% — Эпизоды (на всю высоту)
      */
     private PanelType detectPanelType(float deltaY) {
+        // Отступ сверху (15% высоты экрана или минимум 60dp), чтобы не перехватывать свайп системной шторки
+        float topSafetyMargin = Math.max(screenHeight * 0.15f, 60 * context.getResources().getDisplayMetrics().density);
+        if (dragStartY < topSafetyMargin) {
+            Log.d(TAG, "Touch started in top safety margin (" + dragStartY + " < " + topSafetyMargin + "), ignoring gesture for system status bar");
+            return PanelType.NONE;
+        }
+
         // Левая зона: 0%..25% ширины экрана — Яркость
         if (dragStartX <= screenWidth * 0.25f) {
             Log.d(TAG, "→ BRIGHTNESS (left 25% zone)");

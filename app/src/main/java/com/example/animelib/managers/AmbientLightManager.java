@@ -199,8 +199,16 @@ public class AmbientLightManager {
         }
     }
 
+    private long lastSampleTimeMs = 0;
+    private static final long SAMPLE_INTERVAL_MS = 75; // ~13 FPS: сглаживает подсветку и убирает лаги от 60 FPS чтения кадра
+
     private void sampleMainFrame(TextureView mainTextureView) {
         if (ambientImageView == null || mainTextureView == null || !mainTextureView.isAvailable()) return;
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (now - lastSampleTimeMs < SAMPLE_INTERVAL_MS) {
+            return;
+        }
+        lastSampleTimeMs = now;
         try {
             if (sampleBitmap == null || sampleBitmap.isRecycled()) {
                 sampleBitmap = Bitmap.createBitmap(48, 27, Bitmap.Config.ARGB_8888);
@@ -217,6 +225,7 @@ public class AmbientLightManager {
             if (mainPlayerView != null) {
                 View surfaceView = mainPlayerView.getVideoSurfaceView();
                 if (surfaceView instanceof TextureView) {
+                    lastSampleTimeMs = 0;
                     sampleMainFrame((TextureView) surfaceView);
                 }
             }

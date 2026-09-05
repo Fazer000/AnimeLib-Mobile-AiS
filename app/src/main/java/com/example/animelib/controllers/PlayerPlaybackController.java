@@ -117,12 +117,12 @@ public class PlayerPlaybackController {
 
             DefaultLoadControl loadControl = new DefaultLoadControl.Builder()
                     .setBufferDurationsMs(
-                            30_000, // minBufferMs
-                            120_000, // maxBufferMs
-                            1_000,  // bufferForPlaybackMs (instant playback start)
-                            2_000   // bufferForPlaybackAfterRebufferMs
+                            15_000, // minBufferMs
+                            50_000, // maxBufferMs
+                            1_500,  // bufferForPlaybackMs
+                            2_500   // bufferForPlaybackAfterRebufferMs
                     )
-                    .setBackBuffer(30_000, true)
+                    .setBackBuffer(10_000, true)
                     .setPrioritizeTimeOverSizeThresholds(true)
                     .build();
 
