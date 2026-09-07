@@ -68,6 +68,7 @@ public class JSInjectionsHandler {
         loadAndExecuteJS(webView, "js/debug-info.js", "Debug info");
         loadAndExecuteJS(webView, "js/button-checker.js", "Button checker");
         loadAndExecuteJS(webView, "js/site-logo-long-press.js", "Site logo long press listener");
+        loadAndExecuteJS(webView, "js/theme-color-override.js", "Theme color override");
 
     }
 
@@ -85,6 +86,7 @@ public class JSInjectionsHandler {
         loadAndExecuteJS(webView, "js/carousel-fix.js", "Carousel scroll fix");
         loadAndExecuteJS(webView, "js/auth-handler.js", "Auth handler");
         loadAndExecuteJS(webView, "js/site-logo-long-press.js", "Site logo long press listener");
+        loadAndExecuteJS(webView, "js/theme-color-override.js", "Theme color override");
     }
 
     /**
