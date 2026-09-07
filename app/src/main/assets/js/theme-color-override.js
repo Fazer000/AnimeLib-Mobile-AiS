@@ -18,8 +18,8 @@
                 computedBg = window.getComputedStyle(docEl).getPropertyValue('--background').trim().toLowerCase();
             } catch (e) {}
 
-            var isDarkBg = computedBg === '#0a0a0a' || computedBg === '#1c1c1c' || 
-                           computedBg.includes('10, 10, 10') || computedBg.includes('28, 28, 28');
+            var isDarkBg = computedBg === '#0a0a0a' || computedBg === '#1c1c1c' || computedBg === '#131316' || computedBg === '#0d0d10' ||
+                           computedBg.includes('10, 10, 10') || computedBg.includes('28, 28, 28') || computedBg.includes('19, 19, 22') || computedBg.includes('13, 13, 16');
 
             var shouldApplyDarkPlayerColors = isDarkAttr || (isAuto && systemIsDark) || isDarkBg;
 
@@ -48,47 +48,47 @@
                 html[data-theme="auto"],
                 body[data-theme="dark"],
                 body[data-theme="auto"] {
-                    --background: #1c1c1c !important;
-                    --background-rgb: 28, 28, 28 !important;
-                    --background-dark: #2a2a2d !important;
+                    --background: #0d0d10 !important;
+                    --background-rgb: 13, 13, 16 !important;
+                    --background-dark: #18181b !important;
                     --background-hover: rgba(255, 255, 255, .05) !important;
-                    --background-fill-1: rgba(70, 70, 73, .36) !important;
-                    --background-fill-2: rgba(70, 70, 73, .32) !important;
-                    --background-fill-3: rgba(70, 70, 73, .24) !important;
-                    --background-fill-4: rgba(70, 70, 73, .10) !important;
-                    --background-elevated-1: rgb(37, 37, 39) !important;
-                    --background-elevated-2: rgb(44, 44, 46) !important;
+                    --background-fill-1: rgba(50, 50, 55, .36) !important;
+                    --background-fill-2: rgba(50, 50, 55, .32) !important;
+                    --background-fill-3: rgba(50, 50, 55, .24) !important;
+                    --background-fill-4: rgba(50, 50, 55, .10) !important;
+                    --background-elevated-1: rgb(31, 31, 34) !important;
+                    --background-elevated-2: rgb(37, 37, 39) !important;
                     --background-elevated-3: rgb(54, 54, 59) !important;
-                    --foreground: #1F1F24 !important;
-                    --foreground-rgb: 31, 31, 36 !important;
+                    --foreground: #131316 !important;
+                    --foreground-rgb: 19, 19, 22 !important;
                     --foreground-darken: rgba(0, 0, 0, .15) !important;
 
-                    --btn-default-border: rgba(70, 70, 73, .5) !important;
+                    --btn-default-border: rgba(50, 50, 55, .5) !important;
                     --btn-default-bg: rgba(255, 255, 255, .06) !important;
                     --btn-default-bg-hover: rgba(255, 255, 255, .1) !important;
-                    --btn-light-border: #464649 !important;
-                    --btn-light-bg: #252527 !important;
+                    --btn-light-border: #3a3a3e !important;
+                    --btn-light-bg: #1c1c20 !important;
                     --btn-light-bg-hover: rgba(255, 255, 255, .04) !important;
 
-                    --border-base: rgba(70, 70, 73, .65) !important;
-                    --border-light: #2e2e32 !important;
-                    --border-darker: #464649 !important;
-                    --border-opacity: rgba(70, 70, 73, .65) !important;
-                    --border-primary: #464649 !important;
+                    --border-base: rgba(50, 50, 55, .65) !important;
+                    --border-light: #222226 !important;
+                    --border-darker: #3a3a3e !important;
+                    --border-opacity: rgba(50, 50, 55, .65) !important;
+                    --border-primary: #3a3a3e !important;
 
-                    --input-border: #464649 !important;
+                    --input-border: #3a3a3e !important;
                     --input-border-focus: #8852DE !important;
-                    --input-bg: #222222 !important;
+                    --input-bg: #18181c !important;
 
-                    --placeholder-block-bg: #252527 !important;
-                    --scrollbar-thumb: #464649 !important;
-                    --scrollbar-thumb-hover: #636368 !important;
-                    --scrollbar: #1c1c1c !important;
-                    --comment-highlight: #252527 !important;
-                    --sticky-comment-collapsed-gradient: #252527 !important;
-                    --skeleton-bg: rgba(70, 70, 73, .32) !important;
-                    --skeleton-bg-secondary: rgba(70, 70, 73, .24) !important;
-                    --secondary: #252527 !important;
+                    --placeholder-block-bg: #1c1c20 !important;
+                    --scrollbar-thumb: #3a3a3e !important;
+                    --scrollbar-thumb-hover: #505055 !important;
+                    --scrollbar: #0d0d10 !important;
+                    --comment-highlight: #1c1c20 !important;
+                    --sticky-comment-collapsed-gradient: #1c1c20 !important;
+                    --skeleton-bg: rgba(50, 50, 55, .32) !important;
+                    --skeleton-bg-secondary: rgba(50, 50, 55, .24) !important;
+                    --secondary: #1c1c20 !important;
                     --link-border-color: rgba(255, 255, 255, .2) !important;
                 }
 
@@ -96,47 +96,47 @@
                     :root:not([data-theme="light"]),
                     html:not([data-theme="light"]),
                     body:not([data-theme="light"]) {
-                        --background: #1c1c1c !important;
-                        --background-rgb: 28, 28, 28 !important;
-                        --background-dark: #2a2a2d !important;
+                        --background: #0d0d10 !important;
+                        --background-rgb: 13, 13, 16 !important;
+                        --background-dark: #18181b !important;
                         --background-hover: rgba(255, 255, 255, .05) !important;
-                        --background-fill-1: rgba(70, 70, 73, .36) !important;
-                        --background-fill-2: rgba(70, 70, 73, .32) !important;
-                        --background-fill-3: rgba(70, 70, 73, .24) !important;
-                        --background-fill-4: rgba(70, 70, 73, .10) !important;
-                        --background-elevated-1: rgb(37, 37, 39) !important;
-                        --background-elevated-2: rgb(44, 44, 46) !important;
+                        --background-fill-1: rgba(50, 50, 55, .36) !important;
+                        --background-fill-2: rgba(50, 50, 55, .32) !important;
+                        --background-fill-3: rgba(50, 50, 55, .24) !important;
+                        --background-fill-4: rgba(50, 50, 55, .10) !important;
+                        --background-elevated-1: rgb(31, 31, 34) !important;
+                        --background-elevated-2: rgb(37, 37, 39) !important;
                         --background-elevated-3: rgb(54, 54, 59) !important;
-                        --foreground: #1F1F24 !important;
-                        --foreground-rgb: 31, 31, 36 !important;
+                        --foreground: #131316 !important;
+                        --foreground-rgb: 19, 19, 22 !important;
                         --foreground-darken: rgba(0, 0, 0, .15) !important;
 
-                        --btn-default-border: rgba(70, 70, 73, .5) !important;
+                        --btn-default-border: rgba(50, 50, 55, .5) !important;
                         --btn-default-bg: rgba(255, 255, 255, .06) !important;
                         --btn-default-bg-hover: rgba(255, 255, 255, .1) !important;
-                        --btn-light-border: #464649 !important;
-                        --btn-light-bg: #252527 !important;
+                        --btn-light-border: #3a3a3e !important;
+                        --btn-light-bg: #1c1c20 !important;
                         --btn-light-bg-hover: rgba(255, 255, 255, .04) !important;
 
-                        --border-base: rgba(70, 70, 73, .65) !important;
-                        --border-light: #2e2e32 !important;
-                        --border-darker: #464649 !important;
-                        --border-opacity: rgba(70, 70, 73, .65) !important;
-                        --border-primary: #464649 !important;
+                        --border-base: rgba(50, 50, 55, .65) !important;
+                        --border-light: #222226 !important;
+                        --border-darker: #3a3a3e !important;
+                        --border-opacity: rgba(50, 50, 55, .65) !important;
+                        --border-primary: #3a3a3e !important;
 
-                        --input-border: #464649 !important;
+                        --input-border: #3a3a3e !important;
                         --input-border-focus: #8852DE !important;
-                        --input-bg: #222222 !important;
+                        --input-bg: #18181c !important;
 
-                        --placeholder-block-bg: #252527 !important;
-                        --scrollbar-thumb: #464649 !important;
-                        --scrollbar-thumb-hover: #636368 !important;
-                        --scrollbar: #1c1c1c !important;
-                        --comment-highlight: #252527 !important;
-                        --sticky-comment-collapsed-gradient: #252527 !important;
-                        --skeleton-bg: rgba(70, 70, 73, .32) !important;
-                        --skeleton-bg-secondary: rgba(70, 70, 73, .24) !important;
-                        --secondary: #252527 !important;
+                        --placeholder-block-bg: #1c1c20 !important;
+                        --scrollbar-thumb: #3a3a3e !important;
+                        --scrollbar-thumb-hover: #505055 !important;
+                        --scrollbar: #0d0d10 !important;
+                        --comment-highlight: #1c1c20 !important;
+                        --sticky-comment-collapsed-gradient: #1c1c20 !important;
+                        --skeleton-bg: rgba(50, 50, 55, .32) !important;
+                        --skeleton-bg-secondary: rgba(50, 50, 55, .24) !important;
+                        --secondary: #1c1c20 !important;
                         --link-border-color: rgba(255, 255, 255, .2) !important;
                     }
                 }
