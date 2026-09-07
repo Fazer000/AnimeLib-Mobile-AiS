@@ -204,35 +204,16 @@
                     android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- Бейдж кнопка открытия инфо -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
-                android:background="@drawable/bg_badge_purple_alpha"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingHorizontal="10dp"
-                android:paddingVertical="6dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Инфо"
-                    android:textColor="@color/purple_primary"
-                    android:textSize="12sp"
-                    android:textStyle="bold" />
-
-                <ImageView
-                    android:id="@+id/ivPortraitAnimeTitleChevron"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
-                    android:layout_marginStart="4dp"
-                    android:contentDescription="Expand Anime Info"
-                    android:rotation="90"
-                    android:src="@drawable/ic_chevron_right"
-                    app:tint="@color/purple_primary" />
-            </LinearLayout>
+            <ImageView
+                android:id="@+id/ivPortraitAnimeTitleChevron"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_marginStart="8dp"
+                android:padding="2dp"
+                android:contentDescription="Expand Anime Info"
+                android:rotation="90"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="@color/primary_text_color" />
 
         </LinearLayout>
 
@@ -268,32 +249,15 @@
                         android:textSize="15sp"
                         android:textStyle="bold" />
 
-                    <LinearLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
                         android:layout_alignParentEnd="true"
                         android:layout_centerVertical="true"
-                        android:background="@drawable/bg_badge_purple_alpha"
-                        android:gravity="center"
-                        android:paddingHorizontal="10dp"
-                        android:paddingVertical="5dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Скрыть"
-                            android:textColor="@color/purple_primary"
-                            android:textSize="12sp"
-                            android:textStyle="bold" />
-
-                        <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
-                            android:layout_marginStart="4dp"
-                            android:rotation="270"
-                            android:src="@drawable/ic_chevron_right"
-                            app:tint="@color/purple_primary" />
-                    </LinearLayout>
+                        android:padding="2dp"
+                        android:rotation="270"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="@color/primary_text_color" />
                 </RelativeLayout>
 
                 <!-- Оболочка основного контента инфо -->
@@ -515,6 +479,23 @@
                         android:textColor="@color/primary_text_color"
                         android:textSize="13.5sp"
                         android:lineSpacingExtra="3.5dp"
+                        android:maxLines="3"
+                        android:ellipsize="end"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/btnToggleSummary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Развернуть"
+                        android:textColor="@color/purple_primary"
+                        android:textSize="13sp"
+                        android:fontFamily="@font/open_sans_bold"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:paddingVertical="4dp"
+                        android:paddingHorizontal="2dp"
                         android:visibility="gone" />
                 </LinearLayout>
 

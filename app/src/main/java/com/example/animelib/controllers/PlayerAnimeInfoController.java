@@ -49,6 +49,8 @@ public class PlayerAnimeInfoController {
     private HorizontalScrollView hsvPortraitAuthors;
     private LinearLayout llPortraitAuthorsContainer;
     private TextView tvPortraitInfoSummary;
+    private TextView btnToggleSummary;
+    private boolean isSummaryExpanded = false;
     private com.google.android.material.chip.ChipGroup cgPortraitInfoTagsAndGenres;
 
     // Error & Retry views
@@ -96,6 +98,7 @@ public class PlayerAnimeInfoController {
         hsvPortraitAuthors = rootView.findViewById(R.id.hsvPortraitAuthors);
         llPortraitAuthorsContainer = rootView.findViewById(R.id.llPortraitAuthorsContainer);
         tvPortraitInfoSummary = rootView.findViewById(R.id.tvPortraitInfoSummary);
+        btnToggleSummary = rootView.findViewById(R.id.btnToggleSummary);
         cgPortraitInfoTagsAndGenres = rootView.findViewById(R.id.cgPortraitInfoTagsAndGenres);
 
         // Error & Retry layouts
@@ -413,10 +416,69 @@ public class PlayerAnimeInfoController {
                 } else {
                     formattedSummary = android.text.Html.fromHtml(summaryText);
                 }
-                tvPortraitInfoSummary.setText(formattedSummary.toString().trim());
+
+                final String cleanSummary = formattedSummary.toString().trim();
+                tvPortraitInfoSummary.setText(cleanSummary);
                 tvPortraitInfoSummary.setVisibility(View.VISIBLE);
+
+                // Default collapsed state (3 lines max)
+                isSummaryExpanded = false;
+                tvPortraitInfoSummary.setMaxLines(3);
+                tvPortraitInfoSummary.setEllipsize(android.text.TextUtils.TruncateAt.END);
+
+                // Determine if expansion button should be shown
+                tvPortraitInfoSummary.post(() -> {
+                    if (tvPortraitInfoSummary.getLayout() != null) {
+                        int lineCount = tvPortraitInfoSummary.getLineCount();
+                        boolean isEllipsized = tvPortraitInfoSummary.getLayout().getEllipsisCount(lineCount - 1) > 0;
+                        if (lineCount > 3 || isEllipsized || cleanSummary.length() > 150) {
+                            if (btnToggleSummary != null) {
+                                btnToggleSummary.setVisibility(View.VISIBLE);
+                                btnToggleSummary.setText("Развернуть");
+                            }
+                        } else {
+                            if (btnToggleSummary != null) {
+                                btnToggleSummary.setVisibility(View.GONE);
+                            }
+                        }
+                    } else if (cleanSummary.length() > 150) {
+                        if (btnToggleSummary != null) {
+                            btnToggleSummary.setVisibility(View.VISIBLE);
+                            btnToggleSummary.setText("Развернуть");
+                        }
+                    } else {
+                        if (btnToggleSummary != null) {
+                            btnToggleSummary.setVisibility(View.GONE);
+                        }
+                    }
+                });
+
+                View.OnClickListener toggleClickListener = v -> {
+                    if (btnToggleSummary != null && btnToggleSummary.getVisibility() == View.VISIBLE) {
+                        if (isSummaryExpanded) {
+                            tvPortraitInfoSummary.setMaxLines(3);
+                            tvPortraitInfoSummary.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                            btnToggleSummary.setText("Развернуть");
+                            isSummaryExpanded = false;
+                        } else {
+                            tvPortraitInfoSummary.setMaxLines(Integer.MAX_VALUE);
+                            tvPortraitInfoSummary.setEllipsize(null);
+                            btnToggleSummary.setText("Свернуть");
+                            isSummaryExpanded = true;
+                        }
+                    }
+                };
+
+                if (btnToggleSummary != null) {
+                    btnToggleSummary.setOnClickListener(toggleClickListener);
+                }
+                tvPortraitInfoSummary.setOnClickListener(toggleClickListener);
+
             } else {
                 tvPortraitInfoSummary.setVisibility(View.GONE);
+                if (btnToggleSummary != null) {
+                    btnToggleSummary.setVisibility(View.GONE);
+                }
             }
         }
 

@@ -15,6 +15,8 @@ import com.example.animelib.models.KodikResponse;
 import com.example.animelib.ui.VideoUrlHelper;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Контроллер разрешения видеоисточников (AnimeLib, Kodik HLS, локальные скачанные файлы).
@@ -24,6 +26,7 @@ public class PlayerVideoResolverController {
     private static final String TAG = "PlayerVideoResolver";
 
     public interface ResolverProvider {
+        android.content.Context getContext();
         boolean isDownloadedQuality(String quality);
         DownloadedEpisodeEntity getDownloadedEpisodeForActive();
         void setCurrentVideoUrl(String url);
@@ -87,7 +90,19 @@ public class PlayerVideoResolverController {
 
         if (playerData.getVideo() != null && playerData.getVideo().getQuality() != null && !playerData.getVideo().getQuality().isEmpty()) {
             EpisodeResponse.QualityData selectedQuality = null;
-            String preferredQualityValue = preferredQuality != null ? preferredQuality.replace("p", "") : null;
+
+            String effectiveQuality = preferredQuality;
+            if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(preferredQuality)) {
+                List<String> available = new ArrayList<>();
+                for (EpisodeResponse.QualityData q : playerData.getVideo().getQuality()) {
+                    available.add(q.getQuality() + "p");
+                }
+                effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(
+                        provider.getContext(), available, preferredQuality);
+                Log.d(TAG, "Auto quality resolved to: " + effectiveQuality);
+            }
+
+            String preferredQualityValue = effectiveQuality != null ? effectiveQuality.replace("p", "") : null;
 
             if (preferredQualityValue != null) {
                 try {
@@ -240,7 +255,19 @@ public class PlayerVideoResolverController {
 
         String hlsUrl = null;
         String preferredQuality = provider.getPreferredQuality();
-        String preferredQualityKey = preferredQuality != null ? preferredQuality.replace("p", "") : null;
+
+        String effectiveQuality = preferredQuality;
+        if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(preferredQuality) && kodikResponse.getData() != null) {
+            List<String> availableKeys = new ArrayList<>(kodikResponse.getData().keySet());
+            List<String> formatted = new ArrayList<>();
+            for (String k : availableKeys) {
+                formatted.add(k + "p");
+            }
+            effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(provider.getContext(), formatted, preferredQuality);
+            Log.d(TAG, "Kodik Auto quality resolved to: " + effectiveQuality);
+        }
+
+        String preferredQualityKey = effectiveQuality != null ? effectiveQuality.replace("p", "") : null;
 
         if (preferredQualityKey != null && kodikResponse.getData().containsKey(preferredQualityKey) &&
                 kodikResponse.getData().get(preferredQualityKey).length > 0) {

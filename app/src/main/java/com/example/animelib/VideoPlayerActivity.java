@@ -973,6 +973,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
         playerVideoResolverController = new com.example.animelib.controllers.PlayerVideoResolverController(
                 apiService, timecodeManager, playersManager, new com.example.animelib.controllers.PlayerVideoResolverController.ResolverProvider() {
                     @Override
+                    public android.content.Context getContext() {
+                        return VideoPlayerActivity.this;
+                    }
+
+                    @Override
                     public boolean isDownloadedQuality(String quality) {
                         return VideoPlayerActivity.this.isDownloadedQuality(quality);
                     }
@@ -2217,6 +2222,15 @@ public class VideoPlayerActivity extends AppCompatActivity {
                 return;
             }
             String tag = com.example.animelib.util.FloatingBottomSheetUtils.getQualityTag(preferredQuality);
+            if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(preferredQuality) && playersManager != null) {
+                List<String> available = playersManager.getAvailableQualities();
+                if (!available.isEmpty()) {
+                    String resolved = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(this, available, preferredQuality);
+                    if (resolved != null && !resolved.isEmpty()) {
+                        tag = "AUTO (" + resolved.replace("p", "") + ")";
+                    }
+                }
+            }
             if (tag != null && !tag.isEmpty()) {
                 settingsQualityTag.setText(tag);
                 settingsQualityTag.setVisibility(View.VISIBLE);
@@ -3180,6 +3194,9 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     } else if (savedQuality != null && newQualities.contains(savedQuality)) {
                         newPreferredQuality = savedQuality;
                         Log.d("VideoPlayer", "Using saved quality: " + savedQuality);
+                    } else if (newQualities.contains("Авто")) {
+                        newPreferredQuality = "Авто";
+                        Log.d("VideoPlayer", "Defaulting to Auto quality option");
                     } else if (!newQualities.isEmpty()) {
                         newPreferredQuality = newQualities.get(0);
                         Log.d("VideoPlayer", "Saved quality not found, using top quality: " + newPreferredQuality);

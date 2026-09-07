@@ -237,7 +237,8 @@ public class PlayerDownloadController {
         if (downloadedEp != null) {
             qualities.add("Скачанный файл (" + downloadedEp.getQuality() + ")");
         }
-        if (onlineQualities != null) {
+        if (onlineQualities != null && !onlineQualities.isEmpty()) {
+            qualities.add("Авто");
             for (String q : onlineQualities) {
                 if (!qualities.contains(q)) {
                     qualities.add(q);
