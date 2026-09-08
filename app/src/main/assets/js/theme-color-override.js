@@ -65,6 +65,10 @@
                     --background-elevated-2-rgb: 28, 28, 30 !important;
                     --background-elevated-3-rgb: 28, 28, 30 !important;
 
+                    --header-color: rgb(28, 28, 30) !important;
+                    --header-color-rgb: 28, 28, 30 !important;
+                    --header-bg: rgb(28, 28, 30) !important;
+
                     --foreground: #131316 !important;
                     --foreground-rgb: 19, 19, 22 !important;
                     --foreground-darken: rgba(0, 0, 0, .15) !important;
@@ -117,6 +121,10 @@
                         --background-elevated-1-rgb: 28, 28, 30 !important;
                         --background-elevated-2-rgb: 28, 28, 30 !important;
                         --background-elevated-3-rgb: 28, 28, 30 !important;
+
+                        --header-color: rgb(28, 28, 30) !important;
+                        --header-color-rgb: 28, 28, 30 !important;
+                        --header-bg: rgb(28, 28, 30) !important;
 
                         --foreground: #131316 !important;
                         --foreground-rgb: 19, 19, 22 !important;
