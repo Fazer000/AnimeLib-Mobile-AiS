@@ -23,7 +23,7 @@
     <color name="chip_unselected_bg">#1C1C1E</color>
     <color name="chip_unselected_stroke">#33333C</color>
     <color name="close_btn_bg">#20FFFFFF</color>
-    <color name="placeholder_bg">#282830</color>
+    <color name="placeholder_bg">#1C1C1E</color>
     <color name="stop_btn_bg">#2A1B20</color>
     <color name="sort_popup_item_selected_bg">#2A2D37</color>
     <color name="sort_popup_item_selected_text">#FFFFFF</color>
@@ -38,7 +38,7 @@
     <color name="player_item_active_stroke">@color/purple_primary</color>
 
     <!-- Dialog Colors (Dark Theme Overrides) -->
-    <color name="dialog_bg">#18181A</color>
+    <color name="dialog_bg">#131316</color>
     <color name="dialog_card_bg">#1C1C1E</color>
     <color name="dialog_input_bg">#1C1C1E</color>
     <color name="dialog_input_stroke">#33333C</color>

@@ -18,7 +18,7 @@
 
     <!-- Dark Theme -->
     <!-- General Colors -->
-    <color name="dt_primary_color">#1c1c1c</color>
+    <color name="dt_primary_color">#131316</color>
     <color name="dt_secondary_color">@color/purple_primary</color>
     <color name="dt_blue_color">#2196f3</color>
     <color name="dt_alpha_primary_color">#30000000</color>
@@ -37,15 +37,15 @@
     
     <!-- Anime Info Colors -->
     <color name="dt_card_background">#1C1C1E</color>
-    <color name="dt_bookmark_card_bg">#232328</color>
+    <color name="dt_bookmark_card_bg">#1C1C1E</color>
     <color name="dt_card_elevation">#40000000</color>
     <color name="dt_rating_star">#FFD700</color>
     
     <!-- Player Item Background -->
-    <color name="dt_player_item_background">#222222</color>
+    <color name="dt_player_item_background">#1C1C1E</color>
     
     <!-- Related Titles Panel -->
-    <color name="dt_related_panel_background">#1A1A1A</color>
+    <color name="dt_related_panel_background">#131316</color>
     <color name="dt_related_title_color">#E0E0E0</color>
     <color name="dt_related_subtitle_color">#999999</color>
 
