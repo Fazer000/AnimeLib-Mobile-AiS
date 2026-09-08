@@ -68,37 +68,39 @@ public class PlayerVideoResolverController {
         provider.setHasRenderedFirstFrame(false);
         provider.updatePlayPauseAndLoadingState(true);
 
-        String preferredQuality = provider.getPreferredQuality();
-
-        if (provider.isDownloadedQuality(preferredQuality)) {
-            DownloadedEpisodeEntity downloadedEp = provider.getDownloadedEpisodeForActive();
-            if (downloadedEp != null && downloadedEp.getLocalFilePath() != null) {
-                File file = new File(downloadedEp.getLocalFilePath());
-                if (file.exists() && file.length() > 0) {
-                    provider.setCurrentVideoUrl(Uri.fromFile(file).toString());
-                    if (timecodeManager != null) timecodeManager.setTimecodes(playerData);
-                    provider.initializePlayer();
-                    ExoPlayer player = provider.getPlayer();
-                    if (seekToPosition > 0 && player != null) {
-                        player.seekTo(seekToPosition);
-                    }
-                    Log.d(TAG, "Playing downloaded local file: " + file.getAbsolutePath());
-                    return;
+        // Если эпизод скачан локально — всегда воспроизводим скачанный файл
+        DownloadedEpisodeEntity downloadedEp = provider.getDownloadedEpisodeForActive();
+        if (downloadedEp != null && downloadedEp.getLocalFilePath() != null) {
+            File file = new File(downloadedEp.getLocalFilePath());
+            if (file.exists() && file.length() > 0) {
+                provider.setCurrentVideoUrl(Uri.fromFile(file).toString());
+                if (timecodeManager != null) timecodeManager.setTimecodes(playerData);
+                provider.initializePlayer();
+                ExoPlayer player = provider.getPlayer();
+                if (seekToPosition > 0 && player != null) {
+                    player.seekTo(seekToPosition);
                 }
+                Log.d(TAG, "Playing downloaded local file: " + file.getAbsolutePath());
+                return;
             }
         }
 
         if (playerData.getVideo() != null && playerData.getVideo().getQuality() != null && !playerData.getVideo().getQuality().isEmpty()) {
             EpisodeResponse.QualityData selectedQuality = null;
 
+            String preferredQuality = provider.getPreferredQuality();
             String effectiveQuality = preferredQuality;
             if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(preferredQuality)) {
                 List<String> available = new ArrayList<>();
                 for (EpisodeResponse.QualityData q : playerData.getVideo().getQuality()) {
                     available.add(q.getQuality() + "p");
                 }
+                long estimate = 0;
+                try {
+                    estimate = androidx.media3.exoplayer.upstream.DefaultBandwidthMeter.getSingletonInstance(provider.getContext()).getBitrateEstimate();
+                } catch (Exception ignored) {}
                 effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(
-                        provider.getContext(), available, preferredQuality);
+                        provider.getContext(), available, preferredQuality, estimate);
                 Log.d(TAG, "Auto quality resolved to: " + effectiveQuality);
             }
 
@@ -173,22 +175,20 @@ public class PlayerVideoResolverController {
         if (provider == null) return;
         Log.d(TAG, "Handling Kodik player");
 
-        String preferredQuality = provider.getPreferredQuality();
-        if (provider.isDownloadedQuality(preferredQuality)) {
-            DownloadedEpisodeEntity downloadedEp = provider.getDownloadedEpisodeForActive();
-            if (downloadedEp != null && downloadedEp.getLocalFilePath() != null) {
-                File file = new File(downloadedEp.getLocalFilePath());
-                if (file.exists() && file.length() > 0) {
-                    provider.setCurrentVideoUrl(Uri.fromFile(file).toString());
-                    if (timecodeManager != null) timecodeManager.setTimecodes(playerData);
-                    provider.initializePlayer();
-                    ExoPlayer player = provider.getPlayer();
-                    if (seekToPosition > 0 && player != null) {
-                        player.seekTo(seekToPosition);
-                    }
-                    Log.d(TAG, "Playing downloaded local file: " + file.getAbsolutePath());
-                    return;
+        // Если эпизод скачан локально — всегда воспроизводим скачанный файл
+        DownloadedEpisodeEntity downloadedEp = provider.getDownloadedEpisodeForActive();
+        if (downloadedEp != null && downloadedEp.getLocalFilePath() != null) {
+            File file = new File(downloadedEp.getLocalFilePath());
+            if (file.exists() && file.length() > 0) {
+                provider.setCurrentVideoUrl(Uri.fromFile(file).toString());
+                if (timecodeManager != null) timecodeManager.setTimecodes(playerData);
+                provider.initializePlayer();
+                ExoPlayer player = provider.getPlayer();
+                if (seekToPosition > 0 && player != null) {
+                    player.seekTo(seekToPosition);
                 }
+                Log.d(TAG, "Playing downloaded local file: " + file.getAbsolutePath());
+                return;
             }
         }
 
@@ -263,7 +263,11 @@ public class PlayerVideoResolverController {
             for (String k : availableKeys) {
                 formatted.add(k + "p");
             }
-            effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(provider.getContext(), formatted, preferredQuality);
+            long estimate = 0;
+            try {
+                estimate = androidx.media3.exoplayer.upstream.DefaultBandwidthMeter.getSingletonInstance(provider.getContext()).getBitrateEstimate();
+            } catch (Exception ignored) {}
+            effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(provider.getContext(), formatted, preferredQuality, estimate);
             Log.d(TAG, "Kodik Auto quality resolved to: " + effectiveQuality);
         }
 

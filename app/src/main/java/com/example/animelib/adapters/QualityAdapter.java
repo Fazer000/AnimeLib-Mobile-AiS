@@ -79,7 +79,7 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
         }
 
         // 4. Active / Inactive selection state
-        boolean isCurrent = quality != null && quality.equalsIgnoreCase(currentQuality);
+        boolean isCurrent = com.example.animelib.util.AutoQualityHelper.matchQuality(quality, currentQuality);
 
         if (holder.selectedPill != null) {
             holder.selectedPill.setVisibility(isCurrent ? View.VISIBLE : View.GONE);

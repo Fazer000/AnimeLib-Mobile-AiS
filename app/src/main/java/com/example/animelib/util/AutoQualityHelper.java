@@ -2,12 +2,12 @@ package com.example.animelib.util;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class AutoQualityHelper {
@@ -17,108 +17,139 @@ public class AutoQualityHelper {
      * Проверяет, выбрано ли авто-качество.
      */
     public static boolean isAutoQuality(String quality) {
-        if (quality == null || quality.trim().isEmpty()) return true; // Default to auto
+        if (quality == null || quality.trim().isEmpty()) return true;
         String q = quality.toLowerCase().trim();
         return q.equals("авто") || q.equals("auto") || q.startsWith("авто ") || q.startsWith("auto ");
     }
 
     /**
-     * Опредяляет оптимальное разрешение в p (2160, 1080, 720, 480, 360) на основе сети.
+     * Проверяет, является ли строка описанием скачанного/локального файла.
      */
-    public static int getOptimalQualityResolution(Context context) {
-        if (context == null) return 720;
+    public static boolean isDownloadedQuality(String quality) {
+        if (quality == null) return false;
+        String q = quality.toLowerCase().trim();
+        return q.startsWith("скачанный") || q.startsWith("загруженное") || q.startsWith("локальн") || q.startsWith("офлайн");
+    }
 
-        try {
-            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (cm == null) return 720;
+    /**
+     * Сравнивает две строки качества с учетом гибридного форматирования ("1080p" == "1080", "Авто" == "auto").
+     */
+    public static boolean matchQuality(String q1, String q2) {
+        if (q1 == null || q2 == null) return false;
+        if (q1.equalsIgnoreCase(q2)) return true;
+        if (isAutoQuality(q1) && isAutoQuality(q2)) return true;
+        if (isDownloadedQuality(q1) && isDownloadedQuality(q2)) return true;
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                android.net.Network activeNetwork = cm.getActiveNetwork();
-                if (activeNetwork != null) {
-                    NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
-                    if (caps != null) {
-                        // Unmetered Wi-Fi or Ethernet -> Maximum quality (1080p+)
-                        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                                caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                            Log.d(TAG, "Network: Wi-Fi / Ethernet -> 1080p+");
-                            return 1080;
+        String r1 = q1.replaceAll("[^0-9]", "");
+        String r2 = q2.replaceAll("[^0-9]", "");
+        return !r1.isEmpty() && r1.equals(r2);
+    }
+
+    /**
+     * Определяет оптимальное разрешение в p (2160, 1080, 720, 480, 360) на основе сети и битрейта.
+     */
+    public static int getOptimalQualityResolution(Context context, long exoPlayerBitrateEstimate) {
+        if (exoPlayerBitrateEstimate > 0) {
+            long kbps = exoPlayerBitrateEstimate / 1000;
+            Log.d(TAG, "Measured ExoPlayer Bandwidth: " + kbps + " Kbps");
+            if (kbps >= 15000) return 2160;
+            if (kbps >= 5000) return 1080;
+            if (kbps >= 2200) return 720;
+            if (kbps >= 800) return 480;
+            return 360;
+        }
+
+        if (context != null) {
+            try {
+                ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+                if (cm != null) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        Network activeNetwork = cm.getActiveNetwork();
+                        if (activeNetwork != null) {
+                            NetworkCapabilities caps = cm.getNetworkCapabilities(activeNetwork);
+                            if (caps != null) {
+                                int downstreamKbps = caps.getLinkDownstreamBandwidthKbps();
+                                Log.d(TAG, "Network Downstream Bandwidth: " + downstreamKbps + " Kbps");
+
+                                boolean isWifiOrEth = caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                                                      caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET);
+
+                                if (downstreamKbps > 0) {
+                                    if (downstreamKbps >= 15000) return 2160;
+                                    if (downstreamKbps >= 5000) return 1080;
+                                    if (downstreamKbps >= 2200) return 720;
+                                    if (downstreamKbps >= 800) return 480;
+                                    return 360;
+                                } else if (isWifiOrEth) {
+                                    return 1080;
+                                } else {
+                                    return 720;
+                                }
+                            }
                         }
-
-                        // Mobile network
-                        if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                            int downstreamKbps = caps.getLinkDownstreamBandwidthKbps();
-                            Log.d(TAG, "Network: Mobile cellular. Downstream: " + downstreamKbps + " Kbps");
-
-                            if (downstreamKbps >= 15000) { // High speed LTE / 5G
+                    } else {
+                        android.net.NetworkInfo info = cm.getActiveNetworkInfo();
+                        if (info != null && info.isConnected()) {
+                            if (info.getType() == ConnectivityManager.TYPE_WIFI || info.getType() == ConnectivityManager.TYPE_ETHERNET) {
                                 return 1080;
-                            } else if (downstreamKbps >= 4000) { // Standard 4G / LTE
+                            } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
                                 return 720;
-                            } else if (downstreamKbps >= 1200) { // 3G
-                                return 480;
-                            } else { // 2G / Slow connection
-                                return 360;
                             }
                         }
                     }
                 }
-            } else {
-                android.net.NetworkInfo info = cm.getActiveNetworkInfo();
-                if (info != null && info.isConnected()) {
-                    if (info.getType() == ConnectivityManager.TYPE_WIFI || info.getType() == ConnectivityManager.TYPE_ETHERNET) {
-                        return 1080;
-                    } else if (info.getType() == ConnectivityManager.TYPE_MOBILE) {
-                        return 720;
-                    }
-                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error resolving network quality: " + e.getMessage());
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Error resolving optimal quality resolution: " + e.getMessage());
         }
 
         return 720;
     }
 
+    public static int getOptimalQualityResolution(Context context) {
+        return getOptimalQualityResolution(context, 0);
+    }
+
     /**
-     * Подбирает наиболее подходящее доступное качество из списка.
+     * Подбирает наиболее подходящее доступное качество из списка на основе скорости/сети.
      */
-    public static String resolveBestQuality(Context context, List<String> availableQualities, String preferredQuality) {
+    public static String resolveBestQuality(Context context, List<String> availableQualities, String preferredQuality, long exoPlayerBitrateEstimate) {
         if (availableQualities == null || availableQualities.isEmpty()) {
             return "720p";
         }
 
-        // Если выбрано конкретное качество (не Авто) и оно доступно, используем его
+        // Если выбрано конкретное качество (не Авто) и оно есть в списке, используем его
         if (!isAutoQuality(preferredQuality)) {
             for (String q : availableQualities) {
-                if (q != null && q.equalsIgnoreCase(preferredQuality)) {
+                if (q != null && matchQuality(q, preferredQuality)) {
                     return q;
                 }
             }
         }
 
-        int targetRes = getOptimalQualityResolution(context);
+        int targetRes = getOptimalQualityResolution(context, exoPlayerBitrateEstimate);
         Log.d(TAG, "Auto Quality target resolution: " + targetRes + "p");
 
-        List<Integer> parsedResolutions = new ArrayList<>();
         String bestMatch = null;
-        int minDiff = Integer.MAX_VALUE;
+        int maxResFound = 0;
 
         for (String qStr : availableQualities) {
-            if (qStr == null || isAutoQuality(qStr) || qStr.toLowerCase().contains("скачанный")) continue;
+            if (qStr == null || isAutoQuality(qStr) || isDownloadedQuality(qStr)) {
+                continue;
+            }
 
-            String digits = qStr.replaceAll("[^0-9]", "");
-            if (digits.isEmpty()) continue;
+            int res = extractResolution(qStr);
+            if (res == 0) continue;
 
-            try {
-                int res = Integer.parseInt(digits);
-                // Находим наиближайшее качество
-                if (res <= targetRes) {
-                    if (bestMatch == null || res > extractResolution(bestMatch)) {
-                        bestMatch = qStr;
-                    }
-                } else if (bestMatch == null) {
-                    bestMatch = qStr; // Запасной вариант если все качества выше targetRes
+            if (res <= targetRes) {
+                if (bestMatch == null || res > maxResFound) {
+                    bestMatch = qStr;
+                    maxResFound = res;
                 }
-            } catch (Exception ignored) {}
+            } else if (bestMatch == null) {
+                bestMatch = qStr;
+                maxResFound = res;
+            }
         }
 
         if (bestMatch != null) {
@@ -126,15 +157,20 @@ public class AutoQualityHelper {
             return bestMatch;
         }
 
-        // Запасной выбор первого небезопасного
         for (String q : availableQualities) {
-            if (!isAutoQuality(q) && !q.toLowerCase().contains("скачанный")) return q;
+            if (!isAutoQuality(q) && !isDownloadedQuality(q)) {
+                return q;
+            }
         }
 
         return availableQualities.get(0);
     }
 
-    private static int extractResolution(String qualityStr) {
+    public static String resolveBestQuality(Context context, List<String> availableQualities, String preferredQuality) {
+        return resolveBestQuality(context, availableQualities, preferredQuality, 0);
+    }
+
+    public static int extractResolution(String qualityStr) {
         if (qualityStr == null) return 0;
         String digits = qualityStr.replaceAll("[^0-9]", "");
         if (digits.isEmpty()) return 0;

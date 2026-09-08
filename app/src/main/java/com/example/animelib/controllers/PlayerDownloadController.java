@@ -249,7 +249,7 @@ public class PlayerDownloadController {
     }
 
     public boolean isDownloadedQuality(String quality) {
-        return quality != null && quality.startsWith("Скачанный файл");
+        return com.example.animelib.util.AutoQualityHelper.isDownloadedQuality(quality);
     }
 
     public void cleanup() {
