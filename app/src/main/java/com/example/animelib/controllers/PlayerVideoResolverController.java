@@ -89,56 +89,56 @@ public class PlayerVideoResolverController {
             EpisodeResponse.QualityData selectedQuality = null;
 
             String preferredQuality = provider.getPreferredQuality();
-            String effectiveQuality = preferredQuality;
-            if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(preferredQuality)) {
-                List<String> available = new ArrayList<>();
-                for (EpisodeResponse.QualityData q : playerData.getVideo().getQuality()) {
-                    available.add(q.getQuality() + "p");
-                }
-                long estimate = 0;
-                try {
-                    estimate = androidx.media3.exoplayer.upstream.DefaultBandwidthMeter.getSingletonInstance(provider.getContext()).getBitrateEstimate();
-                } catch (Exception ignored) {}
-                effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(
-                        provider.getContext(), available, preferredQuality, estimate);
-                Log.d(TAG, "Auto quality resolved to: " + effectiveQuality);
+
+            List<String> available = new ArrayList<>();
+            List<EpisodeResponse.QualityData> qList = new ArrayList<>(playerData.getVideo().getQuality());
+            qList.sort((q1, q2) -> Integer.compare(q2.getQuality(), q1.getQuality()));
+            for (EpisodeResponse.QualityData q : qList) {
+                int res = q.getQuality();
+                if (res == 2160 && !provider.isEnable4K()) continue;
+                available.add(res + "p");
             }
 
-            String preferredQualityValue = effectiveQuality != null ? effectiveQuality.replace("p", "") : null;
-
-            if (preferredQualityValue != null) {
-                try {
-                    int preferredQualityInt = Integer.parseInt(preferredQualityValue);
-                    for (EpisodeResponse.QualityData quality : playerData.getVideo().getQuality()) {
-                        if (quality.getQuality() == preferredQualityInt) {
-                            if (preferredQualityInt == 2160 && !provider.isEnable4K()) {
-                                continue;
-                            }
-                            selectedQuality = quality;
-                            Log.d(TAG, "Using preferred quality: " + preferredQualityInt + "p");
-                            break;
-                        }
+            boolean isAuto = com.example.animelib.util.AutoQualityHelper.isAutoQuality(preferredQuality);
+            boolean hasMatch = false;
+            if (!isAuto && preferredQuality != null) {
+                for (String av : available) {
+                    if (com.example.animelib.util.AutoQualityHelper.matchQuality(av, preferredQuality)) {
+                        hasMatch = true;
+                        break;
                     }
-                } catch (NumberFormatException e) {
-                    Log.w(TAG, "Invalid preferred quality format: " + preferredQuality);
                 }
             }
 
-            if (selectedQuality == null) {
-                Log.d(TAG, "Available qualities:");
-                for (EpisodeResponse.QualityData quality : playerData.getVideo().getQuality()) {
-                    String q = String.valueOf(quality.getQuality());
-                    Log.d(TAG, "  - " + quality.getQuality() + "p: " + quality.getHref());
-                    if (provider.isEnable4K() || !"2160".equals(q)) {
-                        if (selectedQuality == null || quality.getQuality() > selectedQuality.getQuality()) {
-                            selectedQuality = quality;
-                        }
-                    }
+            if (!isAuto && !hasMatch) {
+                Log.d(TAG, "Preferred quality '" + preferredQuality + "' not available in Animelib episode. Defaulting to Auto.");
+                preferredQuality = "Авто";
+                provider.setPreferredQuality("Авто");
+                if (apiService != null && playerData.getPlayer() != null && playerData.getTeam() != null) {
+                    apiService.savePlayerPreferences(playerData.getPlayer(), playerData.getTeam().getId(), "Авто");
                 }
-                if (preferredQuality == null && selectedQuality != null) {
-                    String quality = String.valueOf(selectedQuality.getQuality());
-                    provider.setPreferredQuality(quality + "p");
+            }
+
+            long estimate = 0;
+            try {
+                estimate = androidx.media3.exoplayer.upstream.DefaultBandwidthMeter.getSingletonInstance(provider.getContext()).getBitrateEstimate();
+            } catch (Exception ignored) {}
+
+            String effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(
+                    provider.getContext(), available, preferredQuality, estimate);
+            Log.d(TAG, "Animelib quality resolved to: " + effectiveQuality + " (preferred mode: " + preferredQuality + ")");
+
+            int targetRes = com.example.animelib.util.AutoQualityHelper.extractResolution(effectiveQuality);
+
+            for (EpisodeResponse.QualityData qData : qList) {
+                if (qData.getQuality() == targetRes) {
+                    selectedQuality = qData;
+                    break;
                 }
+            }
+
+            if (selectedQuality == null && !qList.isEmpty()) {
+                selectedQuality = qList.get(0);
             }
 
             if (selectedQuality == null) {
@@ -256,27 +256,51 @@ public class PlayerVideoResolverController {
             playersManager.setCurrentKodikResponse(kodikResponse);
         }
 
-        String hlsUrl = null;
         String preferredQuality = provider.getPreferredQuality();
 
         List<String> availableQualities = new ArrayList<>();
         if (kodikResponse != null && kodikResponse.getData() != null && !kodikResponse.getData().isEmpty()) {
-            List<Integer> resolutions = new ArrayList<>();
-            for (String key : kodikResponse.getData().keySet()) {
-                try {
-                    resolutions.add(Integer.parseInt(key));
-                } catch (NumberFormatException ignored) {}
-            }
-            resolutions.sort((a, b) -> Integer.compare(b, a)); // Descending
-            for (int res : resolutions) {
+            List<String> rawKeys = new ArrayList<>(kodikResponse.getData().keySet());
+            rawKeys.sort((k1, k2) -> Integer.compare(
+                    com.example.animelib.util.AutoQualityHelper.extractResolution(k2),
+                    com.example.animelib.util.AutoQualityHelper.extractResolution(k1)
+            ));
+            for (String key : rawKeys) {
+                int res = com.example.animelib.util.AutoQualityHelper.extractResolution(key);
                 if (res == 2160 && !provider.isEnable4K()) continue;
-                availableQualities.add(res + "p");
+                String qStr = res > 0 ? res + "p" : key;
+                if (!availableQualities.contains(qStr)) {
+                    availableQualities.add(qStr);
+                }
             }
         }
         if (availableQualities.isEmpty()) {
             availableQualities.add("720p");
             availableQualities.add("480p");
             availableQualities.add("360p");
+        }
+
+        boolean isAuto = com.example.animelib.util.AutoQualityHelper.isAutoQuality(preferredQuality);
+        boolean hasMatch = false;
+        if (!isAuto && preferredQuality != null) {
+            for (String av : availableQualities) {
+                if (com.example.animelib.util.AutoQualityHelper.matchQuality(av, preferredQuality)) {
+                    hasMatch = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isAuto && !hasMatch) {
+            Log.d(TAG, "Preferred quality '" + preferredQuality + "' not available in Kodik episode. Defaulting to Auto.");
+            preferredQuality = "Авто";
+            provider.setPreferredQuality("Авто");
+            if (apiService != null && playersManager != null && playersManager.getCurrentPlayerData() != null) {
+                EpisodeResponse.PlayerData cp = playersManager.getCurrentPlayerData();
+                if (cp.getPlayer() != null && cp.getTeam() != null) {
+                    apiService.savePlayerPreferences(cp.getPlayer(), cp.getTeam().getId(), "Авто");
+                }
+            }
         }
 
         long estimate = 0;
@@ -286,27 +310,29 @@ public class PlayerVideoResolverController {
 
         String effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(
                 provider.getContext(), availableQualities, preferredQuality, estimate);
-        Log.d(TAG, "Kodik quality resolved to: " + effectiveQuality + " (from preferred: " + preferredQuality + ")");
+        Log.d(TAG, "Kodik quality resolved to: " + effectiveQuality + " (preferred mode: " + preferredQuality + ")");
 
-        String preferredQualityKey = effectiveQuality != null ? effectiveQuality.replace("p", "") : null;
+        int targetRes = com.example.animelib.util.AutoQualityHelper.extractResolution(effectiveQuality);
+        String hlsUrl = null;
 
-        if (preferredQualityKey != null && kodikResponse != null && kodikResponse.getData() != null &&
-                kodikResponse.getData().containsKey(preferredQualityKey) &&
-                kodikResponse.getData().get(preferredQualityKey).length > 0) {
-            hlsUrl = kodikResponse.getData().get(preferredQualityKey)[0].getSrc();
-            Log.d(TAG, "Using quality: " + preferredQualityKey + "p");
-        } else if (kodikResponse != null && kodikResponse.getData() != null) {
-            for (String key : new String[]{"1080", "720", "480", "360"}) {
-                if (kodikResponse.getData().containsKey(key) && kodikResponse.getData().get(key).length > 0) {
-                    hlsUrl = kodikResponse.getData().get(key)[0].getSrc();
-                    effectiveQuality = key + "p";
-                    break;
+        if (kodikResponse != null && kodikResponse.getData() != null) {
+            for (String key : kodikResponse.getData().keySet()) {
+                int keyRes = com.example.animelib.util.AutoQualityHelper.extractResolution(key);
+                if (keyRes == targetRes || key.equalsIgnoreCase(effectiveQuality) || (key + "p").equalsIgnoreCase(effectiveQuality)) {
+                    if (kodikResponse.getData().get(key) != null && kodikResponse.getData().get(key).length > 0) {
+                        hlsUrl = kodikResponse.getData().get(key)[0].getSrc();
+                        break;
+                    }
                 }
             }
-        }
-
-        if (effectiveQuality != null) {
-            provider.setPreferredQuality(effectiveQuality);
+            if (hlsUrl == null) {
+                for (String key : kodikResponse.getData().keySet()) {
+                    if (kodikResponse.getData().get(key) != null && kodikResponse.getData().get(key).length > 0) {
+                        hlsUrl = kodikResponse.getData().get(key)[0].getSrc();
+                        break;
+                    }
+                }
+            }
         }
 
         if (hlsUrl != null) {

@@ -751,28 +751,34 @@ public class PlayersManager {
         if ("animelib".equalsIgnoreCase(currentPlayerData.getPlayer())) {
             // AnimeLib qualities are in video.quality array
             if (currentPlayerData.getVideo() != null && currentPlayerData.getVideo().getQuality() != null) {
-                for (EpisodeResponse.QualityData qualityData : currentPlayerData.getVideo().getQuality()) {
-                    String quality = String.valueOf(qualityData.getQuality());
-                    // Skip 4K if not enabled
-                    if (("2160".equals(quality) || "4K".equals(quality)) && !enable4K) {
+                List<EpisodeResponse.QualityData> qList = new ArrayList<>(currentPlayerData.getVideo().getQuality());
+                qList.sort((q1, q2) -> Integer.compare(q2.getQuality(), q1.getQuality())); // Descending
+                for (EpisodeResponse.QualityData qualityData : qList) {
+                    int res = qualityData.getQuality();
+                    if (res == 2160 && !enable4K) {
                         Log.d(TAG, "Skipping 4K quality (not enabled)");
                         continue;
                     }
-                    qualities.add(quality + "p");
+                    String qStr = res + "p";
+                    if (!qualities.contains(qStr)) {
+                        qualities.add(qStr);
+                    }
                 }
             }
         } else if ("kodik".equalsIgnoreCase(currentPlayerData.getPlayer())) {
             if (currentKodikResponse != null && currentKodikResponse.getData() != null && !currentKodikResponse.getData().isEmpty()) {
-                List<Integer> resolutions = new ArrayList<>();
-                for (String key : currentKodikResponse.getData().keySet()) {
-                    try {
-                        resolutions.add(Integer.parseInt(key));
-                    } catch (NumberFormatException ignored) {}
-                }
-                resolutions.sort((a, b) -> Integer.compare(b, a)); // Descending
-                for (int res : resolutions) {
+                List<String> rawKeys = new ArrayList<>(currentKodikResponse.getData().keySet());
+                rawKeys.sort((k1, k2) -> Integer.compare(
+                        com.example.animelib.util.AutoQualityHelper.extractResolution(k2),
+                        com.example.animelib.util.AutoQualityHelper.extractResolution(k1)
+                ));
+                for (String key : rawKeys) {
+                    int res = com.example.animelib.util.AutoQualityHelper.extractResolution(key);
                     if (res == 2160 && !enable4K) continue;
-                    qualities.add(res + "p");
+                    String qStr = res > 0 ? res + "p" : key;
+                    if (!qualities.contains(qStr)) {
+                        qualities.add(qStr);
+                    }
                 }
             }
             if (qualities.isEmpty()) {

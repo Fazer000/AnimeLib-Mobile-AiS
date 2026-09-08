@@ -3213,11 +3213,16 @@ public class VideoPlayerActivity extends AppCompatActivity {
                         newPreferredQuality = "Скачанный файл (" + dq + ")";
                         Log.d("VideoPlayer", "Downloaded episode found, preferring downloaded quality: " + newPreferredQuality);
                     } else {
-                        if (savedQuality != null) {
-                            for (String q : newQualities) {
-                                if (com.example.animelib.util.AutoQualityHelper.matchQuality(q, savedQuality)) {
-                                    newPreferredQuality = q;
-                                    break;
+                        if (savedQuality != null && !savedQuality.trim().isEmpty()) {
+                            if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(savedQuality)) {
+                                newPreferredQuality = "Авто";
+                            } else {
+                                for (String q : newQualities) {
+                                    if (!com.example.animelib.util.AutoQualityHelper.isAutoQuality(q) &&
+                                            com.example.animelib.util.AutoQualityHelper.matchQuality(q, savedQuality)) {
+                                        newPreferredQuality = q;
+                                        break;
+                                    }
                                 }
                             }
                         }

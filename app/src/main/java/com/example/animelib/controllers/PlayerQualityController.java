@@ -60,17 +60,25 @@ public class PlayerQualityController {
             return null;
         }
 
-        try {
-            int target = Integer.parseInt(quality.replace("p", ""));
-            for (EpisodeResponse.QualityData data : playerData.getVideo().getQuality()) {
-                if (data.getQuality() == target) {
-                    String domain = ("animelib".equalsIgnoreCase(playerData.getPlayer()) && playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty())
-                            ? playerData.getVideoDomain() : currentVideoDomain;
-                    return VideoUrlHelper.toAbsoluteVideoUrl(data.getHref(), domain);
-                }
+        String effectiveQuality = quality;
+        if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(quality)) {
+            List<String> available = playersManager.getAvailableQualities();
+            effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(null, available, quality, 0);
+        }
+
+        int target = com.example.animelib.util.AutoQualityHelper.extractResolution(effectiveQuality);
+        for (EpisodeResponse.QualityData data : playerData.getVideo().getQuality()) {
+            if (data.getQuality() == target) {
+                String domain = ("animelib".equalsIgnoreCase(playerData.getPlayer()) && playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty())
+                        ? playerData.getVideoDomain() : currentVideoDomain;
+                return VideoUrlHelper.toAbsoluteVideoUrl(data.getHref(), domain);
             }
-        } catch (NumberFormatException e) {
-            Log.w(TAG, "Invalid quality format: " + quality);
+        }
+        if (!playerData.getVideo().getQuality().isEmpty()) {
+            EpisodeResponse.QualityData data = playerData.getVideo().getQuality().get(0);
+            String domain = ("animelib".equalsIgnoreCase(playerData.getPlayer()) && playerData.getVideoDomain() != null && !playerData.getVideoDomain().isEmpty())
+                    ? playerData.getVideoDomain() : currentVideoDomain;
+            return VideoUrlHelper.toAbsoluteVideoUrl(data.getHref(), domain);
         }
         return null;
     }
@@ -89,24 +97,39 @@ public class PlayerQualityController {
     public KodikHlsResult resolveKodikHlsResult(KodikResponse response, String targetQuality) {
         if (response == null || response.getData() == null) return null;
 
-        String qualityKey = targetQuality != null ? targetQuality.replace("p", "") : null;
-        if (qualityKey != null && response.getData().containsKey(qualityKey) &&
-                response.getData().get(qualityKey).length > 0) {
-            String url = response.getData().get(qualityKey)[0].getSrc();
-            if (url != null && !url.startsWith("http")) {
-                url = "https:" + url;
+        String qualityToUse = targetQuality;
+        if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(targetQuality)) {
+            List<String> available = new java.util.ArrayList<>();
+            for (String key : response.getData().keySet()) {
+                int r = com.example.animelib.util.AutoQualityHelper.extractResolution(key);
+                if (r > 0) available.add(r + "p");
             }
-            return new KodikHlsResult(url, qualityKey + "p");
+            qualityToUse = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(null, available, targetQuality, 0);
+        }
+
+        int targetRes = com.example.animelib.util.AutoQualityHelper.extractResolution(qualityToUse);
+
+        for (String key : response.getData().keySet()) {
+            int keyRes = com.example.animelib.util.AutoQualityHelper.extractResolution(key);
+            if (keyRes == targetRes || key.equalsIgnoreCase(qualityToUse) || (key + "p").equalsIgnoreCase(qualityToUse)) {
+                if (response.getData().get(key) != null && response.getData().get(key).length > 0) {
+                    String url = response.getData().get(key)[0].getSrc();
+                    if (url != null && !url.startsWith("http")) {
+                        url = "https:" + url;
+                    }
+                    return new KodikHlsResult(url, targetQuality);
+                }
+            }
         }
 
         // Fallbacks
-        for (String key : new String[]{"1080", "720", "480", "360"}) {
-            if (response.getData().containsKey(key) && response.getData().get(key).length > 0) {
+        for (String key : response.getData().keySet()) {
+            if (response.getData().get(key) != null && response.getData().get(key).length > 0) {
                 String url = response.getData().get(key)[0].getSrc();
                 if (url != null && !url.startsWith("http")) {
                     url = "https:" + url;
                 }
-                return new KodikHlsResult(url, key + "p");
+                return new KodikHlsResult(url, targetQuality);
             }
         }
         return null;

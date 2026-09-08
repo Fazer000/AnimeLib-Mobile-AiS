@@ -115,22 +115,25 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
     private static String getQualitySubtitle(String quality) {
         if (quality == null) return "Видеопоток";
         String q = quality.toLowerCase().trim();
-        if (q.contains("2160") || q.contains("4k")) {
-            return "Максимальная четкость";
-        } else if (q.contains("1440") || q.contains("2k")) {
-            return "Высокая детализация";
-        } else if (q.contains("1080") || q.contains("fhd")) {
-            return "Высокое качество";
-        } else if (q.contains("720") || q.contains("hd")) {
-            return "Оптимально для большинства";
-        } else if (q.contains("480")) {
-            return "Хороший баланс";
-        } else if (q.contains("360") || q.contains("240") || q.contains("sd")) {
-            return "Экономия трафика";
-        } else if (q.contains("auto") || q.contains("авто")) {
+        if (q.contains("auto") || q.contains("авто")) {
             return "Автоматический выбор качества";
         } else if (q.contains("скачан") || q.contains("офлайн") || q.contains("локальн")) {
             return "Загруженный медиафайл";
+        }
+
+        int res = com.example.animelib.util.AutoQualityHelper.extractResolution(quality);
+        if (res >= 2160 || q.contains("4k")) {
+            return "Максимальная четкость";
+        } else if (res >= 1440 || q.contains("2k")) {
+            return "Высокая детализация";
+        } else if (res >= 1080 || q.contains("fhd")) {
+            return "Высокое качество";
+        } else if (res >= 720 || q.contains("hd")) {
+            return "Оптимально для большинства";
+        } else if (res >= 480) {
+            return "Хороший баланс";
+        } else if (res > 0) {
+            return "Экономия трафика";
         }
         return "Стандартный видеопоток";
     }
