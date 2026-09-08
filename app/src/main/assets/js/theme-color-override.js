@@ -18,8 +18,8 @@
                 computedBg = window.getComputedStyle(docEl).getPropertyValue('--background').trim().toLowerCase();
             } catch (e) {}
 
-            var isDarkBg = computedBg === '#0a0a0a' || computedBg === '#1c1c1c' || computedBg === '#131316' || computedBg === '#0d0d10' ||
-                           computedBg.includes('10, 10, 10') || computedBg.includes('28, 28, 28') || computedBg.includes('19, 19, 22') || computedBg.includes('13, 13, 16');
+            var isDarkBg = computedBg === '#0a0a0a' || computedBg === '#1c1c1c' || computedBg === '#131316' || computedBg === '#0d0d10' || computedBg === '#0a0a0c' ||
+                           computedBg.includes('10, 10, 10') || computedBg.includes('28, 28, 28') || computedBg.includes('19, 19, 22') || computedBg.includes('13, 13, 16') || computedBg.includes('10, 10, 12');
 
             var shouldApplyDarkPlayerColors = isDarkAttr || (isAuto && systemIsDark) || isDarkBg;
 
@@ -37,28 +37,34 @@
                 return;
             }
 
-            if (existingStyle) return;
-
-            var styleEl = document.createElement('style');
-            styleEl.id = STYLE_ID;
-            styleEl.textContent = `
+            var cssText = `
                 :root[data-theme="dark"],
                 :root[data-theme="auto"],
                 html[data-theme="dark"],
                 html[data-theme="auto"],
                 body[data-theme="dark"],
-                body[data-theme="auto"] {
-                    --background: #0d0d10 !important;
-                    --background-rgb: 13, 13, 16 !important;
-                    --background-dark: #18181b !important;
+                body[data-theme="auto"],
+                [data-theme="dark"],
+                [data-theme="auto"],
+                :root,
+                html,
+                body {
+                    --background: #0a0a0c !important;
+                    --background-rgb: 10, 10, 12 !important;
+                    --background-dark: #121215 !important;
                     --background-hover: rgba(255, 255, 255, .05) !important;
                     --background-fill-1: rgba(50, 50, 55, .36) !important;
                     --background-fill-2: rgba(50, 50, 55, .32) !important;
                     --background-fill-3: rgba(50, 50, 55, .24) !important;
                     --background-fill-4: rgba(50, 50, 55, .10) !important;
-                    --background-elevated-1: rgb(31, 31, 34) !important;
-                    --background-elevated-2: rgb(37, 37, 39) !important;
-                    --background-elevated-3: rgb(54, 54, 59) !important;
+                    
+                    --background-elevated-1: rgb(28, 28, 30) !important;
+                    --background-elevated-2: rgb(28, 28, 30) !important;
+                    --background-elevated-3: rgb(28, 28, 30) !important;
+                    --background-elevated-1-rgb: 28, 28, 30 !important;
+                    --background-elevated-2-rgb: 28, 28, 30 !important;
+                    --background-elevated-3-rgb: 28, 28, 30 !important;
+
                     --foreground: #131316 !important;
                     --foreground-rgb: 19, 19, 22 !important;
                     --foreground-darken: rgba(0, 0, 0, .15) !important;
@@ -67,7 +73,7 @@
                     --btn-default-bg: rgba(255, 255, 255, .06) !important;
                     --btn-default-bg-hover: rgba(255, 255, 255, .1) !important;
                     --btn-light-border: #3a3a3e !important;
-                    --btn-light-bg: #1c1c20 !important;
+                    --btn-light-bg: rgb(28, 28, 30) !important;
                     --btn-light-bg-hover: rgba(255, 255, 255, .04) !important;
 
                     --border-base: rgba(50, 50, 55, .65) !important;
@@ -80,15 +86,15 @@
                     --input-border-focus: #8852DE !important;
                     --input-bg: #18181c !important;
 
-                    --placeholder-block-bg: #1c1c20 !important;
+                    --placeholder-block-bg: rgb(28, 28, 30) !important;
                     --scrollbar-thumb: #3a3a3e !important;
                     --scrollbar-thumb-hover: #505055 !important;
-                    --scrollbar: #0d0d10 !important;
-                    --comment-highlight: #1c1c20 !important;
-                    --sticky-comment-collapsed-gradient: #1c1c20 !important;
+                    --scrollbar: #0a0a0c !important;
+                    --comment-highlight: rgb(28, 28, 30) !important;
+                    --sticky-comment-collapsed-gradient: rgb(28, 28, 30) !important;
                     --skeleton-bg: rgba(50, 50, 55, .32) !important;
                     --skeleton-bg-secondary: rgba(50, 50, 55, .24) !important;
-                    --secondary: #1c1c20 !important;
+                    --secondary: rgb(28, 28, 30) !important;
                     --link-border-color: rgba(255, 255, 255, .2) !important;
                 }
 
@@ -96,17 +102,22 @@
                     :root:not([data-theme="light"]),
                     html:not([data-theme="light"]),
                     body:not([data-theme="light"]) {
-                        --background: #0d0d10 !important;
-                        --background-rgb: 13, 13, 16 !important;
-                        --background-dark: #18181b !important;
+                        --background: #0a0a0c !important;
+                        --background-rgb: 10, 10, 12 !important;
+                        --background-dark: #121215 !important;
                         --background-hover: rgba(255, 255, 255, .05) !important;
                         --background-fill-1: rgba(50, 50, 55, .36) !important;
                         --background-fill-2: rgba(50, 50, 55, .32) !important;
                         --background-fill-3: rgba(50, 50, 55, .24) !important;
                         --background-fill-4: rgba(50, 50, 55, .10) !important;
-                        --background-elevated-1: rgb(31, 31, 34) !important;
-                        --background-elevated-2: rgb(37, 37, 39) !important;
-                        --background-elevated-3: rgb(54, 54, 59) !important;
+                        
+                        --background-elevated-1: rgb(28, 28, 30) !important;
+                        --background-elevated-2: rgb(28, 28, 30) !important;
+                        --background-elevated-3: rgb(28, 28, 30) !important;
+                        --background-elevated-1-rgb: 28, 28, 30 !important;
+                        --background-elevated-2-rgb: 28, 28, 30 !important;
+                        --background-elevated-3-rgb: 28, 28, 30 !important;
+
                         --foreground: #131316 !important;
                         --foreground-rgb: 19, 19, 22 !important;
                         --foreground-darken: rgba(0, 0, 0, .15) !important;
@@ -115,7 +126,7 @@
                         --btn-default-bg: rgba(255, 255, 255, .06) !important;
                         --btn-default-bg-hover: rgba(255, 255, 255, .1) !important;
                         --btn-light-border: #3a3a3e !important;
-                        --btn-light-bg: #1c1c20 !important;
+                        --btn-light-bg: rgb(28, 28, 30) !important;
                         --btn-light-bg-hover: rgba(255, 255, 255, .04) !important;
 
                         --border-base: rgba(50, 50, 55, .65) !important;
@@ -128,19 +139,31 @@
                         --input-border-focus: #8852DE !important;
                         --input-bg: #18181c !important;
 
-                        --placeholder-block-bg: #1c1c20 !important;
+                        --placeholder-block-bg: rgb(28, 28, 30) !important;
                         --scrollbar-thumb: #3a3a3e !important;
                         --scrollbar-thumb-hover: #505055 !important;
-                        --scrollbar: #0d0d10 !important;
-                        --comment-highlight: #1c1c20 !important;
-                        --sticky-comment-collapsed-gradient: #1c1c20 !important;
+                        --scrollbar: #0a0a0c !important;
+                        --comment-highlight: rgb(28, 28, 30) !important;
+                        --sticky-comment-collapsed-gradient: rgb(28, 28, 30) !important;
                         --skeleton-bg: rgba(50, 50, 55, .32) !important;
                         --skeleton-bg-secondary: rgba(50, 50, 55, .24) !important;
-                        --secondary: #1c1c20 !important;
+                        --secondary: rgb(28, 28, 30) !important;
                         --link-border-color: rgba(255, 255, 255, .2) !important;
                     }
                 }
             `;
+
+            if (existingStyle) {
+                if (existingStyle.textContent !== cssText) {
+                    existingStyle.textContent = cssText;
+                    console.log('[AnimeLIB] Updated player dark theme color overrides');
+                }
+                return;
+            }
+
+            var styleEl = document.createElement('style');
+            styleEl.id = STYLE_ID;
+            styleEl.textContent = cssText;
 
             var target = document.head || document.documentElement || document.body;
             if (target) {
