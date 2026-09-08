@@ -79,7 +79,7 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
         }
 
         // 4. Active / Inactive selection state
-        boolean isCurrent = com.example.animelib.util.AutoQualityHelper.matchQuality(quality, currentQuality);
+        boolean isCurrent = (position == getSelectedIndex());
 
         if (holder.selectedPill != null) {
             holder.selectedPill.setVisibility(isCurrent ? View.VISIBLE : View.GONE);
@@ -141,6 +141,38 @@ public class QualityAdapter extends RecyclerView.Adapter<QualityAdapter.QualityV
     @Override
     public int getItemCount() {
         return qualities != null ? qualities.size() : 0;
+    }
+
+    public int getSelectedIndex() {
+        if (qualities == null || qualities.isEmpty()) return -1;
+
+        // 1. Exact or smart quality match
+        for (int i = 0; i < qualities.size(); i++) {
+            if (com.example.animelib.util.AutoQualityHelper.matchQuality(qualities.get(i), currentQuality)) {
+                return i;
+            }
+        }
+
+        // 2. Fallback if currentQuality is auto-like or null/empty
+        if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(currentQuality)) {
+            for (int i = 0; i < qualities.size(); i++) {
+                if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(qualities.get(i))) {
+                    return i;
+                }
+            }
+        }
+
+        // 3. Fallback if currentQuality is downloaded-like
+        if (com.example.animelib.util.AutoQualityHelper.isDownloadedQuality(currentQuality)) {
+            for (int i = 0; i < qualities.size(); i++) {
+                if (com.example.animelib.util.AutoQualityHelper.isDownloadedQuality(qualities.get(i))) {
+                    return i;
+                }
+            }
+        }
+
+        // 4. Fallback to first item if available
+        return 0;
     }
     
     @SuppressLint("NotifyDataSetChanged")

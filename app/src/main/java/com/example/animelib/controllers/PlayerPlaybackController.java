@@ -8,6 +8,8 @@ import com.google.android.material.button.MaterialButton;
 import androidx.media3.common.MediaItem;
 import androidx.media3.common.PlaybackException;
 import androidx.media3.common.Player;
+import androidx.media3.datasource.DataSource;
+import androidx.media3.datasource.DefaultDataSource;
 import androidx.media3.datasource.DefaultHttpDataSource;
 import androidx.media3.datasource.HttpDataSource;
 import androidx.media3.exoplayer.DefaultLoadControl;
@@ -142,7 +144,8 @@ public class PlayerPlaybackController {
             player.clearMediaItems();
         }
 
-        HttpDataSource.Factory dsFactory = getEffectiveHttpDataSourceFactory();
+        HttpDataSource.Factory httpFactory = getEffectiveHttpDataSourceFactory();
+        DataSource.Factory dsFactory = new DefaultDataSource.Factory(playerContext, httpFactory);
 
         MediaSource mediaSource;
         if (videoUrl.contains(".m3u8") || videoUrl.contains("hls")) {

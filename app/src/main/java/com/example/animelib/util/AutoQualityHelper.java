@@ -37,8 +37,14 @@ public class AutoQualityHelper {
     public static boolean matchQuality(String q1, String q2) {
         if (q1 == null || q2 == null) return false;
         if (q1.equalsIgnoreCase(q2)) return true;
-        if (isAutoQuality(q1) && isAutoQuality(q2)) return true;
-        if (isDownloadedQuality(q1) && isDownloadedQuality(q2)) return true;
+
+        boolean auto1 = isAutoQuality(q1);
+        boolean auto2 = isAutoQuality(q2);
+        if (auto1 || auto2) return auto1 && auto2;
+
+        boolean down1 = isDownloadedQuality(q1);
+        boolean down2 = isDownloadedQuality(q2);
+        if (down1 || down2) return down1 && down2;
 
         String r1 = q1.replaceAll("[^0-9]", "");
         String r2 = q2.replaceAll("[^0-9]", "");
