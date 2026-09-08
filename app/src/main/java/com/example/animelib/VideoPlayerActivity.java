@@ -1000,6 +1000,11 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     @Override
                     public void setPreferredQuality(String quality) {
                         preferredQuality = quality;
+                        updateSettingsQualityTag();
+                        if (playerDialogsController != null && playersManager != null) {
+                            List<String> newQualities = getQualitiesWithDownloadedOption(playersManager.getAvailableQualities());
+                            playerDialogsController.updateSettingsQualities(newQualities, preferredQuality);
+                        }
                     }
 
                     @Override
@@ -1060,6 +1065,12 @@ public class VideoPlayerActivity extends AppCompatActivity {
                     @Override
                     public void setCurrentKodikResponse(KodikResponse response) {
                         currentKodikResponse = response;
+                        if (playerQualityController != null) {
+                            playerQualityController.setCurrentKodikResponse(response);
+                        }
+                        if (playersManager != null) {
+                            playersManager.setCurrentKodikResponse(response);
+                        }
                     }
 
                     @Override
@@ -4112,8 +4123,8 @@ public class VideoPlayerActivity extends AppCompatActivity {
             handleAnimelibPlayer(currentPlayerData, currentPosition);
         } else if ("kodik".equalsIgnoreCase(currentPlayerData.getPlayer())) {
             if (currentKodikResponse != null && currentKodikResponse.getData() != null) {
-                String qualityKey = preferredQuality != null ? preferredQuality.replace("p", "") : "1080";
-                if (currentKodikResponse.getData().containsKey(qualityKey) &&
+                String qualityKey = preferredQuality != null ? preferredQuality.replace("p", "") : null;
+                if (qualityKey != null && currentKodikResponse.getData().containsKey(qualityKey) &&
                         Objects.requireNonNull(currentKodikResponse.getData().get(qualityKey)).length > 0) {
                     String newHlsUrl = Objects.requireNonNull(currentKodikResponse.getData().get(qualityKey))[0].getSrc();
                     if (newHlsUrl != null && !newHlsUrl.isEmpty()) {

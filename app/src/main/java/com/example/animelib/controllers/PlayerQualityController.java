@@ -75,8 +75,18 @@ public class PlayerQualityController {
         return null;
     }
 
+    public static class KodikHlsResult {
+        public final String url;
+        public final String quality;
+
+        public KodikHlsResult(String url, String quality) {
+            this.url = url;
+            this.quality = quality;
+        }
+    }
+
     @Nullable
-    public String resolveKodikHlsUrl(KodikResponse response, String targetQuality) {
+    public KodikHlsResult resolveKodikHlsResult(KodikResponse response, String targetQuality) {
         if (response == null || response.getData() == null) return null;
 
         String qualityKey = targetQuality != null ? targetQuality.replace("p", "") : null;
@@ -86,24 +96,29 @@ public class PlayerQualityController {
             if (url != null && !url.startsWith("http")) {
                 url = "https:" + url;
             }
-            return url;
+            return new KodikHlsResult(url, qualityKey + "p");
         }
 
         // Fallbacks
-        for (String key : new String[]{"720", "480", "360"}) {
+        for (String key : new String[]{"1080", "720", "480", "360"}) {
             if (response.getData().containsKey(key) && response.getData().get(key).length > 0) {
                 String url = response.getData().get(key)[0].getSrc();
                 if (url != null && !url.startsWith("http")) {
                     url = "https:" + url;
                 }
-                return url;
+                return new KodikHlsResult(url, key + "p");
             }
         }
         return null;
     }
 
+    @Nullable
+    public String resolveKodikHlsUrl(KodikResponse response, String targetQuality) {
+        KodikHlsResult res = resolveKodikHlsResult(response, targetQuality);
+        return res != null ? res.url : null;
+    }
+
     public void switchQuality(PlayersManager playersManager, String currentVideoDomain, String newQuality) {
-        this.preferredQuality = newQuality;
         if (playersManager == null) return;
 
         EpisodeResponse.PlayerData playerData = playersManager.getCurrentPlayerData();
@@ -111,14 +126,18 @@ public class PlayerQualityController {
 
         if ("kodik".equalsIgnoreCase(playerData.getPlayer())) {
             if (currentKodikResponse != null) {
-                String hlsUrl = resolveKodikHlsUrl(currentKodikResponse, newQuality);
-                if (hlsUrl != null && callback != null) {
-                    callback.onQualityChanged(newQuality, hlsUrl, true);
+                KodikHlsResult result = resolveKodikHlsResult(currentKodikResponse, newQuality);
+                if (result != null && result.url != null) {
+                    this.preferredQuality = result.quality;
+                    if (callback != null) {
+                        callback.onQualityChanged(result.quality, result.url, true);
+                    }
                 } else if (callback != null) {
                     callback.onError("Ошибка смены качества", "Не удалось сформировать HLS ссылку для качества " + newQuality, null);
                 }
             }
         } else {
+            this.preferredQuality = newQuality;
             String videoUrl = resolveDownloadUrl(playersManager, currentVideoDomain, newQuality);
             if (videoUrl != null && callback != null) {
                 callback.onQualityChanged(newQuality, videoUrl, false);

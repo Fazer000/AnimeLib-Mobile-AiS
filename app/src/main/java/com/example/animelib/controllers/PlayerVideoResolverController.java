@@ -252,42 +252,61 @@ public class PlayerVideoResolverController {
     public void startHlsPlayer(KodikResponse kodikResponse, long seekToPosition) {
         if (provider == null) return;
         provider.setCurrentKodikResponse(kodikResponse);
+        if (playersManager != null) {
+            playersManager.setCurrentKodikResponse(kodikResponse);
+        }
 
         String hlsUrl = null;
         String preferredQuality = provider.getPreferredQuality();
 
-        String effectiveQuality = preferredQuality;
-        if (com.example.animelib.util.AutoQualityHelper.isAutoQuality(preferredQuality) && kodikResponse.getData() != null) {
-            List<String> availableKeys = new ArrayList<>(kodikResponse.getData().keySet());
-            List<String> formatted = new ArrayList<>();
-            for (String k : availableKeys) {
-                formatted.add(k + "p");
+        List<String> availableQualities = new ArrayList<>();
+        if (kodikResponse != null && kodikResponse.getData() != null && !kodikResponse.getData().isEmpty()) {
+            List<Integer> resolutions = new ArrayList<>();
+            for (String key : kodikResponse.getData().keySet()) {
+                try {
+                    resolutions.add(Integer.parseInt(key));
+                } catch (NumberFormatException ignored) {}
             }
-            long estimate = 0;
-            try {
-                estimate = androidx.media3.exoplayer.upstream.DefaultBandwidthMeter.getSingletonInstance(provider.getContext()).getBitrateEstimate();
-            } catch (Exception ignored) {}
-            effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(provider.getContext(), formatted, preferredQuality, estimate);
-            Log.d(TAG, "Kodik Auto quality resolved to: " + effectiveQuality);
+            resolutions.sort((a, b) -> Integer.compare(b, a)); // Descending
+            for (int res : resolutions) {
+                if (res == 2160 && !provider.isEnable4K()) continue;
+                availableQualities.add(res + "p");
+            }
         }
+        if (availableQualities.isEmpty()) {
+            availableQualities.add("720p");
+            availableQualities.add("480p");
+            availableQualities.add("360p");
+        }
+
+        long estimate = 0;
+        try {
+            estimate = androidx.media3.exoplayer.upstream.DefaultBandwidthMeter.getSingletonInstance(provider.getContext()).getBitrateEstimate();
+        } catch (Exception ignored) {}
+
+        String effectiveQuality = com.example.animelib.util.AutoQualityHelper.resolveBestQuality(
+                provider.getContext(), availableQualities, preferredQuality, estimate);
+        Log.d(TAG, "Kodik quality resolved to: " + effectiveQuality + " (from preferred: " + preferredQuality + ")");
 
         String preferredQualityKey = effectiveQuality != null ? effectiveQuality.replace("p", "") : null;
 
-        if (preferredQualityKey != null && kodikResponse.getData().containsKey(preferredQualityKey) &&
+        if (preferredQualityKey != null && kodikResponse != null && kodikResponse.getData() != null &&
+                kodikResponse.getData().containsKey(preferredQualityKey) &&
                 kodikResponse.getData().get(preferredQualityKey).length > 0) {
             hlsUrl = kodikResponse.getData().get(preferredQualityKey)[0].getSrc();
-            Log.d(TAG, "Using preferred quality: " + preferredQualityKey + "p");
-        } else {
-            if (kodikResponse.getData().containsKey("720") && kodikResponse.getData().get("720").length > 0) {
-                hlsUrl = kodikResponse.getData().get("720")[0].getSrc();
-                if (preferredQuality == null) provider.setPreferredQuality("720p");
-            } else if (kodikResponse.getData().containsKey("480") && kodikResponse.getData().get("480").length > 0) {
-                hlsUrl = kodikResponse.getData().get("480")[0].getSrc();
-                if (preferredQuality == null) provider.setPreferredQuality("480p");
-            } else if (kodikResponse.getData().containsKey("360") && kodikResponse.getData().get("360").length > 0) {
-                hlsUrl = kodikResponse.getData().get("360")[0].getSrc();
-                if (preferredQuality == null) provider.setPreferredQuality("360p");
+            Log.d(TAG, "Using quality: " + preferredQualityKey + "p");
+        } else if (kodikResponse != null && kodikResponse.getData() != null) {
+            for (String key : new String[]{"1080", "720", "480", "360"}) {
+                if (kodikResponse.getData().containsKey(key) && kodikResponse.getData().get(key).length > 0) {
+                    hlsUrl = kodikResponse.getData().get(key)[0].getSrc();
+                    effectiveQuality = key + "p";
+                    break;
+                }
             }
+        }
+
+        if (effectiveQuality != null) {
+            provider.setPreferredQuality(effectiveQuality);
         }
 
         if (hlsUrl != null) {
@@ -295,7 +314,7 @@ public class PlayerVideoResolverController {
                 hlsUrl = "https:" + hlsUrl;
             }
 
-            Log.d(TAG, "Starting HLS playback with URL: " + hlsUrl);
+            Log.d(TAG, "Starting HLS playback with URL: " + hlsUrl + " (" + effectiveQuality + ")");
             provider.setCurrentVideoUrl(hlsUrl);
             provider.initializeHlsPlayer(hlsUrl);
             ExoPlayer player = provider.getPlayer();

@@ -67,6 +67,7 @@ public class PlayersManager {
     private List<EpisodeResponse.PlayerData> animelibPlayers = new ArrayList<>();
     private List<EpisodeResponse.PlayerData> kodikPlayers = new ArrayList<>();
     private EpisodeResponse.PlayerData currentPlayerData;
+    private com.example.animelib.models.KodikResponse currentKodikResponse;
     
     // Предпочтения пользователя
     private String preferredPlayerType; // "animelib" or "kodik"
@@ -733,6 +734,10 @@ public class PlayersManager {
         return sameTeam && samePlayer;
     }
     
+    public void setCurrentKodikResponse(com.example.animelib.models.KodikResponse response) {
+        this.currentKodikResponse = response;
+    }
+
     /**
      * Получение доступных качеств для текущего плеера
      */
@@ -757,10 +762,24 @@ public class PlayersManager {
                 }
             }
         } else if ("kodik".equalsIgnoreCase(currentPlayerData.getPlayer())) {
-            // Kodik qualities are usually standard
-            qualities.add("720p");
-            qualities.add("480p");
-            qualities.add("360p");
+            if (currentKodikResponse != null && currentKodikResponse.getData() != null && !currentKodikResponse.getData().isEmpty()) {
+                List<Integer> resolutions = new ArrayList<>();
+                for (String key : currentKodikResponse.getData().keySet()) {
+                    try {
+                        resolutions.add(Integer.parseInt(key));
+                    } catch (NumberFormatException ignored) {}
+                }
+                resolutions.sort((a, b) -> Integer.compare(b, a)); // Descending
+                for (int res : resolutions) {
+                    if (res == 2160 && !enable4K) continue;
+                    qualities.add(res + "p");
+                }
+            }
+            if (qualities.isEmpty()) {
+                qualities.add("720p");
+                qualities.add("480p");
+                qualities.add("360p");
+            }
         }
 
         return qualities;
