@@ -128,7 +128,7 @@
                         android:text="FHD"
                         android:textStyle="bold"
                         android:textSize="9.5sp"
-                        android:textColor="#FFFFFF"
+                        android:textColor="@color/app_text_accent_blue"
                         android:visibility="gone"/>
                 </LinearLayout>
 
@@ -314,7 +314,7 @@
                         android:text="ASS"
                         android:textStyle="bold"
                         android:textSize="9.5sp"
-                        android:textColor="#FFFFFF"
+                        android:textColor="@color/app_text_accent_blue"
                         android:visibility="gone"/>
 
                     <com.google.android.material.materialswitch.MaterialSwitch
@@ -456,7 +456,7 @@
                                 android:paddingVertical="1dp"
                                 android:background="@drawable/tag_3d_background"
                                 android:text="3D"
-                                android:textColor="#FFFFFF"
+                                android:textColor="@color/app_text_accent_blue"
                                 android:textSize="9.5sp"
                                 android:textStyle="bold"/>
                         </LinearLayout>

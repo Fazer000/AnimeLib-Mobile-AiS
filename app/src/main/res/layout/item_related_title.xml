@@ -51,7 +51,7 @@
                     android:id="@+id/relatedTypeText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/purple_primary"
+                    android:textColor="@color/app_text_accent_blue"
                     android:text="Текст"
                     android:textSize="12sp" />
 
