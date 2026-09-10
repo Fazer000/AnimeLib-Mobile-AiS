@@ -50,7 +50,7 @@
                     android:text="FHD"
                     android:textStyle="bold"
                     android:textSize="9.5sp"
-                    android:textColor="@color/app_text_accent_blue"
+                    android:textColor="#FFFFFF"
                     android:visibility="gone"/>
             </LinearLayout>
 
