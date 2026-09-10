@@ -29,7 +29,7 @@ public class SiteSelectionBottomSheet extends FlexibleBottomSheetDialog {
     public SiteSelectionBottomSheet(@NonNull Context context,
                                    List<SiteOption> sites,
                                    OnSiteSelectedListener listener) {
-        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        super(context, com.example.animelib.R.style.ThemeOverlay_AnimeLIB_BottomSheetDialog);
         this.sites = sites;
         this.listener = listener;
     }

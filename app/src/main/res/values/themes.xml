@@ -54,6 +54,7 @@
         <item name="logoDrawable">@drawable/ic_logo_non_back_light</item>
         <item name="materialSwitchStyle">@style/Widget.AnimeLIB.MaterialSwitch</item>
         <item name="sliderStyle">@style/Widget.AnimeLIB.Slider</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.AnimeLIB.BottomSheetDialog</item>
 
 <!--        <item name="android:fitsSystemWindows">true</item>-->
     </style>
@@ -88,6 +89,20 @@
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">30dp</item>
         <item name="android:textColor">@color/lt_primary_text_color</item>
+    </style>
+
+    <!-- Основная тема для BottomSheetDialog -->
+    <style name="ThemeOverlay.AnimeLIB.BottomSheetDialog" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="primaryTextColor">@color/app_text_primary</item>
+        <item name="secondaryTextColor">@color/app_text_secondary</item>
+        <item name="accentTextColor">@color/app_text_secondary</item>
+        <item name="brandButtonTextColor">@color/app_text_brand_button</item>
+        <item name="accentBlueTextColor">@color/app_text_accent_blue</item>
+        <item name="android:textColorPrimary">@color/app_text_primary</item>
+        <item name="android:textColorSecondary">@color/app_text_secondary</item>
+        <item name="android:textColor">@color/app_text_primary</item>
+        <item name="colorOnSurface">@color/app_text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/app_text_secondary</item>
     </style>
 
     <!-- Основная тема для AlertDialog -->
@@ -145,6 +160,7 @@
         <item name="relatedSubtitleColor">@color/lt_related_subtitle_color</item>
         <item name="materialSwitchStyle">@style/Widget.AnimeLIB.MaterialSwitch</item>
         <item name="sliderStyle">@style/Widget.AnimeLIB.Slider</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.AnimeLIB.BottomSheetDialog</item>
     </style>
 
     <!-- Custom Style for Material Slider -->

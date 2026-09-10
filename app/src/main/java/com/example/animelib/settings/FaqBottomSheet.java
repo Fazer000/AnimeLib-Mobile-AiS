@@ -23,7 +23,7 @@ public class FaqBottomSheet extends FlexibleBottomSheetDialog {
     private OnBackPressedListener onBackPressedListener;
 
     public FaqBottomSheet(@NonNull Context context) {
-        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        super(context, com.example.animelib.R.style.ThemeOverlay_AnimeLIB_BottomSheetDialog);
     }
 
     public void setOnBackPressedListener(OnBackPressedListener listener) {

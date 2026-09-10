@@ -28,7 +28,7 @@ public class WatchStatusBottomSheet extends FlexibleBottomSheetDialog {
     public WatchStatusBottomSheet(@NonNull Context context,
                                   Object currentStatusId,
                                   OnStatusSelectedListener listener) {
-        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        super(context, com.example.animelib.R.style.ThemeOverlay_AnimeLIB_BottomSheetDialog);
         this.currentStatusId = currentStatusId;
         this.listener = listener;
     }

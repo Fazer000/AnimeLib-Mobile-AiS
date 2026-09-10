@@ -181,7 +181,7 @@ public class SettingsBottomSheet extends FlexibleBottomSheetDialog {
                                OnSkipDurationChangedListener onSkipDurationChangedListener,
                                int currentTheme,
                                OnThemeChangedListener onThemeChangedListener) {
-        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        super(context, com.example.animelib.R.style.ThemeOverlay_AnimeLIB_BottomSheetDialog);
         this.qualities = qualities;
         this.currentQuality = currentQuality;
         this.listener = listener;

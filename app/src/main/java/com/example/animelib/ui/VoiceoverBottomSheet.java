@@ -60,7 +60,7 @@ public class VoiceoverBottomSheet extends FlexibleBottomSheetDialog {
                                 boolean isLoading,
                                 OnPlayerSelectedListener selectionListener,
                                 OnDownloadRequestedListener downloadListener) {
-        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        super(context, com.example.animelib.R.style.ThemeOverlay_AnimeLIB_BottomSheetDialog);
         this.animelibPlayers = animelibPlayers != null ? animelibPlayers : new ArrayList<>();
         this.kodikPlayers = kodikPlayers != null ? kodikPlayers : new ArrayList<>();
         this.currentPlayerData = currentPlayerData;

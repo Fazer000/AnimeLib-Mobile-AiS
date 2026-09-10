@@ -32,7 +32,7 @@ public class CustomSelectBottomSheet extends FlexibleBottomSheetDialog {
                                    List<String> values,
                                    String currentValue,
                                    OnOptionSelectedListener listener) {
-        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        super(context, com.example.animelib.R.style.ThemeOverlay_AnimeLIB_BottomSheetDialog);
         this.options = options;
         this.values = values;
         this.currentValue = currentValue;

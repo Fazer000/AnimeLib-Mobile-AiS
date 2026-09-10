@@ -37,7 +37,7 @@ public class BugReportBottomSheet extends FlexibleBottomSheetDialog {
     }
 
     public BugReportBottomSheet(@NonNull Context context, String initialTitle, String initialLog) {
-        super(context, com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        super(context, com.example.animelib.R.style.ThemeOverlay_AnimeLIB_BottomSheetDialog);
         this.initialTitle = initialTitle;
         this.initialLog = initialLog;
     }
