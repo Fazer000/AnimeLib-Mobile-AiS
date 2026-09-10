@@ -3037,17 +3037,10 @@ public class VideoPlayerActivity extends AppCompatActivity {
     }
     
     /**
-     * Показывает placeholder с информацией об аниме (только 1 раз при входе)
+     * Показывает placeholder с информацией об аниме (вырезано по запросу пользователя)
      */
     private void showAnimeInfoPlaceholder() {
-        if (isOfflineMode) return;
-        boolean isPortrait = getResources().getConfiguration().orientation == android.content.res.Configuration.ORIENTATION_PORTRAIT;
-        if (isPortrait) return;
-        if (playerAnimeInfoController != null) {
-            if (playerAnimeInfoController.isHasShownInitialAnimeInfo()) return;
-            playerAnimeInfoController.setHasShownInitialAnimeInfo(true);
-            playerAnimeInfoController.showPlaceholder();
-        }
+        // Вырезано по запросу пользователя: боковое окно информации об аниме в горизонтальном режиме не показывается
     }
 
     private void hideAnimeInfoPlaceholder() {

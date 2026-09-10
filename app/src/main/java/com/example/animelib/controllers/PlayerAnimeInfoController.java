@@ -628,8 +628,7 @@ public class PlayerAnimeInfoController {
 
     public void showPlaceholder() {
         if (animeInfoPlaceholder != null) {
-            animeInfoPlaceholder.setVisibility(View.VISIBLE);
-            animeInfoPlaceholder.setTranslationX(0);
+            animeInfoPlaceholder.setVisibility(View.GONE);
         }
     }
 
