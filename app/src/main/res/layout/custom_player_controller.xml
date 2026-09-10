@@ -67,7 +67,7 @@
                     android:paddingVertical="1dp"
                     android:background="@drawable/bg_quality_badge"
                     android:text="HD"
-                    android:textColor="@color/app_text_accent_blue"
+                    android:textColor="#FFFFFF"
                     android:textSize="9sp"
                     android:textStyle="bold"
                     android:gravity="center"
