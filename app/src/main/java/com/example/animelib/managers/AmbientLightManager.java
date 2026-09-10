@@ -150,6 +150,17 @@ public class AmbientLightManager {
         }
     }
 
+    private int textureAttachRetryCount = 0;
+    private final Runnable retryAttachRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!isDirectSamplerActive && mainPlayerView != null && textureAttachRetryCount < 10) {
+                textureAttachRetryCount++;
+                attachMainTextureViewListener();
+            }
+        }
+    };
+
     private void attachMainTextureViewListener() {
         if (mainPlayerView == null) return;
         View surfaceView = mainPlayerView.getVideoSurfaceView();
@@ -191,16 +202,21 @@ public class AmbientLightManager {
             isDirectSamplerActive = true;
             if (ambientImageView != null) ambientImageView.setVisibility(View.VISIBLE);
             if (ambientPlayerView != null) ambientPlayerView.setVisibility(View.GONE);
+            releaseAmbientPlayer();
             sampleMainFrame(mainTextureView);
         } else {
             isDirectSamplerActive = false;
             if (ambientImageView != null) ambientImageView.setVisibility(View.GONE);
             if (ambientPlayerView != null) ambientPlayerView.setVisibility(View.VISIBLE);
+            mainHandler.removeCallbacks(retryAttachRunnable);
+            if (textureAttachRetryCount < 10) {
+                mainHandler.postDelayed(retryAttachRunnable, 200);
+            }
         }
     }
 
     private long lastSampleTimeMs = 0;
-    private static final long SAMPLE_INTERVAL_MS = 75; // ~13 FPS: сглаживает подсветку и убирает лаги от 60 FPS чтения кадра
+    private static final long SAMPLE_INTERVAL_MS = 33; // ~30 FPS: плавный мгновенный акаратный синхрон с видео без рассинхрона
 
     private void sampleMainFrame(TextureView mainTextureView) {
         if (ambientImageView == null || mainTextureView == null || !mainTextureView.isAvailable()) return;
@@ -405,6 +421,38 @@ public class AmbientLightManager {
         }
     }
 
+    private final Runnable syncRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isEnabled && !isSuspended && !isFrozen && mainPlayer != null && ambientPlayer != null && !isDirectSamplerActive) {
+                try {
+                    long mainPos = mainPlayer.getCurrentPosition();
+                    long ambPos = ambientPlayer.getCurrentPosition();
+                    long diff = Math.abs(mainPos - ambPos);
+
+                    if (diff > 150) {
+                        ambientPlayer.seekTo(mainPos);
+                    }
+
+                    if (ambientPlayer.getPlaybackParameters().speed != mainPlayer.getPlaybackParameters().speed) {
+                        ambientPlayer.setPlaybackParameters(mainPlayer.getPlaybackParameters());
+                    }
+
+                    if (mainPlayer.isPlaying() && !ambientPlayer.isPlaying()) {
+                        ambientPlayer.play();
+                    } else if (!mainPlayer.isPlaying() && ambientPlayer.isPlaying()) {
+                        ambientPlayer.pause();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error in ambient sync loop", e);
+                }
+            }
+            if (isEnabled && !isSuspended && !isFrozen && ambientPlayer != null && !isDirectSamplerActive) {
+                mainHandler.postDelayed(this, 1000);
+            }
+        }
+    };
+
     private void setupMainPlayerListener() {
         if (mainPlayer == null) return;
 
@@ -416,6 +464,8 @@ public class AmbientLightManager {
                 if (ambientPlayer != null && !isDirectSamplerActive) {
                     if (isPlaying) {
                         ambientPlayer.play();
+                        mainHandler.removeCallbacks(syncRunnable);
+                        mainHandler.post(syncRunnable);
                     } else {
                         ambientPlayer.pause();
                     }
@@ -426,10 +476,33 @@ public class AmbientLightManager {
             public void onPlaybackStateChanged(int playbackState) {
                 if (!isEnabled || isSuspended || isFrozen) return;
                 refreshAmbientFrame();
+                if (!isDirectSamplerActive) {
+                    attachMainTextureViewListener();
+                }
             }
 
             @Override
-            public void onPositionDiscontinuity(Player.PositionInfo oldPosition, Player.PositionInfo newPosition, int reason) {
+            public void onPlaybackParametersChanged(@NonNull PlaybackParameters playbackParameters) {
+                if (!isEnabled || isSuspended || isFrozen) return;
+                if (ambientPlayer != null && !isDirectSamplerActive) {
+                    ambientPlayer.setPlaybackParameters(playbackParameters);
+                }
+            }
+
+            @Override
+            public void onRenderedFirstFrame() {
+                if (!isEnabled || isSuspended || isFrozen) return;
+                refreshAmbientFrame();
+                if (ambientPlayer != null && !isDirectSamplerActive && mainPlayer != null) {
+                    ambientPlayer.seekTo(mainPlayer.getCurrentPosition());
+                    if (mainPlayer.isPlaying()) {
+                        ambientPlayer.play();
+                    }
+                }
+            }
+
+            @Override
+            public void onPositionDiscontinuity(@NonNull Player.PositionInfo oldPosition, @NonNull Player.PositionInfo newPosition, int reason) {
                 if (!isEnabled || isSuspended || isFrozen) return;
                 refreshAmbientFrame();
                 if (ambientPlayer != null && !isDirectSamplerActive) {
@@ -501,6 +574,9 @@ public class AmbientLightManager {
     }
 
     public void releaseAmbientPlayer() {
+        mainHandler.removeCallbacks(syncRunnable);
+        mainHandler.removeCallbacks(retryAttachRunnable);
+
         if (mainPlayer != null && mainPlayerListener != null) {
             mainPlayer.removeListener(mainPlayerListener);
             mainPlayerListener = null;
